@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0c1d15">
+<title>Organização · Confraternização</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&display=swap">
+<link rel="stylesheet" href="estilo.css?v=10">
+</head>
+<body>
+
+<header class="adm-topo wrap">
+  <p class="eyebrow" id="ev-nome">Confraternização</p>
+  <div class="linha">
+    <h1>Organização</h1>
+    <a href="index.html" target="_blank" rel="noopener">Abrir o site dos convidados</a>
+  </div>
+</header>
+
+<main class="wrap adm-pagina">
+
+  <form id="adm-login" novalidate style="padding-top:16px">
+    <p class="lead">Área da comissão organizadora: abrir e fechar votações, ver resultados, editar o cronograma e gerar o QR code das mesas.</p>
+    <div class="campo">
+      <label for="adm-senha">Senha</label>
+      <input type="password" id="adm-senha" autocomplete="current-password" required>
+      <p class="dica" id="adm-dica-teste" hidden>Senha do modo de teste: trocar123</p>
+    </div>
+    <p class="erro" id="adm-login-erro" role="alert" hidden></p>
+    <button class="btn cheio" type="submit">Entrar</button>
+  </form>
+
+  <div id="adm-painel" hidden>
+    <div class="bloco" style="border-top:0">
+      <h3>Ao vivo</h3>
+      <p class="dica">O que estiver ligado aparece para quem está com o site aberto (em até 30 segundos).</p>
+      <div id="adm-chaves"></div>
+    </div>
+
+    <div class="bloco">
+      <h3>Resultados</h3>
+      <p class="dica">Atualiza sozinho a cada 10 segundos. Só a organização vê, a menos que "Mostrar resultado para todos" esteja ligado.</p>
+      <div class="dupla">
+        <div>
+          <h4 class="sub-h">Melhor fantasia</h4>
+          <div id="adm-res-fantasia"></div>
+          <button type="button" class="btn perigo peq" data-zerar="fantasia" style="margin-top:12px">Zerar notas da fantasia</button>
+        </div>
+        <div>
+          <h4 class="sub-h">Show de talentos</h4>
+          <div id="adm-res-talento"></div>
+          <button type="button" class="btn perigo peq" data-zerar="talento" style="margin-top:12px">Zerar notas dos talentos</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h3>Inscritos</h3>
+      <p class="dica">Remova inscrições duplicadas ou de brincadeira. As notas do inscrito removido saem junto.</p>
+      <div class="dupla">
+        <div><h4 class="sub-h">Fantasia</h4><div id="adm-insc-fantasia"></div></div>
+        <div><h4 class="sub-h">Show de talentos</h4><div id="adm-insc-talento"></div></div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h3>Evento</h3>
+      <p class="dica">Nome e data aparecem na tela inicial (quando não houver arte própria). Local e recado aparecem no cronograma.</p>
+      <form id="adm-evento" novalidate>
+        <div class="campo"><label for="e-nome">Nome da festa</label><input type="text" id="e-nome" maxlength="80"></div>
+        <div class="campo"><label for="e-data">Data</label><input type="date" id="e-data"></div>
+        <div class="campo"><label for="e-local">Local</label><input type="text" id="e-local" maxlength="120"></div>
+        <div class="campo"><label for="e-aviso">Recado no cronograma <span class="opc">(opcional)</span></label><textarea id="e-aviso" maxlength="300" placeholder="Ex.: O ônibus de volta sai às 00h30 em frente ao salão."></textarea></div>
+        <button class="btn" type="submit">Salvar evento</button>
+      </form>
+    </div>
+
+    <div class="bloco">
+      <h3>Cronograma</h3>
+      <p class="dica">A ordem define a sequência na tela. No dia da festa, o item do horário atual aparece como "Agora".</p>
+      <div id="adm-prog"></div>
+      <button type="button" class="btn sec" id="adm-prog-add" style="margin-top:12px">Adicionar item</button>
+    </div>
+
+    <div class="bloco">
+      <h3>QR code das mesas</h3>
+      <p class="dica">Use o endereço onde o site dos convidados estiver publicado. Imprime 4 cartões por folha A4.</p>
+      <div class="campo"><label for="qr-url">Endereço do site</label><input type="url" id="qr-url" placeholder="https://..."></div>
+      <div class="acoes">
+        <button type="button" class="btn sec" id="qr-gerar">Gerar QR code</button>
+        <button type="button" class="btn sec" id="qr-png" disabled>Baixar imagem</button>
+        <button type="button" class="btn" id="qr-imprimir" disabled>Imprimir cartões</button>
+      </div>
+      <p class="erro" id="qr-erro" role="alert" hidden style="margin-top:12px"></p>
+      <div class="qr-previa" id="qr-previa" hidden></div>
+    </div>
+
+    <div class="bloco">
+      <h3>Senha e dados</h3>
+      <form id="adm-senha-form" novalidate>
+        <div class="campo"><label for="s-nova">Nova senha</label><input type="password" id="s-nova" autocomplete="new-password" minlength="6"></div>
+        <button class="btn sec" type="submit">Trocar senha</button>
+      </form>
+      <div id="adm-reset" hidden style="margin-top:20px">
+        <button type="button" class="btn perigo" id="adm-reset-btn">Apagar todos os dados de teste</button>
+        <p class="dica">Volta o cronograma e os participantes de exemplo.</p>
+      </div>
+      <div style="margin-top:20px"><button type="button" class="btn sec" id="adm-sair">Sair</button></div>
+    </div>
+  </div>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="impressao" aria-hidden="true"></div>
+
+<script src="dados.js?v=10"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  function h(tag, props, ...filhos) {
+    const el = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (v == null || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k === "text") el.textContent = v;
+      else if (k === "style") el.setAttribute("style", v);
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? "" : v);
+    }
+    for (const f of filhos.flat()) if (f != null && f !== false) el.append(f instanceof Node ? f : document.createTextNode(String(f)));
+    return el;
+  }
+  function toast(msg, tipo) {
+    const t = $("#toast");
+    t.textContent = msg; t.dataset.tipo = tipo || "";
+    t.classList.add("on");
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 3800);
+  }
+  function erroBox(e, tentar) {
+    return h("div", { class: "info" },
+      h("p", { style: "margin:0 0 12px", text: e.message || "Não foi possível carregar." }),
+      h("button", { type: "button", class: "btn sec peq", onclick: tentar, text: "Tentar de novo" }));
+  }
+  function iniciais(nome) {
+    return String(nome || "").replace(/\(.*?\)/g, "").trim().split(/\s+/).slice(0, 2).map((p) => p[0] || "").join("").toUpperCase() || "?";
+  }
+  function fotoEl(p) {
+    return h("span", { class: "foto", "aria-hidden": "true" }, p.foto_url ? h("img", { src: p.foto_url, alt: "", loading: "lazy" }) : iniciais(p.nome));
+  }
+
+  let cfg = {};
+  const adm = { senha: null, timer: null };
+  try { adm.senha = sessionStorage.getItem("confra_admin"); } catch (e) { /* ignora */ }
+
+  const CHAVES = [
+    ["inscricoes_fantasia", "Inscrições do concurso de fantasia", "Libera o formulário “Quero concorrer”."],
+    ["votacao_fantasia", "Votação da melhor fantasia", "Libera as estrelas (nota de 0 a 5) em Fantasia. Desligada, a lista fica só para ver."],
+    ["inscricoes_talento", "Inscrições do show de talentos", "Libera o formulário “Quero me apresentar”."],
+    ["votacao_talento", "Votação do show de talentos", "Libera as estrelas (nota de 0 a 5) em Talentos. Desligada, a lista fica só para ver."],
+    ["resultados_publicos", "Mostrar resultado para todos", "Use na hora da premiação: o ranking aparece no celular de todo mundo."],
+  ];
+
+  function armar(btn, acao) {
+    btn.addEventListener("click", async () => {
+      if (btn.dataset.armado !== "1") {
+        btn.dataset.armado = "1"; btn.dataset.txt = btn.textContent;
+        btn.textContent = "Toque de novo para confirmar"; btn.classList.add("armado");
+        clearTimeout(btn._t);
+        btn._t = setTimeout(() => { btn.dataset.armado = ""; btn.textContent = btn.dataset.txt; btn.classList.remove("armado"); }, 4000);
+        return;
+      }
+      clearTimeout(btn._t);
+      btn.dataset.armado = ""; btn.textContent = btn.dataset.txt; btn.classList.remove("armado");
+      btn.disabled = true;
+      try { await acao(); } catch (e) { toast(e.message, "erro"); } finally { btn.disabled = false; }
+    });
+  }
+
+  async function carregarConfig() {
+    cfg = await api.getConfig();
+    $("#ev-nome").textContent = cfg.evento_nome || "Confraternização";
+  }
+
+  function mostrar() {
+    $("#adm-dica-teste").hidden = !api.modoTeste;
+    $("#adm-reset").hidden = !api.modoTeste;
+    const logado = !!adm.senha;
+    $("#adm-login").hidden = logado;
+    $("#adm-painel").hidden = !logado;
+    if (logado) carregarPainel(); else $("#adm-senha").focus();
+  }
+
+  $("#adm-login").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const s = $("#adm-senha").value, err = $("#adm-login-erro");
+    err.hidden = true;
+    try {
+      if (!(await api.adminLogin(s))) throw new Error("Senha incorreta.");
+      adm.senha = s; try { sessionStorage.setItem("confra_admin", s); } catch (e) { /* ignora */ }
+      $("#adm-senha").value = "";
+      mostrar();
+    } catch (e) { err.textContent = e.message; err.hidden = false; }
+  });
+  $("#adm-sair").addEventListener("click", () => {
+    adm.senha = null; try { sessionStorage.removeItem("confra_admin"); } catch (e) { /* ignora */ }
+    clearInterval(adm.timer); mostrar(); window.scrollTo(0, 0);
+  });
+
+  async function carregarPainel() {
+    try { await carregarConfig(); } catch (e) { toast(e.message, "erro"); return; }
+    renderChaves();
+    $("#e-nome").value = cfg.evento_nome || "";
+    $("#e-data").value = cfg.evento_data || "";
+    $("#e-local").value = cfg.evento_local || "";
+    $("#e-aviso").value = cfg.aviso || "";
+    if (!$("#qr-url").value && /^https?:/.test(location.protocol)) $("#qr-url").value = new URL("./", location.href).href;
+    carregarProgAdmin();
+    carregarInscritos();
+    carregarResultados();
+    clearInterval(adm.timer);
+    adm.timer = setInterval(() => { if (adm.senha && !document.hidden) carregarResultados(); }, 10000);
+  }
+
+  function renderChaves() {
+    $("#adm-chaves").replaceChildren(...CHAVES.map(([k, titulo, desc]) => {
+      const id = "sw-" + k;
+      const sw = h("input", { type: "checkbox", role: "switch", class: "switch", id, checked: cfg[k] === "sim" });
+      sw.addEventListener("change", async () => {
+        sw.disabled = true;
+        try {
+          await api.adminConfig(adm.senha, k, sw.checked ? "sim" : "nao");
+          cfg[k] = sw.checked ? "sim" : "nao";
+          toast(`${titulo}: ${sw.checked ? "ligado" : "desligado"}.`);
+        } catch (e) { sw.checked = !sw.checked; toast(e.message, "erro"); }
+        finally { sw.disabled = false; }
+      });
+      return h("div", { class: "chave" }, h("label", { for: id }, h("strong", { text: titulo }), h("span", { text: desc })), sw);
+    }));
+  }
+
+  $("#adm-evento").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const btn = $('#adm-evento button[type="submit"]'); btn.disabled = true;
+    try {
+      const pares = [["evento_nome", $("#e-nome").value.trim()], ["evento_data", $("#e-data").value], ["evento_local", $("#e-local").value.trim()], ["aviso", $("#e-aviso").value.trim()]];
+      for (const [k, v] of pares) await api.adminConfig(adm.senha, k, v);
+      await carregarConfig();
+      toast("Evento salvo.");
+    } catch (e) { toast(e.message, "erro"); }
+    finally { btn.disabled = false; }
+  });
+
+  // Cronograma
+  async function carregarProgAdmin() {
+    const box = $("#adm-prog");
+    try {
+      const itens = await api.getProgramacao();
+      box.replaceChildren(...itens.map(linhaProg));
+      if (!itens.length) box.append(h("p", { class: "vazio", text: "Nenhum item ainda." }));
+    } catch (e) { box.replaceChildren(erroBox(e, carregarProgAdmin)); }
+  }
+  function linhaProg(it) {
+    const uid = it.id || "novo-" + Math.random().toString(36).slice(2, 8);
+    const hhmm = (v) => (/^\d{2}:\d{2}$/.test(v || "") ? v : "");
+    const hora = h("input", { type: "time", id: "ph-" + uid, value: hhmm(it.hora), "aria-label": "Início" });
+    const fim = h("input", { type: "time", id: "pf-" + uid, value: hhmm(it.fim), "aria-label": "Término (opcional)" });
+    const ordem = h("input", { type: "number", id: "po-" + uid, value: it.ordem ?? "", "aria-label": "Ordem", placeholder: "Ordem" });
+    const titulo = h("input", { type: "text", id: "pt-" + uid, value: it.titulo || "", maxlength: "120", "aria-label": "Título", placeholder: "Título" });
+    const desc = h("textarea", { id: "pd-" + uid, maxlength: "400", "aria-label": "Descrição", placeholder: "Descrição (opcional)" }); desc.value = it.descricao || "";
+    const salvar = h("button", { type: "submit", class: "btn peq", text: it.id ? "Salvar" : "Adicionar" });
+    const excluir = h("button", { type: "button", class: "btn perigo peq", text: it.id ? "Excluir" : "Cancelar" });
+    const rot = (txt, el) => h("label", { class: "mini-campo" }, h("span", { text: txt }), el);
+    const form = h("form", { class: "prog-ed", novalidate: true },
+      rot("Início", hora), rot("Término", fim), rot("Ordem", ordem),
+      h("div", { class: "largo" }, titulo),
+      h("div", { class: "largo" }, desc),
+      h("div", { class: "acoes" }, excluir, salvar));
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      if (!hora.value || !titulo.value.trim()) { toast("Preencha o horário e o título.", "erro"); return; }
+      salvar.disabled = true;
+      try {
+        await api.adminItemSalvar(adm.senha, { id: it.id || null, hora: hora.value, fim: fim.value || null, titulo: titulo.value.trim(), descricao: desc.value.trim() || null, ordem: Number(ordem.value) || 0 });
+        toast("Cronograma salvo."); carregarProgAdmin();
+      } catch (e) { toast(e.message, "erro"); } finally { salvar.disabled = false; }
+    });
+    if (it.id) armar(excluir, async () => { await api.adminItemExcluir(adm.senha, it.id); toast("Item excluído."); carregarProgAdmin(); });
+    else excluir.addEventListener("click", () => form.remove());
+    return form;
+  }
+  $("#adm-prog-add").addEventListener("click", async () => {
+    const box = $("#adm-prog");
+    const vazio = box.querySelector(".vazio"); if (vazio) vazio.remove();
+    let maior = 0;
+    try { (await api.getProgramacao()).forEach((x) => { maior = Math.max(maior, x.ordem || 0); }); } catch (e) { /* ignora */ }
+    const f = linhaProg({ id: null, hora: "", titulo: "", descricao: "", ordem: maior + 1 });
+    box.append(f); f.querySelector('input[type="time"]').focus();
+  });
+
+  // Inscritos
+  async function carregarInscritos() {
+    for (const cat of ["fantasia", "talento"]) {
+      const box = $("#adm-insc-" + cat);
+      try {
+        const lista = await api.getParticipantes(cat);
+        if (!lista.length) { box.replaceChildren(h("p", { class: "vazio", style: "padding:8px 0", text: "Ninguém inscrito ainda." })); continue; }
+        box.replaceChildren(...lista.map((p) => {
+          const rm = h("button", { type: "button", class: "btn perigo peq", text: "Remover" });
+          armar(rm, async () => { await api.adminParticipanteExcluir(adm.senha, p.id); toast("Inscrição removida."); carregarInscritos(); carregarResultados(); });
+          return h("div", { class: "inscrito" }, fotoEl(p),
+            h("div", null,
+              h("strong", { text: p.titulo || "(sem título)" }),
+              h("span", { text: [p.nome, p.setor, p.tipo].filter(Boolean).join(" · ") }),
+              p.descricao ? h("span", { text: "Precisa: " + p.descricao }) : null),
+            rm);
+        }));
+      } catch (e) { box.replaceChildren(erroBox(e, carregarInscritos)); }
+    }
+  }
+
+  // Resultados
+  async function carregarResultados() {
+    let res;
+    try { res = await api.resultados(adm.senha); }
+    catch (e) { ["fantasia", "talento"].forEach((c) => $("#adm-res-" + c).replaceChildren(erroBox(e, carregarResultados))); return; }
+    ["fantasia", "talento"].forEach((cat) => {
+      const r = res.filter((x) => x.categoria === cat);
+      const box = $("#adm-res-" + cat);
+      if (!r.length) { box.replaceChildren(h("p", { class: "vazio", style: "padding:8px 0", text: "Sem participantes." })); return; }
+      const total = r.reduce((s, x) => s + x.qtd, 0);
+      const fmt = (m) => m.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      box.replaceChildren(
+        h("ol", { class: "ranking" }, r.map((x, i) => h("li", null,
+          h("span", { class: "pos", text: String(i + 1) }),
+          h("span", { class: "nm", text: `${x.titulo || ""} · ${x.nome}` }),
+          h("span", { class: "vt", text: x.qtd ? `${fmt(x.media)} ★ · ${x.qtd} ${x.qtd === 1 ? "nota" : "notas"}` : "sem notas" }),
+          h("span", { class: "barra" }, h("span", { style: `width:${Math.round((x.media / 5) * 100)}%` }))))),
+        h("p", { class: "dica", text: `Ranking pela média das notas (0 a 5). Empate: quem recebeu mais notas fica na frente. ${total} ${total === 1 ? "nota" : "notas"} no total.` }));
+    });
+  }
+  $$("[data-zerar]").forEach((b) => armar(b, async () => {
+    await api.adminZerarVotos(adm.senha, b.dataset.zerar);
+    toast("Notas zeradas."); carregarResultados();
+  }));
+
+  // Senha / reset
+  $("#adm-senha-form").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const nova = $("#s-nova").value;
+    try {
+      await api.adminTrocarSenha(adm.senha, nova);
+      adm.senha = nova; try { sessionStorage.setItem("confra_admin", nova); } catch (e) { /* ignora */ }
+      $("#s-nova").value = ""; toast("Senha trocada.");
+    } catch (e) { toast(e.message, "erro"); }
+  });
+  armar($("#adm-reset-btn"), async () => {
+    api.resetarTeste();
+    try { localStorage.removeItem("confra_eleitor"); } catch (e) { /* ignora */ }
+    toast("Dados de teste apagados."); carregarPainel();
+  });
+
+  // QR code
+  let qrAtual = null;
+  async function gerarQR() {
+    const err = $("#qr-erro"); err.hidden = true;
+    const url = $("#qr-url").value.trim();
+    if (!/^https?:\/\/\S+\.\S+/.test(url)) { err.textContent = "Informe o endereço completo do site, começando com https://"; err.hidden = false; return; }
+    try {
+      if (!window.qrcode) await api.carregarScript("https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js");
+    } catch (e) { err.textContent = "Não consegui carregar o gerador de QR code. Verifique a internet."; err.hidden = false; return; }
+    const q = window.qrcode(0, "M"); q.addData(url); q.make();
+    const n = q.getModuleCount();
+    let d = "";
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 ${n + 4} ${n + 4}" shape-rendering="crispEdges" role="img" aria-label="QR code do site"><rect x="-2" y="-2" width="${n + 4}" height="${n + 4}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+    qrAtual = { q, n };
+    const prev = $("#qr-previa"); prev.innerHTML = svg; prev.hidden = false;
+    $("#qr-png").disabled = false; $("#qr-imprimir").disabled = false;
+    const nomeEv = cfg.evento_nome || "Confraternização";
+    const cartao = () => {
+      const s = h("div"); s.innerHTML = svg;
+      return h("div", { class: "cartao" },
+        h("p", { class: "ev", text: nomeEv }),
+        h("p", { class: "cta", text: "Aponte a câmera do celular" }),
+        s.firstChild,
+        h("p", { class: "itens", text: "Cronograma · Melhor fantasia · Show de talentos" }),
+        h("p", { class: "url", text: url }));
+    };
+    $("#impressao").replaceChildren(cartao(), cartao(), cartao(), cartao());
+  }
+  $("#qr-gerar").addEventListener("click", gerarQR);
+  $("#qr-imprimir").addEventListener("click", () => window.print());
+  $("#qr-png").addEventListener("click", () => {
+    if (!qrAtual) return;
+    const esc = 16, marg = 4, lado = (qrAtual.n + marg * 2) * esc;
+    const c = document.createElement("canvas"); c.width = c.height = lado;
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, lado, lado); g.fillStyle = "#000";
+    for (let r = 0; r < qrAtual.n; r++) for (let k = 0; k < qrAtual.n; k++) if (qrAtual.q.isDark(r, k)) g.fillRect((k + marg) * esc, (r + marg) * esc, esc, esc);
+    c.toBlob((b) => {
+      const a = h("a", { href: URL.createObjectURL(b), download: "qrcode-confraternizacao.png" });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }, "image/png");
+  });
+
+  carregarConfig().catch(() => {});
+  mostrar();
+})();
+</script>
+</body>
+</html>

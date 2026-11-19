@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c1d15">
+<title>Confraternização</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&display=swap">
+<link rel="stylesheet" href="estilo.css?v=10">
+</head>
+<body>
+
+<!-- ============================================================ TELA INICIAL -->
+<section id="v-inicio" class="inicio" aria-label="Início">
+  <div class="arte" id="arte">
+    <!-- Para usar a arte oficial do evento, coloque o arquivo "arte.jpg" (ou "arte.png") nesta pasta. -->
+    <img class="arte-img" id="arte-img" alt="" hidden>
+    <svg class="sementes" id="sementes" viewBox="0 0 400 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+    <div class="arte-texto" id="arte-texto">
+      <p class="eyebrow" id="arte-data">&nbsp;</p>
+      <h1 class="arte-nome" id="arte-nome">Confraternização</h1>
+    </div>
+  </div>
+
+  <nav class="menu" aria-label="Seções">
+    <a href="#cronograma">
+      <svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      Cronograma
+      <svg class="seta" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+    <a href="#fantasia">
+      <svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 9c3-2 6-2 10 0 4-2 7-2 10 0-.5 5-3.5 8-6.5 8-1.5 0-2.5-1-3.5-2.5C11 16 10 17 8.5 17 5.5 17 2.5 14 2 9z"/><circle cx="7.5" cy="11" r="1.4" fill="currentColor"/><circle cx="16.5" cy="11" r="1.4" fill="currentColor"/></svg>
+      Fantasia
+      <svg class="seta" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+    <a href="#talentos">
+      <svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></svg>
+      Talentos
+      <svg class="seta" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+    <p class="teste-nota" id="teste-nota" hidden>Versão de teste: os dados ficam salvos só neste aparelho.</p>
+  </nav>
+</section>
+
+<!-- ============================================================ PÁGINAS INTERNAS -->
+<div id="interno" hidden>
+  <main class="wrap">
+
+    <!-- CRONOGRAMA -->
+    <section id="v-cronograma" class="pagina" aria-labelledby="t-cron" hidden>
+      <h2 id="t-cron">Cronograma</h2>
+      <p class="local" id="ev-local-linha" hidden>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        <span id="ev-local"></span>
+      </p>
+      <p class="aviso" id="aviso" hidden></p>
+      <div id="prog-lista"><p class="carregando">Carregando o cronograma…</p></div>
+    </section>
+
+    <!-- FANTASIA -->
+    <section id="v-fantasia" class="pagina" aria-labelledby="t-fant" hidden>
+      <h2 id="t-fant">Melhor fantasia</h2>
+      <div class="seg" role="tablist" aria-label="Melhor fantasia">
+        <button type="button" role="tab" id="tab-fantasia-lista" data-ir="fantasia-lista">Concorrentes</button>
+        <button type="button" role="tab" id="tab-fantasia-concorrer" data-ir="fantasia-concorrer">Quero concorrer</button>
+      </div>
+
+      <div id="pane-fantasia-lista">
+        <div class="status" id="fantasia-status"></div>
+        <div id="fantasia-resultado"></div>
+        <div id="fantasia-lista" class="cands grade"><p class="carregando">Carregando participantes…</p></div>
+      </div>
+
+      <div id="pane-fantasia-concorrer" hidden>
+        <div id="fantasia-minhas" class="minhas" hidden></div>
+        <p id="fantasia-fechado" class="info" hidden>As inscrições para o concurso de fantasia estão fechadas.</p>
+        <form id="form-fantasia" novalidate>
+          <p class="lead">Veio fantasiado? Cadastre-se para entrar na votação da melhor fantasia.</p>
+          <div class="campo">
+            <label for="f-nome">Seu nome</label>
+            <input type="text" id="f-nome" name="nome" maxlength="80" autocomplete="name" placeholder="Ex.: Maria Souza" required>
+          </div>
+          <div class="campo">
+            <label for="f-titulo">Qual é a sua fantasia?</label>
+            <input type="text" id="f-titulo" name="titulo" maxlength="100" placeholder="Ex.: Espantalho do milharal" required>
+          </div>
+          <div class="campo">
+            <label for="f-setor">Setor <span class="opc">(opcional)</span></label>
+            <input type="text" id="f-setor" name="setor" maxlength="60" placeholder="Ex.: Comercial">
+          </div>
+          <fieldset class="campo foto-campo" data-foto>
+            <legend>Foto da fantasia <span class="opc">(opcional)</span></legend>
+            <div class="foto-linha">
+              <span class="previa" aria-hidden="true"><img alt="" hidden><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+              <div class="foto-botoes">
+                <label class="btn sec peq" for="f-camera"><input type="file" id="f-camera" class="vh" accept="image/*" capture="environment">Tirar foto</label>
+                <label class="btn sec peq" for="f-galeria"><input type="file" id="f-galeria" class="vh" accept="image/*">Escolher da galeria</label>
+                <button type="button" class="link-remover" data-remover hidden>Remover foto</button>
+              </div>
+            </div>
+            <p class="dica">Com foto fica mais fácil o pessoal reconhecer você na lista.</p>
+          </fieldset>
+          <p class="erro" id="fantasia-erro" role="alert" hidden></p>
+          <button class="btn cheio" type="submit">Entrar no concurso</button>
+          <button class="btn sec cheio" type="button" data-cancelar hidden style="margin-top:10px">Cancelar edição</button>
+        </form>
+        <div id="fantasia-ok" class="sucesso" hidden>
+          <div class="ok" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg></div>
+          <h3>Você está no concurso!</h3>
+          <p id="fantasia-ok-txt"></p>
+          <div class="acoes">
+            <button type="button" class="btn sec" data-de-novo="fantasia">Cadastrar outra pessoa</button>
+            <a class="btn" href="#fantasia-lista">Ver concorrentes</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TALENTOS -->
+    <section id="v-talentos" class="pagina" aria-labelledby="t-tal" hidden>
+      <h2 id="t-tal">Show de talentos</h2>
+      <div class="seg" role="tablist" aria-label="Show de talentos">
+        <button type="button" role="tab" id="tab-talentos-lista" data-ir="talentos-lista">Apresentações</button>
+        <button type="button" role="tab" id="tab-talentos-inscrever" data-ir="talentos-inscrever">Quero me apresentar</button>
+      </div>
+
+      <div id="pane-talentos-lista">
+        <div class="status" id="talento-status"></div>
+        <div id="talento-resultado"></div>
+        <div id="talento-lista" class="cands lista"><p class="carregando">Carregando apresentações…</p></div>
+      </div>
+
+      <div id="pane-talentos-inscrever" hidden>
+        <div id="talento-minhas" class="minhas" hidden></div>
+        <p id="talento-fechado" class="info" hidden>As inscrições para o show de talentos estão fechadas.</p>
+        <form id="form-talento" novalidate>
+          <p class="lead">Canta, dança, toca, conta piada? Inscreva-se e a organização entra em contato para combinar a ordem das apresentações.</p>
+          <div class="campo">
+            <label for="t-nome">Seu nome ou nome do grupo</label>
+            <input type="text" id="t-nome" name="nome" maxlength="80" placeholder="Ex.: Trio do Armazém" required>
+          </div>
+          <div class="campo">
+            <label for="t-titulo">O que você vai apresentar?</label>
+            <input type="text" id="t-titulo" name="titulo" maxlength="100" placeholder="Ex.: Moda de viola" required>
+          </div>
+          <div class="campo">
+            <label for="t-tipo">Tipo de apresentação</label>
+            <select id="t-tipo" name="tipo">
+              <option>Música</option>
+              <option>Dança</option>
+              <option>Comédia</option>
+              <option>Mágica</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="t-setor">Setor <span class="opc">(opcional)</span></label>
+            <input type="text" id="t-setor" name="setor" maxlength="60" placeholder="Ex.: Expedição">
+          </div>
+          <div class="campo">
+            <label for="t-descricao">Do que você precisa? <span class="opc">(opcional)</span></label>
+            <textarea id="t-descricao" name="descricao" maxlength="400" placeholder="Ex.: 2 microfones, tomada para o teclado, música no pendrive"></textarea>
+          </div>
+          <fieldset class="campo foto-campo" data-foto>
+            <legend>Foto <span class="opc">(opcional)</span></legend>
+            <div class="foto-linha">
+              <span class="previa" aria-hidden="true"><img alt="" hidden><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+              <div class="foto-botoes">
+                <label class="btn sec peq" for="t-camera"><input type="file" id="t-camera" class="vh" accept="image/*" capture="environment">Tirar foto</label>
+                <label class="btn sec peq" for="t-galeria"><input type="file" id="t-galeria" class="vh" accept="image/*">Escolher da galeria</label>
+                <button type="button" class="link-remover" data-remover hidden>Remover foto</button>
+              </div>
+            </div>
+            <p class="dica">Uma foto sua ou do grupo para aparecer na lista de apresentações.</p>
+          </fieldset>
+          <p class="erro" id="talento-erro" role="alert" hidden></p>
+          <button class="btn cheio" type="submit">Enviar inscrição</button>
+          <button class="btn sec cheio" type="button" data-cancelar hidden style="margin-top:10px">Cancelar edição</button>
+        </form>
+        <div id="talento-ok" class="sucesso" hidden>
+          <div class="ok" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg></div>
+          <h3>Inscrição enviada!</h3>
+          <p id="talento-ok-txt"></p>
+          <div class="acoes">
+            <button type="button" class="btn sec" data-de-novo="talento">Fazer outra inscrição</button>
+            <a class="btn" href="#talentos-lista">Ver apresentações</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Janela de nota -->
+<div class="folha" id="folha" hidden>
+  <div class="folha-caixa" role="dialog" aria-modal="true" aria-labelledby="nota-titulo">
+    <div class="nota-topo">
+      <div id="nota-foto" class="nota-foto"></div>
+      <div class="nota-ident"><h3 id="nota-titulo"></h3><p id="nota-sub"></p></div>
+    </div>
+    <div class="estrelas" id="estrelas" role="radiogroup" aria-label="Nota de 0 a 5">
+      <button type="button" role="radio" class="zero" data-n="0" aria-label="Nota zero">0</button>
+        <button type="button" role="radio" class="estrela" data-n="1" aria-label="1 estrela"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button>
+        <button type="button" role="radio" class="estrela" data-n="2" aria-label="2 estrelas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button>
+        <button type="button" role="radio" class="estrela" data-n="3" aria-label="3 estrelas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button>
+        <button type="button" role="radio" class="estrela" data-n="4" aria-label="4 estrelas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button>
+        <button type="button" role="radio" class="estrela" data-n="5" aria-label="5 estrelas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button>
+    </div>
+    <p class="nota-txt" id="nota-txt" aria-live="polite"></p>
+    <p class="erro" id="nota-erro" role="alert" hidden></p>
+    <div class="acoes">
+      <button type="button" class="btn sec" id="nota-cancelar">Cancelar</button>
+      <button type="button" class="btn" id="nota-salvar" disabled>Confirmar nota</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="dados.js?v=10"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  function h(tag, props, ...filhos) {
+    const el = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (v == null || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k === "text") el.textContent = v;
+      else if (k === "style") el.setAttribute("style", v);
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? "" : v);
+    }
+    for (const f of filhos.flat()) if (f != null && f !== false) el.append(f instanceof Node ? f : document.createTextNode(String(f)));
+    return el;
+  }
+
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const CAT_DA_VIEW = { fantasia: "fantasia", talentos: "talento" };
+  const VIEWS = ["inicio", "cronograma", "fantasia", "talentos"];
+  let cfg = {};
+  const estado = {
+    view: null, sub: null,
+    lista: { fantasia: [], talento: [] },
+    notas: { fantasia: {}, talento: {} },      // minhas notas: { id: 0..5 }
+    res: { fantasia: null, talento: null },
+    editando: { fantasia: null, talento: null }, // id da inscrição em edição
+    nota: null,                                  // janela de nota aberta
+  };
+
+  // ---------------------------------------------------------- avisos
+  function toast(msg, tipo) {
+    const t = $("#toast");
+    t.textContent = msg; t.dataset.tipo = tipo || "";
+    t.classList.add("on");
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 3800);
+  }
+  function erroBox(e, tentar) {
+    return h("div", { class: "info" },
+      h("p", { style: "margin:0 0 12px", text: e.message || "Não foi possível carregar." }),
+      h("button", { type: "button", class: "btn sec peq", onclick: tentar, text: "Tentar de novo" }));
+  }
+
+  // ---------------------------------------------------------- arte da tela inicial
+  // Se existir arte.jpg ou arte.png na pasta, ela substitui a arte gerada.
+  (function carregarArte() {
+    const img = $("#arte-img");
+    const opcoes = ["arte.jpg", "arte.png"];
+    let i = 0;
+    img.onload = () => { img.hidden = false; $("#sementes").style.display = "none"; $("#arte-texto").hidden = true; };
+    img.onerror = () => { i += 1; if (i < opcoes.length) img.src = opcoes[i]; };
+    img.src = opcoes[0];
+  })();
+
+  // Sementes e confetes espalhados em volta do título (sempre o mesmo desenho).
+  (function desenharSementes() {
+    const svg = $("#sementes");
+    let s = 20261212;
+    const rnd = () => { s |= 0; s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const cores = ["var(--gold)", "var(--gold)", "var(--coral)", "var(--ok)", "var(--fg)"];
+    let feitos = 0, tentativas = 0;
+    while (feitos < 38 && tentativas < 600) {
+      tentativas++;
+      const x = rnd() * 400, y = rnd() * 640;
+      if (x > 10 && x < 390 && y > 160 && y < 480) continue;   // deixa o centro livre para o título
+      const cor = cores[Math.floor(rnd() * cores.length)];
+      const op = (0.35 + rnd() * 0.55).toFixed(2);
+      const rot = Math.round(rnd() * 180);
+      let el;
+      if (rnd() < 0.7) {
+        // semente: elipse com um risco no meio
+        const rx = 7 + rnd() * 9, ry = rx * (0.45 + rnd() * 0.15);
+        el = document.createElementNS(SVGNS, "g");
+        el.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot})`);
+        const e = document.createElementNS(SVGNS, "ellipse");
+        e.setAttribute("rx", rx.toFixed(1)); e.setAttribute("ry", ry.toFixed(1));
+        e.setAttribute("fill", cor); e.setAttribute("fill-opacity", op);
+        const l = document.createElementNS(SVGNS, "path");
+        l.setAttribute("d", `M${(-rx * 0.6).toFixed(1)} 0 Q0 ${(ry * 0.35).toFixed(1)} ${(rx * 0.6).toFixed(1)} 0`);
+        l.setAttribute("stroke", "var(--bg)"); l.setAttribute("stroke-opacity", "0.5"); l.setAttribute("stroke-width", "1.2"); l.setAttribute("fill", "none");
+        el.append(e, l);
+      } else {
+        // confete: tirinha
+        el = document.createElementNS(SVGNS, "rect");
+        el.setAttribute("x", (x - 6).toFixed(1)); el.setAttribute("y", (y - 2).toFixed(1));
+        el.setAttribute("width", "12"); el.setAttribute("height", "4"); el.setAttribute("rx", "2");
+        el.setAttribute("transform", `rotate(${rot} ${x.toFixed(1)} ${y.toFixed(1)})`);
+        el.setAttribute("fill", cor); el.setAttribute("fill-opacity", op);
+      }
+      svg.append(el);
+      feitos++;
+    }
+  })();
+
+  // ---------------------------------------------------------- datas e horários
+  function fmtData(iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+    if (!m) return iso || "";
+    const d = new Date(+m[1], +m[2] - 1, +m[3]);
+    return new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(d);
+  }
+  function paraMin(hr) { const m = /^(\d{1,2})[:hH](\d{2})/.exec(String(hr || "").trim()); return m ? +m[1] * 60 + +m[2] : null; }
+  function idxAgora(itens) {
+    if (cfg.evento_data !== api.hojeISO()) return -1;
+    const mins = []; let ant = -1, soma = 0;
+    for (const it of itens) {
+      const m = paraMin(it.hora);
+      if (m == null) { mins.push(null); continue; }
+      let v = m + soma;
+      if (ant >= 0 && v < ant) { soma += 1440; v += 1440; }   // passou da meia-noite
+      mins.push(v); ant = v;
+    }
+    const primeiro = mins.find((m) => m != null);
+    if (primeiro == null) return -1;
+    const n = new Date(); let agora = n.getHours() * 60 + n.getMinutes();
+    if (agora < primeiro - 360) agora += 1440;
+    let idx = -1; mins.forEach((m, i) => { if (m != null && m <= agora) idx = i; });
+    return idx;
+  }
+
+  // ---------------------------------------------------------- dados do evento
+  async function carregarConfig() {
+    try { cfg = await api.getConfig(); } catch (e) { if (!Object.keys(cfg).length) toast(e.message, "erro"); return; }
+    const nome = cfg.evento_nome || "Confraternização";
+    document.title = nome;
+    const m = /^(.*\S)\s+(\d{4})$/.exec(nome);
+    const tit = $("#arte-nome");
+    if (m) tit.replaceChildren(m[1], h("span", { class: "arte-ano", text: m[2] }));
+    else tit.textContent = nome;
+    $("#arte-data").textContent = cfg.evento_data ? fmtData(cfg.evento_data) : " ";
+    $("#ev-local").textContent = cfg.evento_local || "";
+    $("#ev-local-linha").hidden = !cfg.evento_local;
+    $("#aviso").textContent = cfg.aviso || "";
+    $("#aviso").hidden = !cfg.aviso;
+    atualizarForms();
+    atualizarAbas();
+    // Se a organização fechou a votação com a janela de nota aberta, fecha a janela.
+    if (estado.nota && cfg["votacao_" + estado.nota.cat] !== "sim") fecharNota();
+  }
+
+  // A lista de inscritos é sempre pública. Ela só vira votação (e a aba passa a se chamar
+  // "Votar") quando a organização libera no admin.html.
+  function atualizarAbas() {
+    [["fantasia", "fantasia", "Concorrentes"], ["talentos", "talento", "Apresentações"]].forEach(([view, cat, nome]) => {
+      $(`#tab-${view}-lista`).textContent = cfg["votacao_" + cat] === "sim" ? "Votar" : nome;
+    });
+  }
+  function atualizarForms() {
+    ["fantasia", "talento"].forEach((cat) => {
+      const editando = !!estado.editando[cat];
+      const okVisivel = !$("#" + cat + "-ok").hidden;
+      const aberta = cfg["inscricoes_" + cat] === "sim";
+      $("#form-" + cat).hidden = !editando && (okVisivel || !aberta);
+      $("#" + cat + "-fechado").hidden = aberta || editando || okVisivel;
+    });
+  }
+
+  // ---------------------------------------------------------- navegação
+  // O voltar do celular sempre leva à tela inicial: só a entrada numa seção cria um
+  // passo no histórico; trocar de aba, enviar formulário etc. substitui o passo atual.
+  function irPara(hash) { location.replace("#" + hash.replace(/^#/, "")); }
+  function rota() {
+    const raw = decodeURIComponent((location.hash || "").slice(1));
+    let [v, sub] = raw.split("-");
+    if (v === "programacao") v = "cronograma";
+    if (!VIEWS.includes(v)) { v = "inicio"; sub = null; }
+    const insc = { fantasia: "concorrer", talentos: "inscrever" }[v];
+    if (insc && sub !== insc) sub = "lista";
+    const mudouView = v !== estado.view;
+    if (mudouView && estado.nota) fecharNota(true);
+    estado.view = v; estado.sub = sub || null;
+    $("#v-inicio").hidden = v !== "inicio";
+    $("#interno").hidden = v === "inicio";
+    ["cronograma", "fantasia", "talentos"].forEach((x) => { $("#v-" + x).hidden = x !== v; });
+    if (insc) setSub(v, sub);
+    if (mudouView) window.scrollTo(0, 0);
+    carregarView();
+  }
+  function setSub(view, sub) {
+    $$(`#v-${view} .seg button`).forEach((b) => b.setAttribute("aria-selected", String(b.id === `tab-${view}-${sub}`)));
+    $$(`#v-${view} [id^="pane-${view}-"]`).forEach((p) => { p.hidden = p.id !== `pane-${view}-${sub}`; });
+  }
+  function carregarView() {
+    if (estado.view === "cronograma") return carregarProgramacao();
+    const cat = CAT_DA_VIEW[estado.view];
+    if (cat) carregarLista(cat);
+  }
+  // Links internos (abas, "Ver concorrentes"…) trocam de tela sem criar passo no histórico.
+  document.addEventListener("click", (ev) => {
+    const a = ev.target.closest('a[href^="#"]');
+    if (!a || a.closest(".menu")) return;
+    ev.preventDefault();
+    irPara(a.getAttribute("href"));
+  });
+  $$("[data-ir]").forEach((b) => b.addEventListener("click", () => irPara(b.dataset.ir)));
+
+  // ---------------------------------------------------------- cronograma
+  async function carregarProgramacao() {
+    const box = $("#prog-lista");
+    try { renderProgramacao(await api.getProgramacao()); }
+    catch (e) { box.replaceChildren(erroBox(e, carregarProgramacao)); }
+  }
+  function renderProgramacao(itens) {
+    const box = $("#prog-lista");
+    if (!itens.length) { box.replaceChildren(h("p", { class: "vazio", text: "O cronograma ainda não foi publicado. Volte mais perto da festa." })); return; }
+    const ag = idxAgora(itens);
+    box.replaceChildren(h("ol", { class: "timeline" }, itens.map((it, i) => {
+      const cls = i === ag ? "agora" : (ag >= 0 && i < ag ? "passou" : "");
+      return h("li", { class: cls || null },
+        h("div", { class: "horario" },
+          h("time", { class: "hora", text: it.hora }),
+          it.fim ? h("span", { class: "fim", text: "até " + it.fim }) : null),
+        h("div", null,
+          i === ag ? h("span", { class: "chip ao-vivo", text: "Agora" }) : null,
+          ag >= 0 && i === ag + 1 ? h("span", { class: "chip", text: "A seguir" }) : null,
+          h("h3", { text: it.titulo }),
+          it.descricao ? h("p", { text: it.descricao }) : null));
+    })));
+  }
+
+  // ---------------------------------------------------------- estrelas
+  const ESTRELA = "M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z";
+  function estrelasMini(n) {
+    const s = document.createElementNS(SVGNS, "svg");
+    s.setAttribute("viewBox", "0 0 120 24"); s.setAttribute("class", "mini-estrelas"); s.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 5; i++) {
+      const p = document.createElementNS(SVGNS, "path");
+      p.setAttribute("d", ESTRELA); p.setAttribute("transform", `translate(${i * 24} 0)`);
+      p.setAttribute("class", i < n ? "cheia" : "vazia");
+      s.append(p);
+    }
+    return s;
+  }
+  const fmtMedia = (m) => m.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+  // ---------------------------------------------------------- lista / votação
+  function iniciais(nome) {
+    return String(nome || "").replace(/\(.*?\)/g, "").trim().split(/\s+/).slice(0, 2).map((p) => p[0] || "").join("").toUpperCase() || "?";
+  }
+  function fotoEl(p) {
+    // Sem foto: iniciais sobre um fundo que varia de pessoa para pessoa.
+    let n = 0; for (const c of String(p.nome || "")) n = (n * 31 + c.charCodeAt(0)) >>> 0;
+    return h("span", { class: "foto tom-" + (n % 4), "aria-hidden": "true" }, p.foto_url ? h("img", { src: p.foto_url, alt: "", loading: "lazy" }) : iniciais(p.nome));
+  }
+  function subtitulo(cat, p) {
+    return cat === "fantasia" ? [p.nome, p.setor].filter(Boolean).join(" · ") : [p.nome, p.tipo].filter(Boolean).join(" · ");
+  }
+  async function carregarLista(cat) {
+    const box = $(`#${cat}-lista`);
+    try {
+      const [lista, notas] = await Promise.all([api.getParticipantes(cat), api.minhasNotas(cat)]);
+      estado.lista[cat] = lista; estado.notas[cat] = notas;
+      let res = null;
+      if (cfg.resultados_publicos === "sim") {
+        try { res = (await api.resultados()).filter((r) => r.categoria === cat); } catch (e) { res = null; }
+      }
+      estado.res[cat] = res;
+      renderLista(cat);
+      renderMinhas(cat);
+    } catch (e) {
+      box.replaceChildren(erroBox(e, () => carregarLista(cat)));
+    }
+  }
+  function renderLista(cat) {
+    const aberta = cfg["votacao_" + cat] === "sim";
+    const lista = estado.lista[cat];
+    const notas = estado.notas[cat] || {};
+    const res = estado.res[cat];
+    const view = cat === "fantasia" ? "fantasia" : "talentos";
+    const linkInsc = cat === "fantasia" ? "#fantasia-concorrer" : "#talentos-inscrever";
+
+    const st = $(`#${cat}-status`);
+    const qtd = lista.length;
+    const avaliados = lista.filter((p) => notas[p.id] != null).length;
+    if (!qtd) st.replaceChildren();
+    else if (aberta) st.replaceChildren(
+      h("span", { class: "pill aberta", text: "Votação aberta" }),
+      h("p", { text: `Toque em cada ${cat === "fantasia" ? "fantasia" : "apresentação"} e dê de 0 a 5 estrelas. Você avaliou ${avaliados} de ${qtd}.` }));
+    else st.replaceChildren(h("p", { class: "contagem", text: cat === "fantasia"
+      ? `${qtd} ${qtd === 1 ? "fantasia inscrita" : "fantasias inscritas"}`
+      : `${qtd} ${qtd === 1 ? "apresentação inscrita" : "apresentações inscritas"}` }));
+
+    const rb = $(`#${cat}-resultado`);
+    if (res && res.length) {
+      rb.replaceChildren(h("div", { class: "resultado" },
+        h("h3", { text: "Resultado" }),
+        h("ol", { class: "ranking" }, res.slice(0, 5).map((r, i) => h("li", null,
+          h("span", { class: "pos", text: String(i + 1) }),
+          h("span", { class: "nm", text: `${r.titulo || ""} · ${r.nome}` }),
+          h("span", { class: "vt", text: r.qtd ? `${fmtMedia(r.media)} ★` : "sem notas" }),
+          h("span", { class: "barra" }, h("span", { style: `width:${Math.round((r.media / 5) * 100)}%` })))))));
+    } else rb.replaceChildren();
+
+    const box = $(`#${cat}-lista`);
+    if (!qtd) {
+      box.replaceChildren(h("div", { class: "vazio", style: "grid-column:1/-1" },
+        h("p", { style: "margin:0 0 12px", text: cat === "fantasia" ? "Ninguém entrou no concurso ainda." : "Nenhuma apresentação inscrita ainda." }),
+        h("a", { class: "btn sec", href: linkInsc, text: cat === "fantasia" ? "Quero concorrer" : "Quero me apresentar" })));
+      return;
+    }
+    box.replaceChildren(...lista.map((p) => {
+      const titulo = p.titulo || p.nome;
+      const sub = subtitulo(cat, p);
+      const minha = notas[p.id];
+      const dono = api.souDono(p.id);
+      const extra = aberta
+        ? h("span", { class: "sua-nota" }, minha != null ? [estrelasMini(minha), h("span", { text: `Sua nota: ${minha}` })] : h("span", { class: "avaliar", text: "Toque para dar nota" }))
+        : (dono ? h("span", { class: "sua-insc" }, "Sua inscrição · ", h("button", { type: "button", class: "link-editar", text: "Editar", onclick: () => { irPara(view + "-" + (cat === "fantasia" ? "concorrer" : "inscrever")); iniciarEdicao(cat, p.id); } })) : null);
+      const conteudo = [
+        fotoEl(p),
+        h("span", { class: "info" },
+          h("span", { class: "titulo", text: titulo }),
+          h("span", { class: "sub", text: sub }),
+          extra),
+      ];
+      return aberta
+        ? h("button", { type: "button", class: "cand" + (minha != null ? " avaliado" : ""), "aria-label": `${titulo}, ${sub}. ${minha != null ? "Sua nota: " + minha : "Dar nota"}`, onclick: () => abrirNota(cat, p) }, conteudo)
+        : h("div", { class: "cand so-ver" + (dono ? " meu" : "") }, conteudo);
+    }));
+  }
+
+  // Janela de nota (0 a 5 estrelas)
+  function abrirNota(cat, p) {
+    if (cfg["votacao_" + cat] !== "sim") return;
+    const atual = (estado.notas[cat] || {})[p.id];
+    estado.nota = { cat, p, valor: atual != null ? atual : null, original: atual != null ? atual : null };
+    $("#nota-foto").replaceChildren(fotoEl(p));
+    $("#nota-titulo").textContent = p.titulo || p.nome;
+    $("#nota-sub").textContent = subtitulo(cat, p);
+    $("#nota-erro").hidden = true;
+    renderEstrelas();
+    $("#folha").hidden = false;
+    document.body.classList.add("travado");
+    history.pushState({ folha: true }, "", location.href);   // voltar do celular fecha a janela
+    setTimeout(() => { const b = $("#estrelas [aria-checked='true']") || $("#estrelas [data-n='1']"); if (b) b.focus(); }, 30);
+  }
+  function fecharNota(viaHistorico) {
+    if (!estado.nota) return;
+    estado.nota = null;
+    $("#folha").hidden = true;
+    document.body.classList.remove("travado");
+    if (!viaHistorico && history.state && history.state.folha) history.back();
+  }
+  window.addEventListener("popstate", () => { if (estado.nota) fecharNota(true); });
+  function renderEstrelas() {
+    const v = estado.nota ? estado.nota.valor : null;
+    $$("#estrelas button").forEach((b) => {
+      const n = +b.dataset.n;
+      b.setAttribute("aria-checked", String(v === n));
+      b.tabIndex = (v == null ? n === 1 : v === n) ? 0 : -1;
+      if (n > 0) b.classList.toggle("cheia", v != null && n <= v);
+    });
+    const txt = v == null ? "Toque nas estrelas para escolher a nota." : v === 0 ? "Nota 0" : `Nota ${v} de 5`;
+    $("#nota-txt").textContent = txt;
+    const salvar = $("#nota-salvar");
+    salvar.disabled = v == null || v === estado.nota?.original;
+    salvar.textContent = estado.nota && estado.nota.original != null ? "Trocar nota" : "Confirmar nota";
+  }
+  $$("#estrelas button").forEach((b) => {
+    b.addEventListener("click", () => { if (!estado.nota) return; estado.nota.valor = +b.dataset.n; renderEstrelas(); });
+    b.addEventListener("keydown", (ev) => {
+      if (!estado.nota) return;
+      const atual = estado.nota.valor == null ? 0 : estado.nota.valor;
+      let n = null;
+      if (ev.key === "ArrowRight" || ev.key === "ArrowUp") n = Math.min(5, atual + 1);
+      if (ev.key === "ArrowLeft" || ev.key === "ArrowDown") n = Math.max(0, atual - 1);
+      if (n == null) return;
+      ev.preventDefault(); estado.nota.valor = n; renderEstrelas(); $(`#estrelas [data-n='${n}']`).focus();
+    });
+  });
+  $("#nota-cancelar").addEventListener("click", () => fecharNota());
+  $("#folha").addEventListener("click", (ev) => { if (ev.target.id === "folha") fecharNota(); });
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && estado.nota) fecharNota(); });
+  $("#nota-salvar").addEventListener("click", async () => {
+    const n = estado.nota; if (!n || n.valor == null) return;
+    const btn = $("#nota-salvar"); btn.disabled = true; btn.textContent = "Salvando…";
+    try {
+      await api.avaliar(n.cat, n.p.id, n.valor);
+      estado.notas[n.cat] = { ...(estado.notas[n.cat] || {}), [n.p.id]: n.valor };
+      toast(`Nota ${n.valor} para “${n.p.titulo || n.p.nome}”.`);
+      fecharNota();
+      renderLista(n.cat);
+    } catch (e) {
+      $("#nota-erro").textContent = e.message; $("#nota-erro").hidden = false;
+      renderEstrelas();
+      if (/fechada/i.test(e.message)) { await carregarConfig(); carregarLista(n.cat); }
+    }
+  });
+
+  // ---------------------------------------------------------- inscrições (criar e editar)
+  const forms = {};
+  function ligarForm(cat) {
+    const form = $("#form-" + cat), erroEl = $(`#${cat}-erro`);
+    const textoLead = $(".lead", form).textContent, textoBotao = $('button[type="submit"]', form).textContent;
+    // Foto: "Tirar foto" (abre a câmera no celular) ou "Escolher da galeria". A última escolhida vale.
+    const campoFoto = form.querySelector("[data-foto]");
+    const entradas = $$('input[type="file"]', campoFoto);
+    const prevImg = $(".previa img", campoFoto), prevIcone = $(".previa svg", campoFoto);
+    const remover = $("[data-remover]", campoFoto);
+    let arquivo = null, existente = null, removerExistente = false;
+    function pintar(src) {
+      if (prevImg.src && prevImg.src.startsWith("blob:")) URL.revokeObjectURL(prevImg.src);
+      if (src) { prevImg.src = src; prevImg.hidden = false; prevIcone.style.display = "none"; }
+      else { prevImg.removeAttribute("src"); prevImg.hidden = true; prevIcone.style.display = ""; }
+      remover.hidden = !src;
+    }
+    function definirFoto(f) {
+      arquivo = f || null;
+      if (!arquivo) entradas.forEach((i) => { i.value = ""; });
+      pintar(arquivo ? URL.createObjectURL(arquivo) : (!removerExistente && existente) || null);
+    }
+    entradas.forEach((inp) => inp.addEventListener("change", () => {
+      const f = inp.files[0];
+      if (!f) return;
+      if (f.type && !/^image\//.test(f.type)) { erroEl.textContent = "Esse arquivo não é uma imagem. Escolha uma foto."; erroEl.hidden = false; inp.value = ""; return; }
+      erroEl.hidden = true;
+      entradas.forEach((o) => { if (o !== inp) o.value = ""; });
+      definirFoto(f);
+    }));
+    remover.addEventListener("click", () => { if (!arquivo && existente) removerExistente = true; definirFoto(null); });
+
+    function modoEdicao(p) {
+      estado.editando[cat] = p ? p.id : null;
+      existente = p ? p.foto_url : null; removerExistente = false;
+      $(".lead", form).textContent = p ? "Editando sua inscrição. Altere o que precisar e salve." : textoLead;
+      $('button[type="submit"]', form).textContent = p ? "Salvar alterações" : textoBotao;
+      $("[data-cancelar]", form).hidden = !p;
+      form.reset();
+      if (p) ["nome", "titulo", "setor", "tipo", "descricao"].forEach((k) => { const el = form.elements[k]; if (el && p[k] != null) el.value = p[k]; });
+      erroEl.hidden = true;
+      definirFoto(null);
+      atualizarForms();
+    }
+    $("[data-cancelar]", form).addEventListener("click", () => { modoEdicao(null); renderMinhas(cat); });
+
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      erroEl.hidden = true;
+      const fd = new FormData(form);
+      const dados = {
+        nome: String(fd.get("nome") || "").trim(),
+        titulo: String(fd.get("titulo") || "").trim(),
+        setor: String(fd.get("setor") || "").trim(),
+        tipo: String(fd.get("tipo") || "").trim(),
+        descricao: String(fd.get("descricao") || "").trim(),
+      };
+      const falha = (msg, campo) => { erroEl.textContent = msg; erroEl.hidden = false; if (campo) form.querySelector(`[name="${campo}"]`).focus(); };
+      if (dados.nome.length < 2) return falha("Informe o nome.", "nome");
+      if (dados.titulo.length < 2) return falha(cat === "fantasia" ? "Conte qual é a sua fantasia." : "Conte o que você vai apresentar.", "titulo");
+      const btn = form.querySelector('button[type="submit"]'), txt = btn.textContent;
+      btn.disabled = true; btn.textContent = "Salvando…";
+      const idEdicao = estado.editando[cat];
+      try {
+        if (idEdicao) {
+          await api.editarInscricao(idEdicao, dados, { nova: arquivo, remover: removerExistente && !arquivo });
+          modoEdicao(null);
+          toast("Inscrição atualizada.");
+          await carregarLista(cat);
+        } else {
+          await api.inscrever(cat, dados, arquivo);
+          $(`#${cat}-ok-txt`).textContent = cat === "fantasia"
+            ? `${dados.nome}, sua fantasia “${dados.titulo}” já aparece na lista de concorrentes.`
+            : `${dados.nome}, sua apresentação já aparece na lista. A organização vai te procurar para combinar a ordem.`;
+          modoEdicao(null);
+          $(`#${cat}-ok`).hidden = false; atualizarForms();
+          await carregarLista(cat);
+        }
+        window.scrollTo(0, 0);
+      } catch (e) {
+        falha(e.message);
+      } finally {
+        btn.disabled = false; if (btn.textContent === "Salvando…") btn.textContent = txt;
+      }
+    });
+    forms[cat] = { modoEdicao };
+  }
+  function iniciarEdicao(cat, id) {
+    const p = estado.lista[cat].find((x) => x.id === id);
+    if (!p) return;
+    $(`#${cat}-ok`).hidden = true;
+    forms[cat].modoEdicao(p);
+    renderMinhas(cat);
+    setTimeout(() => { $(`#form-${cat}`).scrollIntoView({ block: "start" }); $(`#form-${cat} input[name="nome"]`).focus(); }, 30);
+  }
+  // "Suas inscrições": o que foi inscrito neste celular, com o botão Editar.
+  function renderMinhas(cat) {
+    const box = $(`#${cat}-minhas`);
+    const minhas = estado.lista[cat].filter((p) => api.souDono(p.id));
+    if (!minhas.length) { box.hidden = true; box.replaceChildren(); return; }
+    box.hidden = false;
+    box.replaceChildren(
+      h("h3", { text: minhas.length === 1 ? "Sua inscrição" : "Suas inscrições" }),
+      ...minhas.map((p) => h("div", { class: "minha" + (estado.editando[cat] === p.id ? " editando" : "") },
+        fotoEl(p),
+        h("div", { class: "minha-txt" }, h("strong", { text: p.titulo || p.nome }), h("span", { text: subtitulo(cat, p) })),
+        estado.editando[cat] === p.id
+          ? h("span", { class: "chip", text: "Editando" })
+          : h("button", { type: "button", class: "btn sec peq", text: "Editar", onclick: () => iniciarEdicao(cat, p.id) }))));
+  }
+  $$("[data-de-novo]").forEach((b) => b.addEventListener("click", () => {
+    const cat = b.dataset.deNovo;
+    $(`#${cat}-ok`).hidden = true;
+    atualizarForms();
+    const primeiro = $(`#form-${cat} input`); if (primeiro) primeiro.focus();
+  }));
+  $$(".sucesso a.btn").forEach((a) => a.addEventListener("click", () => {
+    ["fantasia", "talento"].forEach((c) => { $(`#${c}-ok`).hidden = true; }); atualizarForms();
+  }));
+
+  // ---------------------------------------------------------- início
+  $("#teste-nota").hidden = !api.modoTeste;
+  ligarForm("fantasia");
+  ligarForm("talento");
+  // Entrou direto numa seção (link ou QR específico)? Coloca a tela inicial antes no
+  // histórico, para o voltar do celular levar até ela.
+  (function () {
+    const raw = (location.hash || "").slice(1).split("-")[0];
+    if (raw && raw !== "inicio" && VIEWS.concat("programacao").includes(raw)) {
+      const destino = location.hash;
+      history.replaceState(null, "", "#inicio");
+      history.pushState(null, "", destino);
+    }
+  })();
+  window.addEventListener("hashchange", rota);
+  carregarConfig().then(rota);
+
+  // Atualiza a cada 30 s (abre/fecha votação, novos inscritos, "Agora" do cronograma).
+  setInterval(async () => {
+    if (document.hidden || estado.nota) return;
+    await carregarConfig();
+    if (estado.view === "cronograma") carregarProgramacao();
+    const cat = CAT_DA_VIEW[estado.view];
+    if (cat && !estado.editando[cat]) carregarLista(cat);
+  }, 30000);
+})();
+</script>
+</body>
+</html>
