@@ -9,7 +9,7 @@
 | `estilo.css` | – | Visual compartilhado pelas duas páginas |
 | `dados.js` | – | Onde os dados são salvos (teste ou Supabase) |
 | `supabase/schema.sql` | – | Banco de dados, para quando forem ligar de verdade |
-| `arte.jpg` *(opcional)* | – | A arte oficial do evento. Se existir, substitui a arte gerada na tela inicial |
+| `artes/` | – | As três artes dos folders, usadas na tela inicial e na faixa dourada do topo |
 
 Mantenha todos os arquivos na mesma pasta.
 
@@ -26,7 +26,7 @@ Mantenha todos os arquivos na mesma pasta.
 
 ## Arte do evento
 
-Salve a arte como `arte.jpg` (ou `arte.png`) nesta pasta. Ela aparece inteira na parte de cima da tela inicial, com os três botões embaixo. Formato vertical funciona melhor (ex.: 1080 × 1350).
+A tela inicial é um folder só, montado com as três artes da pasta `artes/` (`confra.webp`, `premios.webp`, `talentos.webp`). Os textos (lema, "Prepare-se para", votação, premiações, show de talentos) estão escritos no `index.html`; só o que é desenho (título, logo, faixa da data, pódio dos prêmios, palco e faixas douradas) vem recortado das imagens. Para mudar um texto, edite o `index.html`; se uma arte mudar, troque o arquivo na pasta `artes/` com o mesmo nome e tamanho.
 
 ## Agora: modo de teste
 
@@ -57,4 +57,4 @@ Links diretos (úteis para QR codes específicos):
 6. Abra `.../admin.html` no endereço publicado (senha `trocar123`) e **troque a senha**.
 7. No painel, em "QR code das mesas", confira o endereço e imprima os cartões.
 
-Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=12` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.
+Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=16` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.
