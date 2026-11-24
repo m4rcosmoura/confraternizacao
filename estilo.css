@@ -80,8 +80,8 @@ a { color: var(--gold); }
   width: 100%; max-width: 560px; margin: 0 auto;
   text-align: center;
   padding-top: env(safe-area-inset-top, 0px);
-  background-image: var(--flocos), radial-gradient(90% 26% at 50% 14%, #175544 0%, transparent 70%), radial-gradient(90% 20% at 50% 46%, #175544 0%, transparent 70%), radial-gradient(110% 22% at 50% 76%, #24561a 0%, transparent 72%);
-  background-size: 240px 240px, 100% 100%, 100% 100%, 100% 100%;
+  background-image: var(--flocos), radial-gradient(90% 26% at 50% 14%, #175544 0%, transparent 70%), radial-gradient(90% 26% at 50% 58%, #175544 0%, transparent 70%);
+  background-size: 240px 240px, 100% 100%, 100% 100%;
 }
 .f-capa { display: flex; flex-direction: column; gap: 18px; padding: 4px 20px 0; }
 .f-lema { margin: 0; font-weight: 500; font-size: clamp(21px, 6vw, 27px); line-height: 1.3; }
