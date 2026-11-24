@@ -26,7 +26,7 @@ Mantenha todos os arquivos na mesma pasta.
 
 ## Arte do evento
 
-A tela inicial é um folder só, montado com as três artes da pasta `artes/` (`confra.webp`, `premios.webp`, `talentos.webp`). Os textos (lema, "Prepare-se para", votação e premiações) estão escritos no `index.html`; só o que é desenho (título, logo, faixa da data, pódio dos prêmios e faixas douradas) vem recortado das imagens. Para mudar um texto, edite o `index.html`; se uma arte mudar, troque o arquivo na pasta `artes/` com o mesmo nome e tamanho.
+A tela inicial é um folder só, montado com as três artes da pasta `artes/` (`confra.webp`, `premios.webp`, `talentos.webp`). Os textos (lema, "Prepare-se para", votação e premiações) estão escritos no `index.html`; só o que é desenho (título, logo, faixa da data, pódio dos prêmios e faixa dourada do topo) vem recortado das imagens. Para mudar um texto, edite o `index.html`; se uma arte mudar, troque o arquivo na pasta `artes/` com o mesmo nome e tamanho.
 
 ## Agora: modo de teste
 
@@ -57,4 +57,4 @@ Links diretos (úteis para QR codes específicos):
 6. Abra `.../admin.html` no endereço publicado (senha `trocar123`) e **troque a senha**.
 7. No painel, em "QR code das mesas", confira o endereço e imprima os cartões.
 
-Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=17` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.
+Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=18` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.

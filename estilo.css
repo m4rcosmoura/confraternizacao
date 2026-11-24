@@ -121,7 +121,7 @@ a { color: var(--gold); }
 .f-destaque b { font-weight: 700; }
 .f-prazo { margin: 22px 0 10px; color: var(--gold); font-weight: 700; font-size: 19px; }
 .f-cta { font-size: 18px; padding: 14px 26px; }
-.f-final { margin: 34px 0 8px; color: var(--gold); font-style: italic; font-weight: 800; font-size: clamp(28px, 8.4vw, 38px); }
+.f-final { margin: 34px 0 0; padding-bottom: 6px; color: var(--gold); font-style: italic; font-weight: 800; font-size: clamp(28px, 8.4vw, 38px); }
 
 .menu {
   position: sticky; bottom: 0; z-index: 2;
