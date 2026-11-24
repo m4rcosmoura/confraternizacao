@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&display=swap">
-<link rel="stylesheet" href="estilo.css?v=10">
+<link rel="stylesheet" href="estilo.css?v=11">
 </head>
 <body>
 
@@ -136,7 +136,7 @@
         <div id="talento-minhas" class="minhas" hidden></div>
         <p id="talento-fechado" class="info" hidden>As inscrições para o show de talentos estão fechadas.</p>
         <form id="form-talento" novalidate>
-          <p class="lead">Canta, dança, toca, conta piada? Inscreva-se e a organização entra em contato para combinar a ordem das apresentações.</p>
+          <p class="lead">Canta, dança, toca, conta piada? Inscreva-se <strong>até 03/12</strong> e a organização entra em contato para combinar a ordem das apresentações.</p>
           <div class="campo">
             <label for="t-nome">Seu nome ou nome do grupo</label>
             <input type="text" id="t-nome" name="nome" maxlength="80" placeholder="Ex.: Trio do Armazém" required>
@@ -218,7 +218,7 @@
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="dados.js?v=10"></script>
+<script src="dados.js?v=11"></script>
 <script>
 (function () {
   "use strict";
@@ -270,7 +270,11 @@
     const img = $("#arte-img");
     const opcoes = ["arte.jpg", "arte.png"];
     let i = 0;
-    img.onload = () => { img.hidden = false; $("#sementes").style.display = "none"; $("#arte-texto").hidden = true; };
+    img.onload = () => {
+      img.alt = "Arte da Confraternização 2026: sexta-feira, 4 de dezembro, das 10h às 17h, na Fazendinha.";
+      img.hidden = false; $("#sementes").style.display = "none"; $("#arte-texto").hidden = true;
+      $("#v-inicio").classList.add("com-arte");
+    };
     img.onerror = () => { i += 1; if (i < opcoes.length) img.src = opcoes[i]; };
     img.src = opcoes[0];
   })();

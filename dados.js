@@ -169,7 +169,7 @@ window.api = (function () {
       config: {
         evento_nome: "Confraternização 2026",
         evento_data: "2026-12-04",
-        evento_local: "Local a definir",
+        evento_local: "Fazendinha",
         aviso: "Versão de teste: cronograma, inscritos e notas são exemplos.",
         inscricoes_fantasia: "sim", inscricoes_talento: "sim",
         votacao_fantasia: "nao", votacao_talento: "nao",

@@ -386,7 +386,7 @@ create policy "confra-fotos upload" on storage.objects
 insert into public.confra_config (chave, valor) values
   ('evento_nome', 'Confraternização 2026'),
   ('evento_data', '2026-12-04'),
-  ('evento_local', 'Local a definir'),
+  ('evento_local', 'Fazendinha'),
   ('aviso', ''),
   ('inscricoes_fantasia', 'sim'),
   ('inscricoes_talento', 'sim'),

@@ -71,6 +71,17 @@ a { color: var(--gold); }
 .menu a:active { transform: scale(.985); }
 .menu a svg.ic { color: var(--gold); flex: none; }
 .menu a .seta { margin-left: auto; color: var(--muted); flex: none; }
+/* Tela inicial com a arte oficial (arte.jpg): a arte rola, os botões ficam fixos embaixo */
+.inicio.com-arte .arte { flex: none; min-height: 0; display: block; padding-top: 0; background: var(--bg); }
+.inicio.com-arte .arte img.arte-img { position: static; display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto; }
+.inicio.com-arte .menu {
+  position: sticky; bottom: 0; z-index: 2;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding-top: 32px;
+  background: linear-gradient(to bottom, transparent, var(--bg) 38%);
+}
+.inicio.com-arte .menu a { flex-direction: column; justify-content: center; gap: 6px; padding: 12px 4px; font-size: 16px; text-align: center; box-shadow: 0 6px 18px rgba(0, 0, 0, .35); }
+.inicio.com-arte .menu a .seta { display: none; }
+.inicio.com-arte .teste-nota { grid-column: 1 / -1; }
 .teste-nota { text-align: center; font-size: 12px; color: var(--muted); margin: 4px 0 0; }
 
 /* ------------------------------------------------------------ Seções */
