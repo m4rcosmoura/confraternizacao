@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&display=swap">
-<link rel="stylesheet" href="estilo.css?v=11">
+<link rel="stylesheet" href="estilo.css?v=12">
 </head>
 <body>
 
@@ -117,7 +117,7 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="impressao" aria-hidden="true"></div>
 
-<script src="dados.js?v=11"></script>
+<script src="dados.js?v=12"></script>
 <script>
 (function () {
   "use strict";
@@ -160,9 +160,9 @@
 
   const CHAVES = [
     ["inscricoes_fantasia", "Inscrições do concurso de fantasia", "Libera o formulário “Quero concorrer”."],
-    ["votacao_fantasia", "Votação da melhor fantasia", "Libera as estrelas (nota de 0 a 5) em Fantasia. Desligada, a lista fica só para ver."],
+    ["votacao_fantasia", "Votação da melhor fantasia", "Libera as estrelas (nota de 1 a 5) em Fantasia. Desligada, a lista fica só para ver."],
     ["inscricoes_talento", "Inscrições do show de talentos", "Libera o formulário “Quero me apresentar”."],
-    ["votacao_talento", "Votação do show de talentos", "Libera as estrelas (nota de 0 a 5) em Talentos. Desligada, a lista fica só para ver."],
+    ["votacao_talento", "Votação do show de talentos", "Libera as estrelas (nota de 1 a 5) em Talentos. Desligada, a lista fica só para ver."],
     ["resultados_publicos", "Mostrar resultado para todos", "Use na hora da premiação: o ranking aparece no celular de todo mundo."],
   ];
 
@@ -341,7 +341,7 @@
           h("span", { class: "nm", text: `${x.titulo || ""} · ${x.nome}` }),
           h("span", { class: "vt", text: x.qtd ? `${fmt(x.media)} ★ · ${x.qtd} ${x.qtd === 1 ? "nota" : "notas"}` : "sem notas" }),
           h("span", { class: "barra" }, h("span", { style: `width:${Math.round((x.media / 5) * 100)}%` }))))),
-        h("p", { class: "dica", text: `Ranking pela média das notas (0 a 5). Empate: quem recebeu mais notas fica na frente. ${total} ${total === 1 ? "nota" : "notas"} no total.` }));
+        h("p", { class: "dica", text: `Ranking pela média das notas (1 a 5). Empate: quem recebeu mais notas fica na frente. ${total} ${total === 1 ? "nota" : "notas"} no total.` }));
     });
   }
   $$("[data-zerar]").forEach((b) => armar(b, async () => {

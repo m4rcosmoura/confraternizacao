@@ -297,12 +297,6 @@ body.travado { overflow: hidden; }
 .estrelas .estrela svg { width: 46px; height: 46px; fill: currentColor; transition: transform .12s, color .12s; }
 .estrelas .estrela.cheia { color: var(--gold); }
 .estrelas .estrela:active svg { transform: scale(.9); }
-.estrelas .zero {
-  width: 40px; height: 40px; margin-right: 6px; line-height: 1;
-  border: 2px solid var(--line); border-radius: 50%;
-  font-family: var(--display); font-weight: 800; font-size: 17px; color: var(--muted);
-}
-.estrelas .zero[aria-checked="true"] { border-color: var(--gold); background: var(--gold); color: var(--gold-ink); }
 .nota-txt { text-align: center; color: var(--muted); margin: 12px 0 18px; font-weight: 600; min-height: 1.5em; }
 .folha .acoes { display: grid; grid-template-columns: 1fr 1.4fr; }
 .folha .erro { text-align: center; }

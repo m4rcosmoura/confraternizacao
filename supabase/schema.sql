@@ -54,14 +54,14 @@ create table if not exists public.confra_participantes_chave (
   chave_hash text not null
 );
 
--- Notas de 0 a 5. Trava por aparelho: 1 nota por aparelho para cada candidato
+-- Notas de 1 a 5. Trava por aparelho: 1 nota por aparelho para cada candidato
 -- (o aparelho pode trocar a nota enquanto a votação estiver aberta).
 create table if not exists public.confra_notas (
   id bigint generated always as identity primary key,
   categoria text not null check (categoria in ('fantasia', 'talento')),
   participante_id uuid not null references public.confra_participantes(id) on delete cascade,
   eleitor text not null check (char_length(eleitor) between 8 and 64),
-  nota smallint not null check (nota between 0 and 5),
+  nota smallint not null check (nota between 1 and 5),
   criado_em timestamptz not null default now(),
   unique (participante_id, eleitor)
 );
@@ -125,8 +125,8 @@ begin
   if coalesce(public._confra_cfg('votacao_' || p_categoria), 'nao') <> 'sim' then
     raise exception 'A votação está fechada no momento.';
   end if;
-  if p_nota is null or p_nota < 0 or p_nota > 5 then
-    raise exception 'Escolha uma nota de 0 a 5.';
+  if p_nota is null or p_nota < 1 or p_nota > 5 then
+    raise exception 'Escolha uma nota de 1 a 5.';
   end if;
   if p_eleitor is null or char_length(p_eleitor) not between 8 and 64 then
     raise exception 'Não foi possível identificar este aparelho. Recarregue a página.';
@@ -176,6 +176,9 @@ begin
   end if;
   if p_foto_url is not null and position('/storage/v1/object/public/confra-fotos/' in p_foto_url) = 0 then
     raise exception 'Foto inválida.';
+  end if;
+  if p_categoria = 'fantasia' and p_foto_url is null then
+    raise exception 'Coloque uma foto da sua fantasia.';
   end if;
   -- trava simples contra cadastro em massa
   if (select count(*) from public.confra_participantes where criado_em > now() - interval '1 minute') >= 30 then
@@ -229,6 +232,14 @@ begin
   end if;
   if p_foto_acao = 'trocar' and (p_foto_url is null or position('/storage/v1/object/public/confra-fotos/' in p_foto_url) = 0) then
     raise exception 'Foto inválida.';
+  end if;
+  -- Fantasia: a foto é obrigatória (pode trocar, não pode ficar sem).
+  if exists (
+    select 1 from public.confra_participantes
+    where id = p_id and categoria = 'fantasia'
+      and (case p_foto_acao when 'trocar' then p_foto_url when 'remover' then null else foto_url end) is null
+  ) then
+    raise exception 'A foto da fantasia é obrigatória. Troque a foto em vez de remover.';
   end if;
 
   update public.confra_participantes set

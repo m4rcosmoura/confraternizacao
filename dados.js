@@ -13,7 +13,7 @@ window.CONFIG = {
 
 /* =====================================================================
    DADOS
-   Votação por nota: cada celular dá de 0 a 5 estrelas para cada
+   Votação por nota: cada celular dá de 1 a 5 estrelas para cada
    candidato (pode trocar enquanto a votação estiver aberta).
    O ranking usa a média das notas.
    ===================================================================== */
@@ -79,7 +79,7 @@ window.api = (function () {
 
   function validarNota(nota) {
     const n = Number(nota);
-    if (!Number.isInteger(n) || n < 0 || n > 5) throw new Error("Escolha uma nota de 0 a 5.");
+    if (!Number.isInteger(n) || n < 1 || n > 5) throw new Error("Escolha uma nota de 1 a 5.");
     return n;
   }
 
@@ -153,7 +153,7 @@ window.api = (function () {
       part("talento", "Sérgio Nunes", "Beneficiamento", "Mágica com cartas", "Mágica", "Uma mesa pequena."),
       part("talento", "Bianca Torres", "Marketing", "Imitações de famosos", "Comédia", null, fotoTeste("#3a6ea5", "#13294a", "#ffe2c6")),
     ];
-    // Notas de teste (0 a 5) para o painel da organização ter o que mostrar.
+    // Notas de teste (1 a 5) para o painel da organização ter o que mostrar.
     const notas = {};
     const perfis = {
       fantasia: [[5, 4, 5, 5, 4, 3, 5], [4, 3, 4, 5], [3, 4, 2], [5, 5, 4, 5, 5, 4, 5, 5], [4, 5, 4, 3, 4], [2, 3], [4, 4, 5, 3], [3, 2, 4], [4, 3], []],

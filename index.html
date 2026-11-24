@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&display=swap">
-<link rel="stylesheet" href="estilo.css?v=11">
+<link rel="stylesheet" href="estilo.css?v=12">
 </head>
 <body>
 
@@ -91,7 +91,7 @@
             <input type="text" id="f-setor" name="setor" maxlength="60" placeholder="Ex.: Comercial">
           </div>
           <fieldset class="campo foto-campo" data-foto>
-            <legend>Foto da fantasia <span class="opc">(opcional)</span></legend>
+            <legend>Foto da fantasia</legend>
             <div class="foto-linha">
               <span class="previa" aria-hidden="true"><img alt="" hidden><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
               <div class="foto-botoes">
@@ -100,7 +100,7 @@
                 <button type="button" class="link-remover" data-remover hidden>Remover foto</button>
               </div>
             </div>
-            <p class="dica">Com foto fica mais fácil o pessoal reconhecer você na lista.</p>
+            <p class="dica">Obrigatória: é pela foto que o pessoal reconhece e vota na sua fantasia.</p>
           </fieldset>
           <p class="erro" id="fantasia-erro" role="alert" hidden></p>
           <button class="btn cheio" type="submit">Entrar no concurso</button>
@@ -200,8 +200,7 @@
       <div id="nota-foto" class="nota-foto"></div>
       <div class="nota-ident"><h3 id="nota-titulo"></h3><p id="nota-sub"></p></div>
     </div>
-    <div class="estrelas" id="estrelas" role="radiogroup" aria-label="Nota de 0 a 5">
-      <button type="button" role="radio" class="zero" data-n="0" aria-label="Nota zero">0</button>
+    <div class="estrelas" id="estrelas" role="radiogroup" aria-label="Nota de 1 a 5">
         <button type="button" role="radio" class="estrela" data-n="1" aria-label="1 estrela"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button>
         <button type="button" role="radio" class="estrela" data-n="2" aria-label="2 estrelas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button>
         <button type="button" role="radio" class="estrela" data-n="3" aria-label="3 estrelas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></button>
@@ -218,7 +217,7 @@
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="dados.js?v=11"></script>
+<script src="dados.js?v=12"></script>
 <script>
 (function () {
   "use strict";
@@ -502,7 +501,7 @@
     if (!qtd) st.replaceChildren();
     else if (aberta) st.replaceChildren(
       h("span", { class: "pill aberta", text: "Votação aberta" }),
-      h("p", { text: `Toque em cada ${cat === "fantasia" ? "fantasia" : "apresentação"} e dê de 0 a 5 estrelas. Você avaliou ${avaliados} de ${qtd}.` }));
+      h("p", { text: `Toque em cada ${cat === "fantasia" ? "fantasia" : "apresentação"} e dê de 1 a 5 estrelas. Você avaliou ${avaliados} de ${qtd}.` }));
     else st.replaceChildren(h("p", { class: "contagem", text: cat === "fantasia"
       ? `${qtd} ${qtd === 1 ? "fantasia inscrita" : "fantasias inscritas"}`
       : `${qtd} ${qtd === 1 ? "apresentação inscrita" : "apresentações inscritas"}` }));
@@ -546,7 +545,7 @@
     }));
   }
 
-  // Janela de nota (0 a 5 estrelas)
+  // Janela de nota (1 a 5 estrelas)
   function abrirNota(cat, p) {
     if (cfg["votacao_" + cat] !== "sim") return;
     const atual = (estado.notas[cat] || {})[p.id];
@@ -577,7 +576,7 @@
       b.tabIndex = (v == null ? n === 1 : v === n) ? 0 : -1;
       if (n > 0) b.classList.toggle("cheia", v != null && n <= v);
     });
-    const txt = v == null ? "Toque nas estrelas para escolher a nota." : v === 0 ? "Nota 0" : `Nota ${v} de 5`;
+    const txt = v == null ? "Toque nas estrelas para escolher a nota." : `Nota ${v} de 5`;
     $("#nota-txt").textContent = txt;
     const salvar = $("#nota-salvar");
     salvar.disabled = v == null || v === estado.nota?.original;
@@ -590,7 +589,7 @@
       const atual = estado.nota.valor == null ? 0 : estado.nota.valor;
       let n = null;
       if (ev.key === "ArrowRight" || ev.key === "ArrowUp") n = Math.min(5, atual + 1);
-      if (ev.key === "ArrowLeft" || ev.key === "ArrowDown") n = Math.max(0, atual - 1);
+      if (ev.key === "ArrowLeft" || ev.key === "ArrowDown") n = Math.max(1, atual - 1);
       if (n == null) return;
       ev.preventDefault(); estado.nota.valor = n; renderEstrelas(); $(`#estrelas [data-n='${n}']`).focus();
     });
@@ -674,9 +673,15 @@
       const falha = (msg, campo) => { erroEl.textContent = msg; erroEl.hidden = false; if (campo) form.querySelector(`[name="${campo}"]`).focus(); };
       if (dados.nome.length < 2) return falha("Informe o nome.", "nome");
       if (dados.titulo.length < 2) return falha(cat === "fantasia" ? "Conte qual é a sua fantasia." : "Conte o que você vai apresentar.", "titulo");
+      const idEdicao = estado.editando[cat];
+      // Fantasia: foto obrigatória (nova, ou a que já estava na inscrição em edição).
+      if (cat === "fantasia" && !arquivo && !(idEdicao && existente && !removerExistente)) {
+        falha("Coloque uma foto da sua fantasia: tire na hora ou escolha da galeria.");
+        campoFoto.scrollIntoView({ block: "center" });
+        return;
+      }
       const btn = form.querySelector('button[type="submit"]'), txt = btn.textContent;
       btn.disabled = true; btn.textContent = "Salvando…";
-      const idEdicao = estado.editando[cat];
       try {
         if (idEdicao) {
           await api.editarInscricao(idEdicao, dados, { nova: arquivo, remover: removerExistente && !arquivo });
