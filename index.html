@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,500;1,600;1,700;1,800&family=Playfair+Display:wght@500;600&display=swap">
-<link rel="stylesheet" href="estilo.css?v=20">
+<link rel="stylesheet" href="estilo.css?v=21">
 </head>
 <body>
 
@@ -265,7 +265,7 @@
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="dados.js?v=20"></script>
+<script src="dados.js?v=21"></script>
 <script>
 (function () {
   "use strict";
@@ -294,6 +294,7 @@
     lista: { fantasia: [], talento: [] },
     notas: { fantasia: {}, talento: {} },      // minhas notas: { id: 0..5 }
     res: { fantasia: null, talento: null },
+    rankingTodo: { fantasia: false, talento: false }, // "Ver ranking completo" aberto
     editando: { fantasia: null, talento: null }, // id da inscrição em edição
     nota: null,                                  // janela de nota aberta
   };
@@ -496,13 +497,18 @@
 
     const rb = $(`#${cat}-resultado`);
     if (res && res.length) {
+      // Mostra os 5 primeiros; o botão abre o ranking completo (e fica aberto nas atualizações).
+      const todo = estado.rankingTodo[cat], LIMITE = 5;
+      const alternar = () => { estado.rankingTodo[cat] = !todo; renderLista(cat); };
       rb.replaceChildren(h("div", { class: "resultado" },
         h("h3", { text: "Resultado" }),
-        h("ol", { class: "ranking" }, res.slice(0, 5).map((r, i) => h("li", null,
+        h("ol", { class: "ranking" }, (todo ? res : res.slice(0, LIMITE)).map((r, i) => h("li", null,
           h("span", { class: "pos", text: String(r.pos || i + 1) }),
           h("span", { class: "nm", text: `${r.titulo || ""} · ${r.nome}` }),
           h("span", { class: "vt", text: (r.qtd ? `${fmtMedia(r.media)} ★` : "sem notas") + (r.empate ? " · empate" : "") }),
-          h("span", { class: "barra" }, h("span", { style: `width:${Math.round((r.media / 5) * 100)}%` })))))));
+          h("span", { class: "barra" }, h("span", { style: `width:${Math.round((r.media / 5) * 100)}%` }))))),
+        res.length > LIMITE ? h("button", { type: "button", class: "btn sec peq ver-ranking", "aria-expanded": String(todo), onclick: alternar,
+          text: todo ? "Mostrar só os 5 primeiros" : `Ver ranking completo (${res.length})` }) : null));
     } else rb.replaceChildren();
 
     const box = $(`#${cat}-lista`);
