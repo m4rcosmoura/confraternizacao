@@ -200,6 +200,31 @@ body.sem-cursor, body.sem-cursor * { cursor: none !important; }
 }
 .estrelas i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(180deg, #fff3b0, #f5dd2f 45%, #c99a1c); transition: width 1.3s cubic-bezier(.2, .8, .2, 1); }
 
+/* Empate no 1º lugar: os empatados dividem o destaque */
+.poster.grupo { display: flex; flex-direction: column; gap: 14px; }
+.grade { flex: 1; min-height: 0; display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+.grade.n3, .grade.n4 { grid-template-rows: 1fr 1fr; }
+.grade.n3 .mini:last-child { grid-column: 1 / -1; justify-self: center; width: calc(50% - 8px); }
+.mini { position: relative; min-height: 0; }
+.mini .moldura { padding: 4px; border-radius: 22px; }
+.mini.pulsa .moldura { animation: ang 6s linear infinite, pulsa-ouro 1.5s ease-out; }
+.mini .poster-in { border-radius: 18px; }
+.mini .sem-foto { font-size: 90px; padding-bottom: 120px; }
+.mini-info { position: absolute; left: 18px; right: 18px; bottom: 16px; z-index: 2; }
+.mini-nome { margin: 0; font-weight: 800; font-style: italic; font-size: var(--fs, 34px); line-height: 1.05; text-wrap: balance; text-shadow: 0 4px 14px rgba(0, 0, 0, .6); }
+.mini-fant { margin: 4px 0 0; font-family: var(--serif); font-style: italic; font-size: 22px; line-height: 1.15; color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-placar { position: relative; display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.mini-media { font-size: 60px; font-weight: 800; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; background: var(--ouro); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.mini .estrelas { --t: 20px; }
+.mini .p-placar-dir { gap: 6px; }
+.mini-qtd { font-size: 15px; font-weight: 600; color: var(--muted); }
+.grade.n3 .mini-media, .grade.n4 .mini-media { font-size: 46px; }
+.grade.n3 .mini-fant, .grade.n4 .mini-fant { font-size: 18px; }
+.grade.n3 .mini-info, .grade.n4 .mini-info { left: 14px; right: 14px; bottom: 12px; }
+.mini .mais { left: 120px; top: -30px; font-size: 24px; }
+.grupo-pe { flex: none; margin: 0; text-align: center; }
+.grupo-pe .selo-1 { margin: 0; }
+
 /* +N avaliações */
 .mais { position: absolute; z-index: 4; font-weight: 800; font-size: 30px; color: var(--gold); pointer-events: none; text-shadow: 0 0 18px rgba(245, 221, 47, .7), 0 2px 6px rgba(0, 0, 0, .6); animation: sobe-some 2.2s ease-out forwards; }
 .p-placar .mais { left: 200px; top: -36px; }
@@ -753,7 +778,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
       if (x.empate && x.pos <= Math.max(3, C.premios.length)) grupos.set(x.pos, [...(grupos.get(x.pos) || []), x.titulo ? `${x.nome} (${x.titulo})` : x.nome]);
     });
     const juntar = (n) => (n.length > 1 ? `${n.slice(0, -1).join(", ")} e ${n[n.length - 1]}` : n[0]);
-    grupos.forEach((nomes, pos) => it.push([{ b: `Empate no ${pos}º lugar` }, `: ${juntar(nomes)}. Mesma nota e mesmas estrelas; a organização decide`]));
+    grupos.forEach((nomes, pos) => it.push([{ b: `Empate no ${pos}º lugar` }, `: ${juntar(nomes)}, com a mesma nota e as mesmas estrelas`]));
     if (aberta()) {
       it.push(["Vote agora: ", { b: "escaneie o QR code da sua mesa" }, ` e dê de 1 a 5 estrelas para ${C.unidade}`]);
       it.push(["Cada celular dá ", { b: "uma nota por candidato" }, " e pode mudar a nota enquanto a votação estiver aberta"]);
@@ -766,9 +791,9 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     if (C.premios.length) it.push(["Prêmios: ", ...C.premios.flatMap((p, i) => [i ? "  ·  " : "", { b: `${i + 1}º` }, " " + p])]);
     const div = est.prog.find((x) => /resultado/i.test(x.titulo || ""));
     if (div && div.hora) it.push(["Resultado oficial às ", { b: horaBR(div.hora) }]);
-    const resto = lista.slice(1 + MAX_LINHAS);
+    const resto = lista.slice((est.nLider || 1) + MAX_LINHAS);
     if (resto.length && temNotas) {
-      it.push(["Também na disputa: ", ...resto.flatMap((p, k) => [k ? "  ·  " : "", { b: `${k + 2 + MAX_LINHAS}º` }, ` ${p.nome}`, p.qtd ? ` ${fmt(p.media)} ★` : ""])]);
+      it.push(["Também na disputa: ", ...resto.flatMap((p, k) => [k ? "  ·  " : "", { b: `${p.pos || k + 2 + MAX_LINHAS}º` }, ` ${p.nome}`, p.qtd ? ` ${fmt(p.media)} ★` : ""])]);
     }
     return it;
   }
@@ -811,24 +836,52 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
               h("div", { class: "p-placar-dir" }, h("span", { class: "estrelas", style: "--t:36px" }, h("i")), h("span", { class: "p-qtd" }))),
             C.premios[0] ? h("p", { class: "p-premio" }, h("small", { text: "Prêmio" }), C.premios[0]) : null))));
   }
-  function renderLider(p) {
-    const area = $("#lider-area");
+  // Empate no 1º lugar: todos os empatados (até 4) dividem o destaque, cada um com sua foto.
+  function criarGrupo(grupo) {
+    return h("article", { class: "poster grupo entra", "data-id": grupo.map((p) => p.id).join("|") },
+      h("div", { class: `grade n${grupo.length}` }, grupo.map((p) =>
+        h("div", { class: "mini", "data-id": p.id },
+          h("div", { class: "moldura" },
+            h("div", { class: "poster-in" },
+              h("div", { class: "poster-foto" }),
+              h("div", { class: "scrim" }),
+              h("div", { class: "mini-info" },
+                h("h2", { class: "mini-nome" }),
+                h("p", { class: "mini-fant" }),
+                h("div", { class: "mini-placar" },
+                  h("span", { class: "mini-media", text: "0,00" }),
+                  h("div", { class: "p-placar-dir" }, h("span", { class: "estrelas" }, h("i")), h("span", { class: "mini-qtd" }))))))))),
+      h("p", { class: "grupo-pe" }, h("span", { class: "selo-1" }, h("b", { text: "1º" }), "Empate")));
+  }
+  function renderLider(grupo) {
+    const area = $("#lider-area"), chave = grupo.map((p) => p.id).join("|");
     let poster = area.querySelector(".poster:not(.sai)");
-    if (!poster || est.posterId !== p.id) {
+    if (!poster || est.posterId !== chave) {
       if (poster) { poster.classList.add("sai"); const velho = poster; setTimeout(() => velho.remove(), 1100); }
-      poster = criarPoster(p);
+      poster = grupo.length > 1 ? criarGrupo(grupo) : criarPoster(grupo[0]);
       area.append(poster);
       requestAnimationFrame(() => requestAnimationFrame(() => poster.classList.remove("entra")));
-      est.posterId = p.id;
+      est.posterId = chave;
     }
+    if (grupo.length > 1) {
+      grupo.forEach((p) => {
+        const m = poster.querySelector(`.mini[data-id="${CSS.escape(p.id)}"]`);
+        if (!m) return;
+        const nome = $(".mini-nome", m);
+        nome.textContent = p.nome; nome.style.setProperty("--fs", tamNome(p.nome, grupo.length === 2 ? 36 : 30) + "px");
+        $(".mini-fant", m).textContent = p.titulo || "";
+        trocarFoto($(".poster-foto", m), p);
+        contar($(".mini-media", m), p.media, fmt);
+        $(".estrelas i", m).style.width = (p.media / 5 * 100) + "%";
+        $(".mini-qtd", m).textContent = plural(p.qtd, "avaliação", "avaliações");
+        const antes = est.prev.get(p.id);
+        if (est.pronto && antes && p.qtd > antes.qtd) { soltarMais($(".mini-placar", m), p.qtd - antes.qtd); reiniciarAnimacao(m, "pulsa"); }
+      });
+      return;
+    }
+    const p = grupo[0];
     $(".p-nome", poster).textContent = p.nome;
     $(".p-fant", poster).textContent = p.titulo || "";
-    $(".selo-1", poster).replaceChildren(h("b", { text: "1º" }), p.empate ? "Empate" : "Liderando");
-    poster.classList.toggle("empatado", !!p.empate);
-    const premio = $(".p-premio", poster);
-    if (premio) premio.replaceChildren(...(p.empate
-      ? [h("small", { text: "Empate" }), "A organização decide o 1º lugar"]
-      : [h("small", { text: "Prêmio" }), C.premios[0]]));
     trocarFoto($(".poster-foto", poster), p);
     contar($(".p-media", poster), p.media, fmt);
     $(".estrelas i", poster).style.width = (p.media / 5 * 100) + "%";
@@ -853,7 +906,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
       h("span", { class: "l-num" }, h("b", { class: "l-media" }, h("span"), h("small", { text: "★" })), h("small", { class: "l-qtd" })),
       h("span", { class: "l-delta" }));
   }
-  function renderLinhas(itens) {
+  function renderLinhas(itens, inicio) {   // inicio: posição na fila (base 0) do primeiro item
     const lista = $("#lista"), vistos = new Set();
     let novos = 0;
     itens.forEach((p, i) => {
@@ -877,7 +930,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
       $(".l-trilho i", el).style.width = (p.media / 5 * 100) + "%";
       const premio = $(".l-premio", el), pr = C.premios[pos - 1];
       el.classList.toggle("empatada", !!p.empate);
-      if (p.empate) premio.replaceChildren(h("b", { class: "tag-empate", text: "Empate" }), "a organização decide");
+      if (p.empate) premio.replaceChildren(h("b", { class: "tag-empate", text: "Empate" }));
       else if (pr) premio.replaceChildren(h("b", { text: "Prêmio" }), pr);
       else premio.replaceChildren();
       const media = $(".l-media span", el);
@@ -887,7 +940,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
 
       const antes = est.prev.get(p.id);
       if (est.pronto && antes) {
-        const dif = antes.pos - (i + 1);   // lugares na fila (base 0) que subiu
+        const dif = antes.pos - (i + inicio);   // lugares na fila (base 0) que subiu
         if (dif) {
           const d = $(".l-delta", el);
           d.textContent = dif > 0 ? `▲ ${dif}` : `▼ ${-dif}`;
@@ -1004,6 +1057,8 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
       return { id: r.participante_id, nome: r.nome, titulo: r.titulo, media: Number(r.media) || 0, qtd: Number(r.qtd) || 0, foto: p ? p.foto_url : null, pos: r.pos, empate: !!r.empate };
     });
     est.lista = lista;
+    // quantos dividem o destaque do 1º lugar (empate: até 4)
+    est.nLider = lista[0] && lista[0].empate ? Math.min(4, lista.filter((x) => x.pos === 1).length) : 1;
     const total = lista.reduce((s, x) => s + x.qtd, 0);
     contar($("#total"), total, (v) => Math.round(v).toLocaleString("pt-BR"), 900);
     $("#total-rot").textContent = total === 1 ? "avaliação" : "avaliações";
@@ -1017,9 +1072,11 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
       modoArena();
       const lider = lista[0], anterior = est.liderId;
       est.liderId = lider.id;
-      renderLider(lider);
-      renderLinhas(lista.slice(1, 1 + MAX_LINHAS));
-      atualizarChamada(Math.min(lista.length - 1, MAX_LINHAS));
+      // empatados no 1º lugar vão todos para o destaque (até 4); a classificação começa depois deles
+      const grupo = lista.slice(0, est.nLider);
+      renderLider(grupo);
+      renderLinhas(lista.slice(grupo.length, grupo.length + MAX_LINHAS), grupo.length);
+      atualizarChamada(Math.min(lista.length - grupo.length, MAX_LINHAS));
       if (est.pronto && !lider.empate && anterior !== lider.id && Date.now() - est.ultimaVirada > 15000) {
         virada(lider, anterior ? "Nova liderança" : "Abrindo a apuração");
       }
