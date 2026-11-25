@@ -27,7 +27,7 @@ Mantenha todos os arquivos na mesma pasta.
 
 ## Telão (TV)
 
-Abra `telao.html` no computador ligado na TV (HDMI). Não pede senha: já abre na apuração. Clique em qualquer lugar ou aperte **F** para tela cheia (o navegador só permite tela cheia depois de um clique ou tecla). **F** de novo ou **Esc** sai.
+Abra `telao.html` direto no navegador da TV (ou num computador ligado na TV). Não pede senha: já abre na apuração. Para tela cheia, aperte **OK** no controle da TV (ou clique na tela / tecla **F** no computador); o navegador só permite tela cheia depois de um toque. **Voltar** ou **Esc** sai. Se o navegador da TV não tiver tela cheia, a apuração se ajusta sozinha ao espaço da tela do mesmo jeito.
 
 Como não tem senha, qualquer pessoa que abrir esse endereço vê o ranking ao vivo (nunca quem votou em quem).
 

@@ -17,7 +17,7 @@
   - telao.html                       → melhor fantasia (abre direto, sem senha)
   - telao.html?categoria=talento     → show de talentos
   - telao.html?demo                  → demonstração com dados inventados (não lê o banco)
-  Tela cheia: clique em qualquer lugar ou aperte F (F de novo ou Esc sai).
+  Tela cheia: OK no controle da TV, clique em qualquer lugar ou tecla F (Esc ou Voltar sai).
 -->
 <style>
 @property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
@@ -475,7 +475,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     <div class="i-linha"></div>
     <p class="i-sobre">Apuração ao vivo</p>
     <p class="h-cat" data-cat>Melhor Fantasia</p>
-    <p class="i-dica">Clique na tela ou aperte <b>F</b> para tela cheia</p>
+    <p class="i-dica">Aperte <b>OK</b> no controle da TV (ou clique na tela) para tela cheia</p>
   </div>
 
   <!-- ====================================================== VIRADA DE LIDERANÇA -->
@@ -495,7 +495,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
 
 <div class="grao" aria-hidden="true"></div>
 <div class="controles" id="controles">
-  <button type="button" id="btn-tela">Tela cheia (F)</button>
+  <button type="button" id="btn-tela">Tela cheia</button>
 </div>
 
 <script src="dados.js?v=19"></script>
@@ -1045,7 +1045,11 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     const el = d.documentElement;
     if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
   }
-  addEventListener("keydown", (e) => { if (e.key === "f" || e.key === "F") telaCheia(); });
+  // Controle remoto da TV: o OK chega como Enter (ou clique, nos controles com ponteiro). Só entra; para sair, Voltar/Esc.
+  addEventListener("keydown", (e) => {
+    if (e.key === "f" || e.key === "F") telaCheia();
+    else if (e.key === "Enter" || e.key === " " || e.key === "Select" || e.keyCode === 13) { e.preventDefault(); telaCheia(true); }
+  });
   addEventListener("click", (e) => { if (e.target !== $("#btn-tela")) telaCheia(true); });
   $("#btn-tela").addEventListener("click", () => telaCheia());
 
