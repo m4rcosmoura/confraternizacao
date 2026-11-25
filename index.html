@@ -750,14 +750,22 @@
   window.addEventListener("hashchange", rota);
   carregarConfig().then(rota);
 
-  // Atualiza a cada 30 s (abre/fecha votação, novos inscritos, "Agora" do cronograma).
-  setInterval(async () => {
-    if (document.hidden || estado.nota) return;
-    await carregarConfig();
-    if (estado.view === "cronograma") carregarProgramacao();
-    const cat = CAT_DA_VIEW[estado.view];
-    if (cat && !estado.editando[cat]) carregarLista(cat);
-  }, 30000);
+  // Atualiza sozinho a cada 15 s (abre/fecha votação, novos inscritos, resultado, "Agora" do cronograma)
+  // e na hora em que a pessoa volta para a tela (o celular pausa a página quando está bloqueado ou em outro app).
+  let ultimaAtualizacao = Date.now(), atualizando = false;
+  async function atualizarSozinho() {
+    if (document.hidden || estado.nota || atualizando) return;
+    atualizando = true;
+    try {
+      await carregarConfig();
+      if (estado.view === "cronograma") carregarProgramacao();
+      const cat = CAT_DA_VIEW[estado.view];
+      if (cat && !estado.editando[cat]) await carregarLista(cat);
+    } finally { atualizando = false; ultimaAtualizacao = Date.now(); }
+  }
+  setInterval(atualizarSozinho, 15000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - ultimaAtualizacao > 5000) atualizarSozinho(); });
+  window.addEventListener("pageshow", (e) => { if (e.persisted) atualizarSozinho(); });   // voltou pelo histórico do navegador
 })();
 </script>
 </body>
