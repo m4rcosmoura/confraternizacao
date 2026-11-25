@@ -560,7 +560,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     talento: { titulo: "Show de Talentos", unidade: "cada apresentação", toque: "Toque na apresentação", ancora: "talentos", premios: ["Caixa de som JBL Xtreme 4", "Air Fryer Electrolux 12 litros"] },
   };
   const C = CATS[CAT];
-  const MAX_LINHAS = 7;            // 2º ao 8º na coluna (sobra espaço para o QR code); do 9º em diante vão para o letreiro
+  const MAX_LINHAS = 7;            // 2º ao 8º na coluna (sobra espaço para o QR code)
   const INTERVALO = DEMO ? 3000 : 5000;
 
   document.title = `Telão · ${C.titulo}`;
@@ -791,10 +791,6 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     if (C.premios.length) it.push(["Prêmios: ", ...C.premios.flatMap((p, i) => [i ? "  ·  " : "", { b: `${i + 1}º` }, " " + p])]);
     const div = est.prog.find((x) => /resultado/i.test(x.titulo || ""));
     if (div && div.hora) it.push(["Resultado oficial às ", { b: horaBR(div.hora) }]);
-    const resto = lista.slice((est.nLider || 1) + MAX_LINHAS);
-    if (resto.length && temNotas) {
-      it.push(["Também na disputa: ", ...resto.flatMap((p, k) => [k ? "  ·  " : "", { b: `${p.pos || k + 2 + MAX_LINHAS}º` }, ` ${p.nome}`, p.qtd ? ` ${fmt(p.media)} ★` : ""])]);
-    }
     return it;
   }
   function definirTicker(itens) {

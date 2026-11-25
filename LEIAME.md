@@ -39,7 +39,7 @@ Como não tem senha, qualquer pessoa que abrir esse endereço vê o ranking ao v
 - **Empate no 1º lugar**: os empatados (até 4) dividem o destaque, lado a lado, cada um com sua foto, nota e o selo "1º · Empate". Empatados em outras posições aparecem com a mesma posição e a marca EMPATE.
 - **QR code sempre na tela**: o cartão "Vote pelo celular" com QR code fica embaixo da classificação. Com até 6 concorrentes ele aparece grande; com 7 ou mais fica compacto, para caber a lista.
 - **Votação fechada no painel**: o selo vira "Votação encerrada" e o ranking fica parado.
-- **Letreiro no rodapé**: como votar, regra do desempate, prêmios, horário da divulgação (lido do cronograma) e do 9º lugar em diante.
+- **Letreiro no rodapé**: como votar, regra do desempate, prêmios, e horário da divulgação (lido do cronograma).
 - A TV não apaga sozinha enquanto o telão estiver aberto (em navegadores que permitem) e o mouse some depois de alguns segundos parado (mexa o mouse para ver o botão "Tela cheia").
 
 | Endereço | O que mostra |
