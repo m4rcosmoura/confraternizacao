@@ -278,6 +278,13 @@ body.sem-cursor, body.sem-cursor * { cursor: none !important; }
 .ch-sobre { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); }
 .ch-tit { margin: 6px 0 16px; font-family: var(--serif); font-weight: 600; font-size: 42px; line-height: 1.1; }
 .ch-passos { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; font-size: 22px; font-weight: 600; }
+/* versão compacta (6 ou mais linhas na classificação): o QR continua na tela */
+.chamada.compacta { height: 150px; gap: 26px; padding: 14px 26px; }
+.chamada.compacta .ch-qr { width: 122px; height: 122px; padding: 8px; border-radius: 12px; }
+.chamada.compacta .ch-tit { font-size: 30px; margin: 2px 0 10px; }
+.chamada.compacta .ch-passos { display: flex; gap: 22px; font-size: 17px; white-space: nowrap; }
+.chamada.compacta .ch-passos li { gap: 9px; }
+.chamada.compacta .ch-passos b { width: 28px; height: 28px; font-size: 14px; }
 .ch-passos li { display: flex; align-items: center; gap: 14px; }
 .ch-passos b { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--ouro); color: var(--ink); font-size: 17px; font-weight: 800; }
 .ch-fim { margin: 0; font-size: 24px; font-weight: 500; color: var(--muted); }
@@ -528,7 +535,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     talento: { titulo: "Show de Talentos", unidade: "cada apresentação", toque: "Toque na apresentação", ancora: "talentos", premios: ["Caixa de som JBL Xtreme 4", "Air Fryer Electrolux 12 litros"] },
   };
   const C = CATS[CAT];
-  const MAX_LINHAS = 9;            // posições 2 a 10 na coluna; do 11º em diante vão para o letreiro
+  const MAX_LINHAS = 7;            // 2º ao 8º na coluna (sobra espaço para o QR code); do 9º em diante vão para o letreiro
   const INTERVALO = DEMO ? 3000 : 5000;
 
   document.title = `Telão · ${C.titulo}`;
@@ -742,8 +749,11 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     const it = [], temNotas = lista.some((x) => x.qtd > 0);
     // Empate em posição que vale prêmio: avisa logo no começo do letreiro
     const grupos = new Map();
-    lista.forEach((x) => { if (x.empate && x.pos <= Math.max(3, C.premios.length)) grupos.set(x.pos, [...(grupos.get(x.pos) || []), x.nome]); });
-    grupos.forEach((nomes, pos) => it.push([{ b: `Empate no ${pos}º lugar` }, `: ${nomes.join(" e ")}. Mesma nota e mesmas estrelas; a organização decide`]));
+    lista.forEach((x) => {
+      if (x.empate && x.pos <= Math.max(3, C.premios.length)) grupos.set(x.pos, [...(grupos.get(x.pos) || []), x.titulo ? `${x.nome} (${x.titulo})` : x.nome]);
+    });
+    const juntar = (n) => (n.length > 1 ? `${n.slice(0, -1).join(", ")} e ${n[n.length - 1]}` : n[0]);
+    grupos.forEach((nomes, pos) => it.push([{ b: `Empate no ${pos}º lugar` }, `: ${juntar(nomes)}. Mesma nota e mesmas estrelas; a organização decide`]));
     if (aberta()) {
       it.push(["Vote agora: ", { b: "escaneie o QR code da sua mesa" }, ` e dê de 1 a 5 estrelas para ${C.unidade}`]);
       it.push(["Cada celular dá ", { b: "uma nota por candidato" }, " e pode mudar a nota enquanto a votação estiver aberta"]);
@@ -902,9 +912,10 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
 
   // ------------------------------------------------------------ Cartão "vote pelo celular" com QR code
   function atualizarChamada(nLinhas) {
-    const ch = $("#chamada"), mostrar = nLinhas <= 5;
-    ch.hidden = !mostrar;
-    if (!mostrar) return;
+    // Sempre na tela: grande com até 5 linhas, compacto com 6 ou 7.
+    const ch = $("#chamada");
+    ch.hidden = false;
+    ch.classList.toggle("compacta", nLinhas > 5);
     const ab = aberta();
     $("#ch-sobre").textContent = ab ? "Vote pelo celular" : "Apuração";
     $("#ch-tit").textContent = ab ? "Sua nota decide o pódio" : "Votação encerrada";

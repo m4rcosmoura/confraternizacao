@@ -34,11 +34,11 @@ Como não tem senha, qualquer pessoa que abrir esse endereço vê o ranking ao v
 
 - **Abertura**: vinheta com o título da festa, depois o painel entra em cena.
 - **Antes das primeiras notas**: desfile dos concorrentes com foto e o aviso de que a votação está aberta (ou abre em breve).
-- **Ao vivo**: o 1º lugar em destaque (foto grande, coroa, média e prêmio) e a classificação do 2º ao 10º com barra de média e número de notas. Atualiza a cada 5 segundos. Quando alguém sobe, a linha brilha e mostra ▲; cada nota nova aparece como "+1".
+- **Ao vivo**: o 1º lugar em destaque (foto grande, coroa, média e prêmio) e a classificação do 2º ao 8º com barra de média e número de notas. Atualiza a cada 5 segundos. Quando alguém sobe, a linha brilha e mostra ▲; cada nota nova aparece como "+1".
 - **Nova liderança**: quando o 1º lugar muda, a tela escurece, entram faixas de cinema, a foto do novo líder e uma chuva de confete dourado (no máximo uma vez a cada 15 segundos).
-- **Poucos concorrentes**: com 6 ou menos, a coluna da direita ganha um cartão "Vote pelo celular" com QR code.
+- **QR code sempre na tela**: o cartão "Vote pelo celular" com QR code fica embaixo da classificação. Com até 6 concorrentes ele aparece grande; com 7 ou mais fica compacto, para caber a lista.
 - **Votação fechada no painel**: o selo vira "Votação encerrada" e o ranking fica parado.
-- **Letreiro no rodapé**: como votar, regra do desempate, prêmios, horário da divulgação (lido do cronograma) e do 11º lugar em diante.
+- **Letreiro no rodapé**: como votar, regra do desempate, prêmios, horário da divulgação (lido do cronograma) e do 9º lugar em diante.
 - A TV não apaga sozinha enquanto o telão estiver aberto (em navegadores que permitem) e o mouse some depois de alguns segundos parado (mexa o mouse para ver o botão "Tela cheia").
 
 | Endereço | O que mostra |
