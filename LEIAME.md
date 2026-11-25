@@ -21,7 +21,8 @@ Mantenha todos os arquivos na mesma pasta.
 - **Talentos**: lista pública das apresentações e o formulário "Quero me apresentar" (nome, apresentação, tipo, do que precisa, foto opcional).
 - **Foto**: dois botões, "Tirar foto" (abre a câmera do celular) e "Escolher da galeria". É sempre opcional.
 - **Editar inscrição**: quem se inscreveu vê "Sua inscrição" com o botão **Editar** (nome, fantasia/apresentação, setor, foto). Só funciona no celular que fez a inscrição.
-- **Votação por nota**: fica bloqueada até a organização liberar no `admin.html`. Liberada, a aba passa a se chamar "Votar". A pessoa toca no candidato e dá de 1 a 5 estrelas, e pode avaliar todos. O ranking é pela **média das notas**; no empate, fica na frente quem recebeu mais notas.
+- **Votação por nota**: fica bloqueada até a organização liberar no `admin.html`. Liberada, a aba passa a se chamar "Votar". A pessoa toca no candidato e dá de 1 a 5 estrelas, e pode avaliar todos. O ranking é pela **média das notas**.
+- **Desempate**, nesta ordem: 1) quem recebeu **mais notas**; 2) quem recebeu **mais notas 5**; 3) mais notas 4; 4) mais notas 3; 5) mais notas 2. Se mesmo assim tudo for igual (mesma média, mesma quantidade e as mesmas estrelas), é **EMPATE**: os dois dividem a posição (ex.: 1º, 1º, 3º) e aparecem marcados como empate no telão, no painel e no site. Aí a **organização decide** (aplausos da plateia ou voto da comissão). No painel aparece quantas notas de cada estrela cada um recebeu.
 - **Trava por aparelho**: cada celular dá **uma nota por candidato**. Se tentar de novo, a nota nova substitui a anterior (não soma). A identificação do aparelho fica guardada em 3 lugares do navegador; só apagando todos os dados do site ou usando aba anônima dá para votar de novo.
 - **Voltar do celular**: de qualquer seção, volta direto para a tela inicial. Com a janela de estrelas aberta, o voltar só fecha a janela.
 
@@ -79,4 +80,4 @@ Links diretos (úteis para QR codes específicos):
 6. Abra `.../admin.html` no endereço publicado (senha `trocar123`) e **troque a senha**.
 7. No painel, em "QR code das mesas", confira o endereço e imprima os cartões.
 
-Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=19` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.
+Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=20` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.

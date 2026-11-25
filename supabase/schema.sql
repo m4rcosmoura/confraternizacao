@@ -287,6 +287,21 @@ language sql stable security definer set search_path = public as $$
   order by coalesce(avg(n.nota), 0) desc, count(n.id) desc, p.nome;
 $$;
 
+-- Desempate: quantas notas 5, 4, 3, 2 e 1 cada concorrente recebeu (nunca quem votou).
+-- O site ordena por média > mais notas > mais notas 5 > 4 > 3 > 2; se tudo for igual, marca EMPATE.
+create or replace function public.confra_estrelas(p_categoria text)
+returns table (participante_id uuid, n5 bigint, n4 bigint, n3 bigint, n2 bigint, n1 bigint)
+language sql stable security definer set search_path = public as $$
+  select p.id,
+         count(n.id) filter (where n.nota = 5), count(n.id) filter (where n.nota = 4),
+         count(n.id) filter (where n.nota = 3), count(n.id) filter (where n.nota = 2),
+         count(n.id) filter (where n.nota = 1)
+  from public.confra_participantes p
+  left join public.confra_notas n on n.participante_id = p.id
+  where p.categoria = p_categoria
+  group by p.id;
+$$;
+
 -- ---------------------------------------------------------------------
 -- Funções do painel de administração (todas exigem a senha)
 -- ---------------------------------------------------------------------
@@ -385,6 +400,7 @@ grant execute on function
   public.confra_editar_inscricao(uuid, text, text, text, text, text, text, text, text),
   public.confra_resultados(text),
   public.confra_telao(text),
+  public.confra_estrelas(text),
   public.confra_admin_login(text),
   public.confra_admin_config(text, text, text),
   public.confra_admin_item_salvar(text, uuid, text, text, text, text, int),

@@ -200,7 +200,9 @@ window.api = (function () {
     return d.participantes.map((p) => {
       const ns = Object.values(d.notas[p.id] || {});
       const soma = ns.reduce((s, x) => s + x, 0);
-      return { categoria: p.categoria, participante_id: p.id, nome: p.nome, titulo: p.titulo, media: ns.length ? soma / ns.length : 0, qtd: ns.length };
+      const n = (v) => ns.filter((x) => x === v).length;
+      return { categoria: p.categoria, participante_id: p.id, nome: p.nome, titulo: p.titulo, media: ns.length ? soma / ns.length : 0, qtd: ns.length,
+        n5: n(5), n4: n(4), n3: n(3), n2: n(2), n1: n(1) };
     }).sort(ordenarResultado);
   }
 
@@ -256,6 +258,7 @@ window.api = (function () {
       return calcularResultados(d);
     },
     async telao(cat) { await espera(60); return calcularResultados(ler()).filter((r) => r.categoria === cat); },
+    async estrelas(cat) { await espera(60); return calcularResultados(ler()).filter((r) => r.categoria === cat); },
     async adminLogin(senha) { await espera(); return senha === ler().senha; },
     async adminConfig(senha, chave, valor) { const d = ler(); exigirAdmin(d, senha); d.config[chave] = valor; gravar(d); },
     async adminItemSalvar(senha, it) {
@@ -287,7 +290,44 @@ window.api = (function () {
     resetarTeste() { store.del(DEMO_KEY); store.del("confra_minhas"); minhasMem = {}; memoria = null; },
   };
   function ordenarProg(l) { return l.slice().sort((a, b) => (a.ordem || 0) - (b.ordem || 0) || String(a.hora).localeCompare(String(b.hora))); }
-  function ordenarResultado(a, b) { return a.categoria.localeCompare(b.categoria) || b.media - a.media || b.qtd - a.qtd || a.nome.localeCompare(b.nome); }
+  // ------------------------------------------------ Ranking e desempate
+  // 1) maior média  2) mais notas  3) mais notas 5  4) mais notas 4  5) mais notas 3  6) mais notas 2.
+  // Se tudo for igual, é EMPATE: os dois ficam na mesma posição e a organização decide.
+  const temEstrelas = (x) => x.n5 != null;
+  const mediaExata = (x) => (temEstrelas(x) && x.qtd ? (5 * x.n5 + 4 * x.n4 + 3 * x.n3 + 2 * x.n2 + x.n1) / x.qtd : x.media);
+  function ordenarResultado(a, b) {
+    return a.categoria.localeCompare(b.categoria) || mediaExata(b) - mediaExata(a) || b.qtd - a.qtd
+      || (b.n5 || 0) - (a.n5 || 0) || (b.n4 || 0) - (a.n4 || 0) || (b.n3 || 0) - (a.n3 || 0) || (b.n2 || 0) - (a.n2 || 0)
+      || a.nome.localeCompare(b.nome);
+  }
+  function mesmaNota(a, b) {
+    return !!a && !!b && a.categoria === b.categoria && a.qtd > 0 && a.qtd === b.qtd && temEstrelas(a) && temEstrelas(b)
+      && a.n5 === b.n5 && a.n4 === b.n4 && a.n3 === b.n3 && a.n2 === b.n2 && a.n1 === b.n1;
+  }
+  // Ordena e marca a posição (empatados dividem a posição) e quem está empatado.
+  function classificar(lista) {
+    const l = lista.slice().sort(ordenarResultado);
+    let pos = 0, cat = null, i0 = 0;
+    return l.map((x, i) => {
+      if (x.categoria !== cat) { cat = x.categoria; i0 = i; }
+      if (!mesmaNota(l[i - 1], x)) pos = i - i0 + 1;
+      return { ...x, pos, empate: mesmaNota(l[i - 1], x) || mesmaNota(l[i + 1], x) };
+    });
+  }
+  // Junta a contagem de estrelas (função confra_estrelas) quando o banco não a devolve junto.
+  async function completar(res) {
+    res = res || [];
+    if (res.length && !temEstrelas(res[0])) {
+      const cats = [...new Set(res.map((r) => r.categoria))];
+      const m = new Map();
+      try { (await Promise.all(cats.map((c) => backend.estrelas(c)))).flat().forEach((e) => m.set(e.participante_id, e)); } catch (e) { /* sem desempate fino */ }
+      res = res.map((r) => {
+        const e = m.get(r.participante_id);
+        return e ? { ...r, n5: Number(e.n5), n4: Number(e.n4), n3: Number(e.n3), n2: Number(e.n2), n1: Number(e.n1) } : r;
+      });
+    }
+    return classificar(res);
+  }
 
   // ------------------------------------------------ Supabase (quando configurado)
   function criarSupabase() {
@@ -341,6 +381,8 @@ window.api = (function () {
           .map((x) => ({ ...x, media: Number(x.media), qtd: Number(x.qtd) }))
           .sort(ordenarResultado);
       },
+      // Quantas notas 5, 4, 3, 2 e 1 cada concorrente recebeu (para o desempate).
+      estrelas(cat) { return rpc("confra_estrelas", { p_categoria: cat }); },
       adminLogin(senha) { return rpc("confra_admin_login", { p_senha: senha }); },
       adminConfig(senha, chave, valor) { return rpc("confra_admin_config", { p_senha: senha, p_chave: chave, p_valor: valor }); },
       adminItemSalvar(senha, it) { return rpc("confra_admin_item_salvar", { p_senha: senha, p_id: it.id || null, p_hora: it.hora, p_fim: it.fim || null, p_titulo: it.titulo, p_descricao: it.descricao || null, p_ordem: Number(it.ordem) || 0 }); },
@@ -368,7 +410,10 @@ window.api = (function () {
   const backend = modoTeste ? teste : supabasePreguicoso();
   const nomes = ["getConfig", "getProgramacao", "getParticipantes", "avaliar", "minhasNotas", "inscrever", "editarInscricao", "resultados", "telao",
     "adminLogin", "adminConfig", "adminItemSalvar", "adminItemExcluir", "adminParticipanteExcluir", "adminZerarVotos", "adminTrocarSenha", "resetarTeste"];
-  const api = { modoTeste, hojeISO, carregarScript, souDono: (id) => !!minhas()[id] };
+  const api = { modoTeste, hojeISO, carregarScript, classificar, souDono: (id) => !!minhas()[id] };
   nomes.forEach((n) => { api[n] = (...a) => backend[n](...a); });
+  // Resultados já vêm ordenados com o desempate e com { pos, empate } em cada item.
+  api.resultados = async (...a) => completar(await backend.resultados(...a));
+  api.telao = async (cat) => completar(await backend.telao(cat));
   return api;
 })();

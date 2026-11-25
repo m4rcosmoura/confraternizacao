@@ -229,6 +229,7 @@ body.sem-cursor, body.sem-cursor * { cursor: none !important; }
 .linha[data-pos="2"] { border-color: rgba(230, 236, 240, .42); }
 .linha[data-pos="3"] { border-color: rgba(240, 181, 125, .42); }
 .l-pos { font-size: 40px; font-weight: 800; font-style: italic; text-align: center; color: rgba(255, 255, 255, .9); font-variant-numeric: tabular-nums; }
+.linha[data-pos="1"] .l-pos { background: var(--ouro); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .linha[data-pos="2"] .l-pos { background: var(--prata); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .linha[data-pos="3"] .l-pos { background: var(--bronze); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .l-foto { position: relative; width: 58px; height: 58px; border-radius: 50%; overflow: hidden; background: #0b2e22; box-shadow: 0 0 0 2px rgba(245, 221, 47, .6), 0 6px 14px rgba(0, 0, 0, .4); }
@@ -244,6 +245,8 @@ body.sem-cursor, body.sem-cursor * { cursor: none !important; }
 @keyframes brilho-barra { from { transform: translateX(-120%); } to { transform: translateX(320%); } }
 .l-premio { font-size: 15px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .l-premio b { margin-right: 8px; font-size: 12px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+.l-premio b.tag-empate, .poster.empatado .p-premio small { display: inline-block; padding: 2px 8px; border-radius: 6px; background: var(--ouro); color: var(--ink); letter-spacing: .18em; }
+.linha.empatada { border-color: rgba(245, 221, 47, .7); box-shadow: 0 0 26px rgba(245, 221, 47, .22), 0 10px 30px rgba(0, 0, 0, .25); }
 .l-num { display: grid; text-align: right; line-height: 1.05; }
 .l-media { font-size: 36px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .l-media small { margin-left: 4px; font-size: 22px; color: var(--gold); }
@@ -498,7 +501,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
   <button type="button" id="btn-tela">Tela cheia</button>
 </div>
 
-<script src="dados.js?v=19"></script>
+<script src="dados.js?v=20"></script>
 <script>
 (function () {
   "use strict";
@@ -694,8 +697,10 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
       programacao: async () => [{ titulo: "Divulgação dos resultados", hora: "15:30" }],
       resultados: async () => {
         simular();
-        return ordem().map((i) => ({ categoria: CAT, participante_id: ps[i].id, nome: ps[i].nome, titulo: ps[i].titulo, media: Math.round(media(i) * 100) / 100, qtd: notas[i].length }))
-          .sort((a, b) => b.media - a.media || b.qtd - a.qtd || a.nome.localeCompare(b.nome));
+        const conta = (i, v) => notas[i].filter((x) => x === v).length;
+        return window.api.classificar(ps.map((p, i) => ({ categoria: CAT, participante_id: p.id, nome: p.nome, titulo: p.titulo,
+          media: Math.round(media(i) * 100) / 100, qtd: notas[i].length,
+          n5: conta(i, 5), n4: conta(i, 4), n3: conta(i, 3), n2: conta(i, 2), n1: conta(i, 1) })));
       },
     };
   }
@@ -735,6 +740,10 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
   const tk = { pendente: null, chave: "", anim: null };
   function itensTicker(lista) {
     const it = [], temNotas = lista.some((x) => x.qtd > 0);
+    // Empate em posição que vale prêmio: avisa logo no começo do letreiro
+    const grupos = new Map();
+    lista.forEach((x) => { if (x.empate && x.pos <= Math.max(3, C.premios.length)) grupos.set(x.pos, [...(grupos.get(x.pos) || []), x.nome]); });
+    grupos.forEach((nomes, pos) => it.push([{ b: `Empate no ${pos}º lugar` }, `: ${nomes.join(" e ")}. Mesma nota e mesmas estrelas; a organização decide`]));
     if (aberta()) {
       it.push(["Vote agora: ", { b: "escaneie o QR code da sua mesa" }, ` e dê de 1 a 5 estrelas para ${C.unidade}`]);
       it.push(["Cada celular dá ", { b: "uma nota por candidato" }, " e pode mudar a nota enquanto a votação estiver aberta"]);
@@ -743,7 +752,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     } else {
       it.push(["A votação abre em breve. ", { b: "Fique de olho no QR code da sua mesa" }]);
     }
-    it.push(["O ranking é pela ", { b: "média das estrelas" }, ". No empate, fica na frente quem recebeu mais notas"]);
+    it.push(["O ranking é pela ", { b: "média das estrelas" }, ". Desempate: quem recebeu ", { b: "mais notas" }, ", depois ", { b: "mais notas 5 ★" }, ", depois mais notas 4 ★, e assim por diante"]);
     if (C.premios.length) it.push(["Prêmios: ", ...C.premios.flatMap((p, i) => [i ? "  ·  " : "", { b: `${i + 1}º` }, " " + p])]);
     const div = est.prog.find((x) => /resultado/i.test(x.titulo || ""));
     if (div && div.hora) it.push(["Resultado oficial às ", { b: horaBR(div.hora) }]);
@@ -804,6 +813,12 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     }
     $(".p-nome", poster).textContent = p.nome;
     $(".p-fant", poster).textContent = p.titulo || "";
+    $(".selo-1", poster).replaceChildren(h("b", { text: "1º" }), p.empate ? "Empate" : "Liderando");
+    poster.classList.toggle("empatado", !!p.empate);
+    const premio = $(".p-premio", poster);
+    if (premio) premio.replaceChildren(...(p.empate
+      ? [h("small", { text: "Empate" }), "A organização decide o 1º lugar"]
+      : [h("small", { text: "Prêmio" }), C.premios[0]]));
     trocarFoto($(".poster-foto", poster), p);
     contar($(".p-media", poster), p.media, fmt);
     $(".estrelas i", poster).style.width = (p.media / 5 * 100) + "%";
@@ -832,7 +847,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     const lista = $("#lista"), vistos = new Set();
     let novos = 0;
     itens.forEach((p, i) => {
-      const pos = i + 2;
+      const pos = p.pos || i + 2;   // empatados dividem a mesma posição
       let el = linhas.get(p.id);
       if (!el) {
         el = criarLinha(p);
@@ -851,7 +866,10 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
       $(".l-fant", el).textContent = p.titulo || "";
       $(".l-trilho i", el).style.width = (p.media / 5 * 100) + "%";
       const premio = $(".l-premio", el), pr = C.premios[pos - 1];
-      if (pr) premio.replaceChildren(h("b", { text: "Prêmio" }), pr); else premio.replaceChildren();
+      el.classList.toggle("empatada", !!p.empate);
+      if (p.empate) premio.replaceChildren(h("b", { class: "tag-empate", text: "Empate" }), "a organização decide");
+      else if (pr) premio.replaceChildren(h("b", { text: "Prêmio" }), pr);
+      else premio.replaceChildren();
       const media = $(".l-media span", el);
       if (p.qtd) contar(media, p.media, fmt); else { cancelAnimationFrame(media._raf); media.textContent = "—"; media._v = 0; }
       $(".l-media small", el).hidden = !p.qtd;
@@ -859,7 +877,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
 
       const antes = est.prev.get(p.id);
       if (est.pronto && antes) {
-        const dif = antes.pos - (pos - 1);   // posições (base 0) que subiu
+        const dif = antes.pos - (i + 1);   // lugares na fila (base 0) que subiu
         if (dif) {
           const d = $(".l-delta", el);
           d.textContent = dif > 0 ? `▲ ${dif}` : `▼ ${-dif}`;
@@ -972,7 +990,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     const lista = res.map((r) => {
       const p = est.participantes.get(r.participante_id);
       if (!p) est.precisaParticipantes = true;
-      return { id: r.participante_id, nome: r.nome, titulo: r.titulo, media: Number(r.media) || 0, qtd: Number(r.qtd) || 0, foto: p ? p.foto_url : null };
+      return { id: r.participante_id, nome: r.nome, titulo: r.titulo, media: Number(r.media) || 0, qtd: Number(r.qtd) || 0, foto: p ? p.foto_url : null, pos: r.pos, empate: !!r.empate };
     });
     est.lista = lista;
     const total = lista.reduce((s, x) => s + x.qtd, 0);
@@ -991,7 +1009,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
       renderLider(lider);
       renderLinhas(lista.slice(1, 1 + MAX_LINHAS));
       atualizarChamada(Math.min(lista.length - 1, MAX_LINHAS));
-      if (est.pronto && anterior !== lider.id && Date.now() - est.ultimaVirada > 15000) {
+      if (est.pronto && !lider.empate && anterior !== lider.id && Date.now() - est.ultimaVirada > 15000) {
         virada(lider, anterior ? "Nova liderança" : "Abrindo a apuração");
       }
     }

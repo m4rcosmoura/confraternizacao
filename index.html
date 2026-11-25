@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,500;1,600;1,700;1,800&family=Playfair+Display:wght@500;600&display=swap">
-<link rel="stylesheet" href="estilo.css?v=19">
+<link rel="stylesheet" href="estilo.css?v=20">
 </head>
 <body>
 
@@ -265,7 +265,7 @@
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="dados.js?v=19"></script>
+<script src="dados.js?v=20"></script>
 <script>
 (function () {
   "use strict";
@@ -499,9 +499,9 @@
       rb.replaceChildren(h("div", { class: "resultado" },
         h("h3", { text: "Resultado" }),
         h("ol", { class: "ranking" }, res.slice(0, 5).map((r, i) => h("li", null,
-          h("span", { class: "pos", text: String(i + 1) }),
+          h("span", { class: "pos", text: String(r.pos || i + 1) }),
           h("span", { class: "nm", text: `${r.titulo || ""} · ${r.nome}` }),
-          h("span", { class: "vt", text: r.qtd ? `${fmtMedia(r.media)} ★` : "sem notas" }),
+          h("span", { class: "vt", text: (r.qtd ? `${fmtMedia(r.media)} ★` : "sem notas") + (r.empate ? " · empate" : "") }),
           h("span", { class: "barra" }, h("span", { style: `width:${Math.round((r.media / 5) * 100)}%` })))))));
     } else rb.replaceChildren();
 
