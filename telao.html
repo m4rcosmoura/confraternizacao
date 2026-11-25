@@ -14,10 +14,10 @@
   TELÃO DA APURAÇÃO (para a TV)
   Tela 16:9 desenhada em 1920x1080 e ampliada/reduzida para caber em qualquer TV.
   Mostra o ranking da votação ao vivo (atualiza a cada 5 segundos) com a identidade dos folders.
-  - telao.html                       → melhor fantasia (pede a senha da organização)
+  - telao.html                       → melhor fantasia (abre direto, sem senha)
   - telao.html?categoria=talento     → show de talentos
   - telao.html?demo                  → demonstração com dados inventados (não lê o banco)
-  Teclas: F ou dois cliques = tela cheia.
+  Tela cheia: clique em qualquer lugar ou aperte F (F de novo ou Esc sai).
 -->
 <style>
 @property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
@@ -107,31 +107,6 @@ body.sem-cursor, body.sem-cursor * { cursor: none !important; }
   animation: brilho 8s ease-in-out infinite;
 }
 @keyframes brilho { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-
-/* ------------------------------------------------------------ Login */
-.login { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-.login .marca-g { width: 760px; }
-.login .sobre { margin-top: 26px; }
-.login .h-cat { font-size: 96px; margin-top: 4px; }
-.l-form {
-  margin-top: 40px; width: 640px; padding: 34px 40px 30px; border-radius: 24px; text-align: left;
-  background: rgba(3, 20, 14, .72); border: 1px solid rgba(245, 221, 47, .3);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, .5); display: grid; gap: 16px;
-}
-.l-form label { font-size: 17px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
-.l-form input {
-  font: 600 28px var(--display); color: #fff; padding: 16px 20px; border-radius: 14px;
-  border: 2px solid rgba(245, 221, 47, .4); background: rgba(0, 0, 0, .35); outline: none;
-}
-.l-form input:focus { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(245, 221, 47, .2); }
-.l-form button {
-  font: italic 800 24px var(--display); letter-spacing: .04em; padding: 18px; border: 0; border-radius: 14px;
-  background: var(--ouro); color: var(--ink); cursor: pointer; box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
-}
-.l-form button:disabled { opacity: .6; cursor: wait; }
-.l-erro { margin: 0; color: #ffa49a; font-size: 20px; font-weight: 600; }
-.l-dica { margin: 4px 0 0; font-size: 17px; line-height: 1.5; color: var(--muted); }
-.l-dica a { color: var(--gold); font-weight: 600; }
 
 /* ------------------------------------------------------------ Cabeçalho */
 .topo { position: absolute; left: 80px; right: 80px; top: 34px; height: 150px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 40px; }
@@ -370,6 +345,10 @@ body.sem-cursor, body.sem-cursor * { cursor: none !important; }
 @keyframes i-espaco { to { letter-spacing: .5em; opacity: 1; } }
 .intro .h-cat { font-size: 104px; margin-top: 6px; opacity: 0; animation: brilho 8s ease-in-out infinite, i-sobe 1.3s 2.2s cubic-bezier(.2, .8, .2, 1) forwards; }
 @keyframes i-sobe { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+/* aviso de tela cheia, só na abertura (e só se ainda não estiver em tela cheia) */
+.i-dica { position: absolute; left: 0; right: 0; bottom: 64px; margin: 0; text-align: center; font-size: 20px; font-weight: 600; letter-spacing: .04em; color: rgba(255, 255, 255, .72); opacity: 0; animation: i-sobe 1s .8s ease forwards; }
+.i-dica b { color: var(--gold); }
+:fullscreen .i-dica { display: none; }
 
 /* ------------------------------------------------------------ Virada de liderança */
 .virada { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; overflow: hidden; pointer-events: none; }
@@ -428,21 +407,6 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
 <div class="vinheta" aria-hidden="true"></div>
 
 <div class="palco" id="palco">
-
-  <!-- ====================================================== LOGIN -->
-  <section class="tela login" id="tela-login" hidden>
-    <div class="recorte de-confra esfuma marca-g" style="--x:88;--y:176;--w:726;--h:158" role="img" aria-label="Confraternização 2026"></div>
-    <p class="sobre"><span class="orn"></span><span>Telão da apuração</span><span class="orn dir"></span></p>
-    <h1 class="h-cat" data-cat>Melhor Fantasia</h1>
-    <form class="l-form" id="form-login" novalidate>
-      <label for="senha">Senha da organização</label>
-      <input type="password" id="senha" autocomplete="current-password" required>
-      <p class="l-erro" id="login-erro" role="alert" hidden></p>
-      <button type="submit" id="btn-entrar">Entrar e abrir em tela cheia</button>
-      <p class="l-dica">Use no computador ligado na TV. A tela atualiza sozinha a cada 5 segundos. Aperte <b>F</b> para tela cheia.<br>
-        <a href="?demo" id="link-demo">Ver demonstração com dados de exemplo</a></p>
-    </form>
-  </section>
 
   <!-- ====================================================== AO VIVO -->
   <section class="tela" id="tela-show" hidden>
@@ -511,6 +475,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     <div class="i-linha"></div>
     <p class="i-sobre">Apuração ao vivo</p>
     <p class="h-cat" data-cat>Melhor Fantasia</p>
+    <p class="i-dica">Clique na tela ou aperte <b>F</b> para tela cheia</p>
   </div>
 
   <!-- ====================================================== VIRADA DE LIDERANÇA -->
@@ -531,10 +496,9 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
 <div class="grao" aria-hidden="true"></div>
 <div class="controles" id="controles">
   <button type="button" id="btn-tela">Tela cheia (F)</button>
-  <button type="button" id="btn-sair" hidden>Sair</button>
 </div>
 
-<script src="dados.js?v=18"></script>
+<script src="dados.js?v=19"></script>
 <script>
 (function () {
   "use strict";
@@ -567,7 +531,6 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
   document.title = `Telão · ${C.titulo}`;
   document.querySelectorAll("[data-cat]").forEach((el) => { el.textContent = C.titulo; });
   $("#ch-toque").textContent = C.toque;
-  if (CAT !== "fantasia") $("#link-demo").href = `?demo&categoria=${CAT}`;
 
   // ------------------------------------------------------------ Escala do palco 1920x1080
   const PALCO = $("#palco");
@@ -672,11 +635,10 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
   // ------------------------------------------------------------ De onde vêm os dados
   const real = {
     demo: false,
-    login: (s) => window.api.adminLogin(s),
     participantes: () => window.api.getParticipantes(CAT),
     config: () => window.api.getConfig(),
     programacao: () => window.api.getProgramacao(),
-    resultados: (s) => window.api.resultados(s),
+    resultados: () => window.api.telao(CAT),   // ranking sem senha (função confra_telao no banco)
   };
   // Demonstração: concorrentes inventados e notas chegando sozinhas (não toca no banco).
   function criarDemo() {
@@ -727,7 +689,6 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     }
     return {
       demo: true,
-      login: async () => true,
       participantes: async () => ps,
       config: async () => ({ ["votacao_" + CAT]: "sim" }),
       programacao: async () => [{ titulo: "Divulgação dos resultados", hora: "15:30" }],
@@ -742,7 +703,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
 
   // ------------------------------------------------------------ Estado
   const est = {
-    senha: null, n: 0, timer: null, rodando: false, pronto: false, online: true,
+    n: 0, timer: null, rodando: false, pronto: false, online: true,
     participantes: new Map(), cfg: {}, prog: [], precisaParticipantes: true,
     prev: new Map(), liderId: null, posterId: null, ultimaVirada: 0, emArena: null, desfileChave: "", lista: [],
   };
@@ -1048,15 +1009,11 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
         est.precisaParticipantes = false;
       }
       if (n % 60 === 0) { try { est.prog = (await fonte.programacao()) || []; } catch (e) { /* segue sem */ } }
-      const res = ((await fonte.resultados(est.senha)) || []).filter((r) => r.categoria === CAT);
+      const res = ((await fonte.resultados()) || []).filter((r) => r.categoria === CAT);
       est.online = true;
       aplicar(res);
     } catch (e) {
-      if (!fonte.demo && /divulgad|senha/i.test((e && e.message) || "")) {
-        sair("A senha da organização mudou. Entre de novo.");
-        return;
-      }
-      est.online = false;
+      est.online = false;   // sem internet: mantém o último ranking e tenta de novo
       atualizarSelo();
     }
     est.timer = setTimeout(ciclo, INTERVALO);
@@ -1073,53 +1030,24 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     }, 4900);
   }
   function mostrarShow() {
-    $("#tela-login").hidden = true; $("#tela-show").hidden = false;
-    $("#btn-sair").hidden = fonte.demo;
+    $("#tela-show").hidden = false;
     est.rodando = true;
     manterAcesa();
     abertura();
     ciclo();
   }
-  function mostrarLogin(msg) {
-    $("#tela-show").hidden = true; $("#tela-login").hidden = false;
-    const erro = $("#login-erro");
-    erro.hidden = !msg; erro.textContent = msg || "";
-    setTimeout(() => $("#senha").focus(), 50);
-  }
-  function sair(msg) {
-    try { sessionStorage.removeItem("confra_admin"); if (msg) sessionStorage.setItem("confra_telao_msg", msg); } catch (e) { /* ignora */ }
-    location.reload();
-  }
-  $("#form-login").addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const s = $("#senha").value, erro = $("#login-erro"), btn = $("#btn-entrar");
-    if (!s) { erro.hidden = false; erro.textContent = "Digite a senha."; return; }
-    telaCheia(true);   // precisa ser no clique, antes de esperar a resposta
-    btn.disabled = true; btn.textContent = "Entrando…"; erro.hidden = true;
-    try {
-      if (!(await fonte.login(s))) throw new Error("Senha incorreta.");
-      est.senha = s;
-      try { sessionStorage.setItem("confra_admin", s); } catch (e) { /* ignora */ }
-      mostrarShow();
-    } catch (e) {
-      erro.hidden = false; erro.textContent = e.message || "Não foi possível entrar.";
-    } finally { btn.disabled = false; btn.textContent = "Entrar e abrir em tela cheia"; }
-  });
 
   // ------------------------------------------------------------ Tela cheia, tela sempre acesa, cursor
+  // O navegador só deixa entrar em tela cheia depois de um clique ou tecla de alguém.
   function telaCheia(so_entrar) {
     const d = document;
     if (d.fullscreenElement) { if (!so_entrar && d.exitFullscreen) d.exitFullscreen().catch(() => {}); return; }
     const el = d.documentElement;
     if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
   }
-  addEventListener("keydown", (e) => {
-    if (e.target && e.target.tagName === "INPUT") return;
-    if (e.key === "f" || e.key === "F") telaCheia();
-  });
-  addEventListener("dblclick", () => telaCheia());
+  addEventListener("keydown", (e) => { if (e.key === "f" || e.key === "F") telaCheia(); });
+  addEventListener("click", (e) => { if (e.target !== $("#btn-tela")) telaCheia(true); });
   $("#btn-tela").addEventListener("click", () => telaCheia());
-  $("#btn-sair").addEventListener("click", () => sair());
 
   let trava = null;
   async function manterAcesa() {
@@ -1136,10 +1064,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
   addEventListener("mousemove", mexeu);
 
   // ------------------------------------------------------------ Início
-  if (fonte.demo) { mostrarShow(); return; }
-  let msg = null;
-  try { est.senha = sessionStorage.getItem("confra_admin"); msg = sessionStorage.getItem("confra_telao_msg"); sessionStorage.removeItem("confra_telao_msg"); } catch (e) { /* ignora */ }
-  if (est.senha) mostrarShow(); else mostrarLogin(msg);
+  mostrarShow();
 })();
 </script>
 </body>

@@ -255,6 +255,7 @@ window.api = (function () {
       if (senha !== d.senha && d.config.resultados_publicos !== "sim") throw new Error("Os resultados ainda não foram divulgados.");
       return calcularResultados(d);
     },
+    async telao(cat) { await espera(60); return calcularResultados(ler()).filter((r) => r.categoria === cat); },
     async adminLogin(senha) { await espera(); return senha === ler().senha; },
     async adminConfig(senha, chave, valor) { const d = ler(); exigirAdmin(d, senha); d.config[chave] = valor; gravar(d); },
     async adminItemSalvar(senha, it) {
@@ -334,6 +335,12 @@ window.api = (function () {
           .map((x) => ({ ...x, media: Number(x.media), qtd: Number(x.qtd) }))
           .sort(ordenarResultado);
       },
+      // Telão da TV: ranking de uma categoria, sem senha.
+      async telao(cat) {
+        return ((await rpc("confra_telao", { p_categoria: cat })) || [])
+          .map((x) => ({ ...x, media: Number(x.media), qtd: Number(x.qtd) }))
+          .sort(ordenarResultado);
+      },
       adminLogin(senha) { return rpc("confra_admin_login", { p_senha: senha }); },
       adminConfig(senha, chave, valor) { return rpc("confra_admin_config", { p_senha: senha, p_chave: chave, p_valor: valor }); },
       adminItemSalvar(senha, it) { return rpc("confra_admin_item_salvar", { p_senha: senha, p_id: it.id || null, p_hora: it.hora, p_fim: it.fim || null, p_titulo: it.titulo, p_descricao: it.descricao || null, p_ordem: Number(it.ordem) || 0 }); },
@@ -359,7 +366,7 @@ window.api = (function () {
   }
 
   const backend = modoTeste ? teste : supabasePreguicoso();
-  const nomes = ["getConfig", "getProgramacao", "getParticipantes", "avaliar", "minhasNotas", "inscrever", "editarInscricao", "resultados",
+  const nomes = ["getConfig", "getProgramacao", "getParticipantes", "avaliar", "minhasNotas", "inscrever", "editarInscricao", "resultados", "telao",
     "adminLogin", "adminConfig", "adminItemSalvar", "adminItemExcluir", "adminParticipanteExcluir", "adminZerarVotos", "adminTrocarSenha", "resetarTeste"];
   const api = { modoTeste, hojeISO, carregarScript, souDono: (id) => !!minhas()[id] };
   nomes.forEach((n) => { api[n] = (...a) => backend[n](...a); });

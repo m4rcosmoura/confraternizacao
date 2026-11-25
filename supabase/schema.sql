@@ -273,6 +273,20 @@ begin
     order by p.categoria, coalesce(avg(n.nota), 0) desc, count(n.id) desc, p.nome;
 end $$;
 
+-- Ranking ao vivo para o telão (TV): não pede senha.
+-- Devolve só nome, título, média e quantidade de notas de uma categoria (nunca quem votou).
+create or replace function public.confra_telao(p_categoria text)
+returns table (categoria text, participante_id uuid, nome text, titulo text, media numeric, qtd bigint)
+language sql stable security definer set search_path = public as $$
+  select p.categoria, p.id, p.nome, p.titulo,
+         coalesce(round(avg(n.nota)::numeric, 2), 0), count(n.id)
+  from public.confra_participantes p
+  left join public.confra_notas n on n.participante_id = p.id
+  where p.categoria = p_categoria
+  group by p.id
+  order by coalesce(avg(n.nota), 0) desc, count(n.id) desc, p.nome;
+$$;
+
 -- ---------------------------------------------------------------------
 -- Funções do painel de administração (todas exigem a senha)
 -- ---------------------------------------------------------------------
@@ -370,6 +384,7 @@ grant execute on function
   public.confra_inscrever(text, text, text, text, text, text, text, text),
   public.confra_editar_inscricao(uuid, text, text, text, text, text, text, text, text),
   public.confra_resultados(text),
+  public.confra_telao(text),
   public.confra_admin_login(text),
   public.confra_admin_config(text, text, text),
   public.confra_admin_item_salvar(text, uuid, text, text, text, text, int),

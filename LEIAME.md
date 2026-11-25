@@ -6,7 +6,7 @@
 |---|---|---|
 | `index.html` | Convidados (é o que o QR code abre) | Tela inicial com a arte do evento e os botões Cronograma, Fantasia e Talentos |
 | `admin.html` | Só a organização | Painel com senha: abre e fecha votações, mostra resultados, edita o cronograma, gera o QR code |
-| `telao.html` | A TV da festa | Apuração ao vivo da melhor fantasia, em tela cheia (pede a senha da organização) |
+| `telao.html` | A TV da festa | Apuração ao vivo da melhor fantasia, em tela cheia (abre sem senha) |
 | `estilo.css` | – | Visual compartilhado pelas duas páginas |
 | `dados.js` | – | Onde os dados são salvos (teste ou Supabase) |
 | `supabase/schema.sql` | – | Banco de dados, para quando forem ligar de verdade |
@@ -27,7 +27,9 @@ Mantenha todos os arquivos na mesma pasta.
 
 ## Telão (TV)
 
-Abra `telao.html` no computador ligado na TV (HDMI), digite a senha da organização e a tela entra em tela cheia. Se não entrar, aperte **F** ou dê dois cliques.
+Abra `telao.html` no computador ligado na TV (HDMI). Não pede senha: já abre na apuração. Clique em qualquer lugar ou aperte **F** para tela cheia (o navegador só permite tela cheia depois de um clique ou tecla). **F** de novo ou **Esc** sai.
+
+Como não tem senha, qualquer pessoa que abrir esse endereço vê o ranking ao vivo (nunca quem votou em quem).
 
 - **Abertura**: vinheta com o título da festa, depois o painel entra em cena.
 - **Antes das primeiras notas**: desfile dos concorrentes com foto e o aviso de que a votação está aberta (ou abre em breve).
@@ -36,7 +38,7 @@ Abra `telao.html` no computador ligado na TV (HDMI), digite a senha da organiza�
 - **Poucos concorrentes**: com 6 ou menos, a coluna da direita ganha um cartão "Vote pelo celular" com QR code.
 - **Votação fechada no painel**: o selo vira "Votação encerrada" e o ranking fica parado.
 - **Letreiro no rodapé**: como votar, regra do desempate, prêmios, horário da divulgação (lido do cronograma) e do 11º lugar em diante.
-- A TV não apaga sozinha enquanto o telão estiver aberto (em navegadores que permitem) e o mouse some depois de alguns segundos parado (mexa o mouse para ver os botões "Tela cheia" e "Sair").
+- A TV não apaga sozinha enquanto o telão estiver aberto (em navegadores que permitem) e o mouse some depois de alguns segundos parado (mexa o mouse para ver o botão "Tela cheia").
 
 | Endereço | O que mostra |
 |---|---|
@@ -77,4 +79,4 @@ Links diretos (úteis para QR codes específicos):
 6. Abra `.../admin.html` no endereço publicado (senha `trocar123`) e **troque a senha**.
 7. No painel, em "QR code das mesas", confira o endereço e imprima os cartões.
 
-Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=18` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.
+Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=19` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.
