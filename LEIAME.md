@@ -6,6 +6,7 @@
 |---|---|---|
 | `index.html` | Convidados (é o que o QR code abre) | Tela inicial com a arte do evento e os botões Cronograma, Fantasia e Talentos |
 | `admin.html` | Só a organização | Painel com senha: abre e fecha votações, mostra resultados, edita o cronograma, gera o QR code |
+| `telao.html` | A TV da festa | Apuração ao vivo da melhor fantasia, em tela cheia (pede a senha da organização) |
 | `estilo.css` | – | Visual compartilhado pelas duas páginas |
 | `dados.js` | – | Onde os dados são salvos (teste ou Supabase) |
 | `supabase/schema.sql` | – | Banco de dados, para quando forem ligar de verdade |
@@ -23,6 +24,25 @@ Mantenha todos os arquivos na mesma pasta.
 - **Votação por nota**: fica bloqueada até a organização liberar no `admin.html`. Liberada, a aba passa a se chamar "Votar". A pessoa toca no candidato e dá de 1 a 5 estrelas, e pode avaliar todos. O ranking é pela **média das notas**; no empate, fica na frente quem recebeu mais notas.
 - **Trava por aparelho**: cada celular dá **uma nota por candidato**. Se tentar de novo, a nota nova substitui a anterior (não soma). A identificação do aparelho fica guardada em 3 lugares do navegador; só apagando todos os dados do site ou usando aba anônima dá para votar de novo.
 - **Voltar do celular**: de qualquer seção, volta direto para a tela inicial. Com a janela de estrelas aberta, o voltar só fecha a janela.
+
+## Telão (TV)
+
+Abra `telao.html` no computador ligado na TV (HDMI), digite a senha da organização e a tela entra em tela cheia. Se não entrar, aperte **F** ou dê dois cliques.
+
+- **Abertura**: vinheta com o título da festa, depois o painel entra em cena.
+- **Antes das primeiras notas**: desfile dos concorrentes com foto e o aviso de que a votação está aberta (ou abre em breve).
+- **Ao vivo**: o 1º lugar em destaque (foto grande, coroa, média e prêmio) e a classificação do 2º ao 10º com barra de média e número de notas. Atualiza a cada 5 segundos. Quando alguém sobe, a linha brilha e mostra ▲; cada nota nova aparece como "+1".
+- **Nova liderança**: quando o 1º lugar muda, a tela escurece, entram faixas de cinema, a foto do novo líder e uma chuva de confete dourado (no máximo uma vez a cada 15 segundos).
+- **Poucos concorrentes**: com 6 ou menos, a coluna da direita ganha um cartão "Vote pelo celular" com QR code.
+- **Votação fechada no painel**: o selo vira "Votação encerrada" e o ranking fica parado.
+- **Letreiro no rodapé**: como votar, regra do desempate, prêmios, horário da divulgação (lido do cronograma) e do 11º lugar em diante.
+- A TV não apaga sozinha enquanto o telão estiver aberto (em navegadores que permitem) e o mouse some depois de alguns segundos parado (mexa o mouse para ver os botões "Tela cheia" e "Sair").
+
+| Endereço | O que mostra |
+|---|---|
+| `telao.html` | Melhor fantasia |
+| `telao.html?categoria=talento` | Show de talentos |
+| `telao.html?demo` | Demonstração com concorrentes e notas inventados (não lê o banco). Serve para testar a TV antes da festa |
 
 ## Arte do evento
 
