@@ -29,11 +29,13 @@ Mantenha todos os arquivos na mesma pasta.
   - Ninguém é empurrado: dois empatados em 2º ocupam o 2º e o 3º; o duelo só decide quem fica com qual. Quem estava em 4º continua em 4º.
   - Se o duelo também empatar, o empate continua aparecendo: abra **outro duelo** ou use **Comissão decide (sem votação)**, em que a comissão toca nos nomes na ordem. Duelos e decisões ficam em "Desempates feitos", com o botão **Desfazer**.
   - Só um duelo por vez, de 2 a 4 concorrentes (com mais de 4 empatados, só a comissão). "Encerrar agora" termina antes e já mostra o resultado; "Cancelar duelo" descarta.
-- **Resultado no celular**: com "Mostrar resultado para todos" ligado, a lista aparece no mesmo visual da classificação do telão (posição em ouro, prata e bronze, foto, barra da média, prêmio ou EMPATE, média e notas). Mostra os 5 primeiros, com o botão "Ver ranking completo".
+- **Resultado no celular**: com "Mostrar resultado para todos" ligado, aparece a aba **Resultado** (entre "Votar" e a inscrição), separada da votação, nas duas categorias. A lista aparece no mesmo visual da classificação do telão (posição em ouro, prata e bronze, foto, barra da média, prêmio ou EMPATE, média e notas). Mostra os 5 primeiros, com o botão "Ver ranking completo". Se a organização desligar o resultado, a aba some e o celular volta para a lista.
 - **Trava por aparelho**: cada celular dá **uma nota por candidato**. Se tentar de novo, a nota nova substitui a anterior (não soma). A identificação do aparelho fica guardada em 3 lugares do navegador; só apagando todos os dados do site ou usando aba anônima dá para votar de novo.
 - **Voltar do celular**: de qualquer seção, volta direto para a tela inicial. Com a janela de estrelas aberta, o voltar só fecha a janela.
 
 ## Telão (TV)
+
+Tudo vale igual para a **melhor fantasia** e para o **show de talentos** (telão, desempate, duelo, resultado no celular e painel); só muda o endereço do telão (tabela abaixo) e os prêmios (3 na fantasia, 2 nos talentos).
 
 Abra `telao.html` direto no navegador da TV (ou num computador ligado na TV). Não pede senha: já abre na apuração. Para tela cheia, aperte **OK** no controle da TV (ou clique na tela / tecla **F** no computador); o navegador só permite tela cheia depois de um toque. **Voltar** ou **Esc** sai. Se o navegador da TV não tiver tela cheia, a apuração se ajusta sozinha ao espaço da tela do mesmo jeito.
 
@@ -80,6 +82,7 @@ Links diretos (úteis para QR codes específicos):
 | `index.html#fantasia-concorrer` | Cadastro de fantasia |
 | `index.html#talentos` | Apresentações do show de talentos (votação, quando liberada) |
 | `index.html#talentos-inscrever` | Inscrição no show de talentos |
+| `index.html#fantasia-resultado` / `index.html#talentos-resultado` | Aba Resultado (quando divulgado) |
 
 ## Depois: ligar o banco para a festa de verdade
 
@@ -91,4 +94,4 @@ Links diretos (úteis para QR codes específicos):
 6. Abra `.../admin.html` no endereço publicado (senha `trocar123`) e **troque a senha**.
 7. No painel, em "QR code das mesas", confira o endereço e imprima os cartões.
 
-Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=23` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.
+Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=24` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.
