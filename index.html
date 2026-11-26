@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,500;1,600;1,700;1,800&family=Playfair+Display:wght@500;600&display=swap">
-<link rel="stylesheet" href="estilo.css?v=22">
+<link rel="stylesheet" href="estilo.css?v=23">
 </head>
 <body>
 
@@ -268,7 +268,7 @@
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="dados.js?v=22"></script>
+<script src="dados.js?v=23"></script>
 <script>
 (function () {
   "use strict";
@@ -450,7 +450,6 @@
     }
     return s;
   }
-  const fmtMedia = (m) => m.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
   // ---------------------------------------------------------- lista / votação
   function iniciais(nome) {
@@ -505,15 +504,31 @@
     const rb = $(`#${cat}-resultado`);
     if (res && res.length) {
       // Mostra os 5 primeiros; o botão abre o ranking completo (e fica aberto nas atualizações).
+      // Mesmo visual da classificação do telão: posição em ouro/prata/bronze, foto, nome, fantasia,
+      // barra da média, prêmio (ou EMPATE) e média com o número de notas.
       const todo = estado.rankingTodo[cat], LIMITE = 5;
       const alternar = () => { estado.rankingTodo[cat] = !todo; renderLista(cat); };
+      const porId = new Map(lista.map((p) => [p.id, p]));
+      const premios = api.premios[cat] || [];
+      const media2 = (m) => m.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       rb.replaceChildren(h("div", { class: "resultado" },
         h("h3", { text: "Resultado" }),
-        h("ol", { class: "ranking" }, (todo ? res : res.slice(0, LIMITE)).map((r, i) => h("li", null,
-          h("span", { class: "pos", text: String(r.pos || i + 1) }),
-          h("span", { class: "nm", text: `${r.titulo || ""} · ${r.nome}` }),
-          h("span", { class: "vt", text: (r.qtd ? `${fmtMedia(r.media)} ★` : "sem notas") + (r.empate ? " · empate" : "") }),
-          h("span", { class: "barra" }, h("span", { style: `width:${Math.round((r.media / 5) * 100)}%` }))))),
+        h("div", { class: "rk-cab", "aria-hidden": "true" }, h("span", { text: "Classificação" }), h("span", { text: "Média · notas" })),
+        h("ol", { class: "rk-tv" }, (todo ? res : res.slice(0, LIMITE)).map((r, i) => {
+          const pos = r.pos || i + 1, p = porId.get(r.participante_id), premio = premios[pos - 1];
+          return h("li", { class: "rk-linha" + (r.empate ? " empatada" : ""), "data-pos": String(pos) },
+            h("span", { class: "rk-pos", text: pos + "º" }),
+            h("span", { class: "rk-foto", "aria-hidden": "true" }, p && p.foto_url ? h("img", { src: p.foto_url, alt: "", loading: "lazy" }) : iniciais(r.nome)),
+            h("span", { class: "rk-txt" },
+              h("b", { class: "rk-nome", text: r.nome }),
+              r.titulo ? h("i", { class: "rk-fant", text: r.titulo }) : null,
+              h("span", { class: "rk-barra" }, h("i", { style: `width:${Math.round((r.media / 5) * 100)}%` })),
+              r.empate ? h("small", { class: "rk-premio" }, h("b", { class: "tag-empate", text: "Empate" }))
+                : premio ? h("small", { class: "rk-premio" }, h("b", { text: "Prêmio" }), premio) : null),
+            h("span", { class: "rk-num" },
+              r.qtd ? h("b", null, media2(r.media), h("small", { text: "★" })) : h("b", { text: "—" }),
+              h("small", { text: r.qtd ? `${r.qtd} ${r.qtd === 1 ? "nota" : "notas"}` : "sem notas" })));
+        })),
         res.length > LIMITE ? h("button", { type: "button", class: "btn sec peq ver-ranking", "aria-expanded": String(todo), onclick: alternar,
           text: todo ? "Mostrar só os 5 primeiros" : `Ver ranking completo (${res.length})` }) : null));
     } else rb.replaceChildren();

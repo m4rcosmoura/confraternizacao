@@ -29,6 +29,7 @@ Mantenha todos os arquivos na mesma pasta.
   - Ninguém é empurrado: dois empatados em 2º ocupam o 2º e o 3º; o duelo só decide quem fica com qual. Quem estava em 4º continua em 4º.
   - Se o duelo também empatar, o empate continua aparecendo: abra **outro duelo** ou use **Comissão decide (sem votação)**, em que a comissão toca nos nomes na ordem. Duelos e decisões ficam em "Desempates feitos", com o botão **Desfazer**.
   - Só um duelo por vez, de 2 a 4 concorrentes (com mais de 4 empatados, só a comissão). "Encerrar agora" termina antes e já mostra o resultado; "Cancelar duelo" descarta.
+- **Resultado no celular**: com "Mostrar resultado para todos" ligado, a lista aparece no mesmo visual da classificação do telão (posição em ouro, prata e bronze, foto, barra da média, prêmio ou EMPATE, média e notas). Mostra os 5 primeiros, com o botão "Ver ranking completo".
 - **Trava por aparelho**: cada celular dá **uma nota por candidato**. Se tentar de novo, a nota nova substitui a anterior (não soma). A identificação do aparelho fica guardada em 3 lugares do navegador; só apagando todos os dados do site ou usando aba anônima dá para votar de novo.
 - **Voltar do celular**: de qualquer seção, volta direto para a tela inicial. Com a janela de estrelas aberta, o voltar só fecha a janela.
 
@@ -40,11 +41,11 @@ Como não tem senha, qualquer pessoa que abrir esse endereço vê o ranking ao v
 
 - **Abertura**: vinheta com o título da festa, depois o painel entra em cena.
 - **Antes das primeiras notas**: desfile dos concorrentes com foto e o aviso de que a votação está aberta (ou abre em breve).
-- **Ao vivo**: o 1º lugar em destaque (foto grande, coroa, média e prêmio) e a classificação do 2º ao 8º com barra de média e número de notas. Atualiza a cada 5 segundos. Quando alguém sobe, a linha brilha e mostra ▲; cada nota nova aparece como "+1".
+- **Ao vivo**: o 1º lugar em destaque (foto grande, coroa, média e prêmio) e a classificação do 2º ao 8º (do 2º ao 10º depois que a votação fecha) com barra de média e número de notas. Atualiza a cada 5 segundos. Quando alguém sobe, a linha brilha e mostra ▲; cada nota nova aparece como "+1".
 - **Nova liderança**: quando o 1º lugar muda, a tela escurece, entram faixas de cinema, a foto do novo líder e uma chuva de confete dourado (no máximo uma vez a cada 15 segundos).
 - **Empate no 1º lugar**: os empatados (até 4) dividem o destaque, lado a lado, cada um com sua foto, nota e o selo "1º · Empate". Empatados em outras posições aparecem com a mesma posição e a marca EMPATE.
-- **QR code sempre na tela**: o cartão "Vote pelo celular" com QR code fica embaixo da classificação. Com até 6 concorrentes ele aparece grande; com 7 ou mais fica compacto, para caber a lista.
-- **Votação fechada no painel**: o selo vira "Votação encerrada" e o ranking fica parado.
+- **QR code sempre na tela** (com a votação aberta): o cartão "Vote pelo celular" com QR code fica embaixo da classificação. Com até 6 concorrentes ele aparece grande; com 7 ou mais fica compacto, para caber a lista.
+- **Votação fechada no painel**: o selo vira "Votação encerrada", o cartão do QR code vira só a faixa "Votação encerrada" e a classificação passa a ir até o 10º lugar.
 - **Duelo de desempate**: quando a organização abre um duelo, o telão troca a classificação pela tela do duelo e, no fim, revela o resultado (veja "Duelo relâmpago" acima).
 - **Letreiro no rodapé**: como votar, regra do desempate (incluindo o duelo relâmpago), prêmios, e horário da divulgação (lido do cronograma).
 - A TV não apaga sozinha enquanto o telão estiver aberto (em navegadores que permitem) e o mouse some depois de alguns segundos parado (mexa o mouse para ver o botão "Tela cheia").
@@ -55,6 +56,7 @@ Como não tem senha, qualquer pessoa que abrir esse endereço vê o ranking ao v
 | `telao.html?categoria=talento` | Show de talentos |
 | `telao.html?demo` | Demonstração com concorrentes e notas inventados (não lê o banco). Serve para testar a TV antes da festa |
 | `telao.html?demo&duelo` | Demonstração com um duelo de desempate de 40 segundos e a revelação no fim (`&duelo=3` ou `&duelo=4` para 3 ou 4 empatados) |
+| `telao.html?demo&encerrada` | Demonstração de como fica com a votação fechada (lista até o 10º) |
 
 ## Arte do evento
 
@@ -89,4 +91,4 @@ Links diretos (úteis para QR codes específicos):
 6. Abra `.../admin.html` no endereço publicado (senha `trocar123`) e **troque a senha**.
 7. No painel, em "QR code das mesas", confira o endereço e imprima os cartões.
 
-Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=22` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.
+Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=23` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.

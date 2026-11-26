@@ -241,11 +241,11 @@ body.sem-cursor, body.sem-cursor * { cursor: none !important; }
 .lista { position: relative; flex: 1; }
 .lista-vazia { position: absolute; inset: 40px 0 auto; text-align: center; font-family: var(--serif); font-style: italic; font-size: 30px; color: var(--muted); }
 .linha {
-  position: absolute; left: 0; right: 0; top: 0; height: 70px;
-  display: grid; grid-template-columns: 70px 58px minmax(0, 1fr) 250px 132px; align-items: center; gap: 18px; padding: 0 24px 0 10px;
+  position: absolute; left: 0; right: 0; top: 0; height: var(--alt, 70px);
+  display: grid; grid-template-columns: 70px var(--foto, 58px) minmax(0, 1fr) 250px 132px; align-items: center; gap: 18px; padding: 0 24px 0 10px;
   border-radius: 18px; background: linear-gradient(90deg, rgba(14, 62, 46, .9), rgba(6, 34, 25, .68));
   border: 1px solid rgba(245, 221, 47, .15); box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
-  transform: translateY(calc(var(--i, 0) * 79px));
+  transform: translateY(calc(var(--i, 0) * var(--passo, 79px)));
   transition: transform 1.1s cubic-bezier(.2, .85, .2, 1), translate .9s cubic-bezier(.2, .85, .2, 1) var(--d, 0s), opacity .9s ease var(--d, 0s), border-color .6s;
 }
 .linha.entra { opacity: 0; translate: 140px 0; }
@@ -258,7 +258,7 @@ body.sem-cursor, body.sem-cursor * { cursor: none !important; }
 .linha[data-pos="1"] .l-pos { background: var(--ouro); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .linha[data-pos="2"] .l-pos { background: var(--prata); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .linha[data-pos="3"] .l-pos { background: var(--bronze); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.l-foto { position: relative; width: 58px; height: 58px; border-radius: 50%; overflow: hidden; background: #0b2e22; box-shadow: 0 0 0 2px rgba(245, 221, 47, .6), 0 6px 14px rgba(0, 0, 0, .4); }
+.l-foto { position: relative; width: var(--foto, 58px); height: var(--foto, 58px); border-radius: 50%; overflow: hidden; background: #0b2e22; box-shadow: 0 0 0 2px rgba(245, 221, 47, .6), 0 6px 14px rgba(0, 0, 0, .4); }
 .l-foto img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; }
 .l-foto .sem-foto { font-size: 22px; }
 .l-txt { display: grid; min-width: 0; }
@@ -314,6 +314,14 @@ body.sem-cursor, body.sem-cursor * { cursor: none !important; }
 .ch-passos li { display: flex; align-items: center; gap: 14px; }
 .ch-passos b { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--ouro); color: var(--ink); font-size: 17px; font-weight: 800; }
 .ch-fim { margin: 0; font-size: 24px; font-weight: 500; color: var(--muted); }
+/* votação encerrada: só a faixa "Votação encerrada", e a classificação vai até o 10º (linhas um pouco mais baixas) */
+.chamada.encerrada { height: 64px; justify-content: center; padding: 0 30px; }
+.chamada.encerrada .ch-qr, .chamada.encerrada .ch-sobre, .chamada.encerrada .ch-passos, .chamada.encerrada .ch-fim { display: none !important; }
+.chamada.encerrada .ch-tit { margin: 0; font-size: 34px; text-align: center; }
+.ranking.denso { --alt: 63px; --passo: 71px; --foto: 52px; }
+.ranking.denso .l-pos { font-size: 36px; }
+.ranking.denso .l-nome { font-size: 25px; }
+.ranking.denso .l-fant { font-size: 19px; }
 
 /* ------------------------------------------------------------ Espera (antes das primeiras notas) */
 .espera { position: absolute; left: 0; right: 0; top: 205px; height: 755px; display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -616,7 +624,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
   <button type="button" id="btn-tela">Tela cheia</button>
 </div>
 
-<script src="dados.js?v=22"></script>
+<script src="dados.js?v=23"></script>
 <script>
 (function () {
   "use strict";
@@ -643,7 +651,9 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     talento: { titulo: "Show de Talentos", unidade: "cada apresentação", toque: "Toque na apresentação", ancora: "talentos", premios: ["Caixa de som JBL Xtreme 4", "Air Fryer Electrolux 12 litros"] },
   };
   const C = CATS[CAT];
-  const MAX_LINHAS = 7;            // 2º ao 8º na coluna (sobra espaço para o QR code)
+  // Linhas da classificação depois do 1º lugar: com a votação aberta, 2º ao 8º (sobra espaço para o QR code);
+  // com a votação encerrada, 2º ao 10º (o cartão vira só a faixa "Votação encerrada").
+  const maxLinhas = () => (aberta() ? 7 : 9);
   const INTERVALO = DEMO ? 3000 : 5000;
 
   document.title = `Telão · ${C.titulo}`;
@@ -812,7 +822,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     return {
       demo: true,
       participantes: async () => ps,
-      config: async () => ({ ["votacao_" + CAT]: "sim" }),
+      config: async () => ({ ["votacao_" + CAT]: params.has("encerrada") ? "nao" : "sim" }),   // &encerrada: como fica com a votação fechada
       programacao: async () => [{ titulo: "Divulgação dos resultados", hora: "15:30" }],
       resultados: async () => {
         simular();
@@ -1058,14 +1068,16 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
 
   // ------------------------------------------------------------ Cartão "vote pelo celular" com QR code
   function atualizarChamada(nLinhas) {
-    // Sempre na tela: grande com até 5 linhas, compacto com 6 ou 7.
-    const ch = $("#chamada");
+    // Votação aberta: sempre na tela, grande com até 5 linhas, compacto com 6 ou 7.
+    // Encerrada: vira só a faixa "Votação encerrada" e a lista ganha espaço até o 10º.
+    const ch = $("#chamada"), ab = aberta();
     ch.hidden = false;
-    ch.classList.toggle("compacta", nLinhas > 5);
-    const ab = aberta();
-    $("#ch-sobre").textContent = ab ? "Vote pelo celular" : "Apuração";
+    ch.classList.toggle("compacta", ab && nLinhas > 5);
+    ch.classList.toggle("encerrada", !ab);
+    $(".ranking").classList.toggle("denso", !ab && nLinhas > 7);
+    $("#ch-sobre").textContent = "Vote pelo celular";
     $("#ch-tit").textContent = ab ? "Sua nota decide o pódio" : "Votação encerrada";
-    $("#ch-passos").hidden = !ab; $("#ch-fim").hidden = ab;
+    $("#ch-passos").hidden = !ab; $("#ch-fim").hidden = true;
     $("#ch-qr").hidden = !ab || !est.qrOk;
     if (ab) montarQR();
   }
@@ -1174,8 +1186,9 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
       // empatados no 1º lugar vão todos para o destaque (até 4); a classificação começa depois deles
       const grupo = lista.slice(0, est.nLider);
       renderLider(grupo);
-      renderLinhas(lista.slice(grupo.length, grupo.length + MAX_LINHAS), grupo.length);
-      atualizarChamada(Math.min(lista.length - grupo.length, MAX_LINHAS));
+      const max = maxLinhas();
+      renderLinhas(lista.slice(grupo.length, grupo.length + max), grupo.length);
+      atualizarChamada(Math.min(lista.length - grupo.length, max));
       if (est.pronto && !lider.empate && anterior !== lider.id && Date.now() - est.ultimaVirada > 15000) {
         virada(lider, anterior ? "Nova liderança" : "Abrindo a apuração");
       }
