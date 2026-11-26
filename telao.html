@@ -14,8 +14,8 @@
   TELÃO DA APURAÇÃO (para a TV)
   Tela 16:9 desenhada em 1920x1080 e ampliada/reduzida para caber em qualquer TV.
   Mostra o ranking da votação ao vivo (atualiza a cada 5 segundos) com a identidade dos folders.
-  - telao.html                       → melhor fantasia (abre direto, sem senha)
-  - telao.html?categoria=talento     → show de talentos
+  - telao.html                       → o que o painel mandar mostrar: melhor fantasia ou show de talentos (abre direto, sem senha)
+  - telao.html?categoria=talento     → fixo no show de talentos (?categoria=fantasia: fixo na fantasia)
   - telao.html?demo                  → demonstração com dados inventados (não lê o banco)
   - telao.html?demo&duelo            → demonstração com um duelo de desempate (&duelo=3 ou 4 para mais empatados)
   Tela cheia: OK no controle da TV, clique em qualquer lugar ou tecla F (Esc ou Voltar sai).
@@ -624,7 +624,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
   <button type="button" id="btn-tela">Tela cheia</button>
 </div>
 
-<script src="dados.js?v=24"></script>
+<script src="dados.js?v=25"></script>
 <script>
 (function () {
   "use strict";
@@ -645,20 +645,27 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
   // ------------------------------------------------------------ Parâmetros
   const params = new URLSearchParams(location.search);
   const DEMO = params.has("demo");
-  const CAT = params.get("categoria") === "talento" ? "talento" : "fantasia";
+  // Um endereço só para a TV: quem escolhe o que aparece (fantasia ou talentos) é o painel da organização.
+  // ?categoria=fantasia ou ?categoria=talento fixa a TV numa categoria (ignora o painel).
+  const FIXA = ["fantasia", "talento"].includes(params.get("categoria")) ? params.get("categoria") : null;
+  let CAT = FIXA || "fantasia";
   const CATS = {
     fantasia: { titulo: "Melhor Fantasia", unidade: "cada fantasia", toque: "Toque na fantasia", ancora: "fantasia", premios: ["Xiaomi Redmi Note 17", "Bicicleta aro 29", "Echo Dot (Alexa)"] },
     talento: { titulo: "Show de Talentos", unidade: "cada apresentação", toque: "Toque na apresentação", ancora: "talentos", premios: ["Caixa de som JBL Xtreme 4", "Air Fryer Electrolux 12 litros"] },
   };
-  const C = CATS[CAT];
+  let C = CATS[CAT];
   // Linhas da classificação depois do 1º lugar: com a votação aberta, 2º ao 8º (sobra espaço para o QR code);
   // com a votação encerrada, 2º ao 10º (o cartão vira só a faixa "Votação encerrada").
   const maxLinhas = () => (aberta() ? 7 : 9);
   const INTERVALO = DEMO ? 3000 : 5000;
 
-  document.title = `Telão · ${C.titulo}`;
-  document.querySelectorAll("[data-cat]").forEach((el) => { el.textContent = C.titulo; });
-  $("#ch-toque").textContent = C.toque;
+  function textosDaCategoria() {
+    document.title = `Telão · ${C.titulo}`;
+    document.querySelectorAll("[data-cat]").forEach((el) => { el.textContent = C.titulo; });
+    $("#ch-toque").textContent = C.toque;
+  }
+  textosDaCategoria();
+  const categoriaDoPainel = (cfg) => FIXA || (cfg && cfg.telao_categoria === "talento" ? "talento" : "fantasia");
 
   // ------------------------------------------------------------ Escala do palco 1920x1080
   const PALCO = $("#palco");
@@ -1370,10 +1377,13 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     est.emCiclo = true;
     const n = est.n++;
     try {
+      // A configuração vem a cada ciclo: é por ela que o painel troca o que a TV mostra (em até 5 segundos).
+      est.cfg = (await fonte.config()) || {};
+      const quer = categoriaDoPainel(est.cfg);
+      if (quer !== CAT) trocarCategoria(quer);
       if (n % 4 === 0 || est.precisaParticipantes) {
-        const [ps, cfg] = await Promise.all([fonte.participantes(), fonte.config()]);
+        const ps = await fonte.participantes();
         est.participantes = new Map((ps || []).map((p) => [p.id, p]));
-        est.cfg = cfg || {};
         est.precisaParticipantes = false;
       }
       if (n % 60 === 0) { try { est.prog = (await fonte.programacao()) || []; } catch (e) { /* segue sem */ } }
@@ -1401,14 +1411,45 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
   // ------------------------------------------------------------ Abertura e telas
   function abertura() {
     const i = $("#intro");
-    i.hidden = false;
-    setTimeout(() => { PALCO.classList.add("pronto"); i.classList.add("sai"); }, 3900);
-    setTimeout(() => {
-      i.hidden = true; est.pronto = true;
-      if (!tk.anim) rodarTicker();
-    }, 4900);
+    (est.aberturaT || []).forEach(clearTimeout);
+    i.classList.remove("sai"); i.hidden = false;
+    est.aberturaT = [
+      setTimeout(() => { PALCO.classList.add("pronto"); i.classList.add("sai"); }, 3900),
+      setTimeout(() => {
+        i.hidden = true; est.pronto = true;
+        if (!tk.anim) rodarTicker();
+      }, 4900),
+    ];
   }
-  function mostrarShow() {
+  // Troca de categoria pelo painel: a vinheta de abertura entra com o novo título e,
+  // por trás dela, a apuração da outra categoria é montada do zero (sem recarregar a página,
+  // para a TV não sair da tela cheia).
+  function trocarCategoria(nova) {
+    CAT = nova; C = CATS[CAT];
+    sairDuelo(true);
+    $("#duelo").hidden = true; $("#duelo").className = "duelo";
+    $(".titulo .sobre span:nth-child(2)").textContent = "Apuração ao vivo";
+    linhas.forEach((el) => el.remove()); linhas.clear();
+    $("#lista").replaceChildren();
+    $("#lider-area").querySelectorAll(".poster").forEach((el) => el.remove());
+    $(".ranking").classList.remove("denso");
+    $("#arena").hidden = true; $("#espera").hidden = true;
+    $("#virada").hidden = true;
+    Object.assign(est, {
+      emArena: null, posterId: null, liderId: null, prev: new Map(), lista: [], desfileChave: "",
+      participantes: new Map(), precisaParticipantes: true, qrOk: false, qrSvg: null, ultimaVirada: Date.now(),
+    });
+    $("#ch-qr").replaceChildren(); $("#d-qr").replaceChildren();
+    $("#total")._v = null; $("#total").textContent = "0";
+    if (tk.anim) { tk.anim.onfinish = null; tk.anim.cancel(); tk.anim = null; }
+    tk.chave = ""; tk.pendente = null; $("#tk-texto").replaceChildren();
+    textosDaCategoria();
+    est.pronto = false; PALCO.classList.remove("pronto");
+    abertura();
+  }
+  async function mostrarShow() {
+    // começa já na categoria escolhida no painel (a vinheta mostra o título certo)
+    try { const cfg = await Promise.race([fonte.config(), new Promise((r) => setTimeout(r, 4000))]); CAT = categoriaDoPainel(cfg); C = CATS[CAT]; textosDaCategoria(); } catch (e) { /* segue na fantasia */ }
     $("#tela-show").hidden = false;
     est.rodando = true;
     manterAcesa();

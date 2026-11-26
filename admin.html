@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,500;1,600;1,700;1,800&family=Playfair+Display:wght@500;600&display=swap">
-<link rel="stylesheet" href="estilo.css?v=24">
+<link rel="stylesheet" href="estilo.css?v=25">
 </head>
 <body>
 <div class="recorte de-confra faixa-topo faixa-interna" style="--x:0;--y:0;--w:902;--h:118;--px:0%" aria-hidden="true"></div>
@@ -40,12 +40,19 @@
       <h3>Ao vivo</h3>
       <p class="dica">O que estiver ligado aparece para quem está com o site aberto (em até 5 segundos).</p>
       <div id="adm-chaves"></div>
+      <div class="tv-escolha">
+        <p class="tv-tit"><strong>Telão (TV)</strong><span>O que a TV mostra. Troca sozinha em até 5 segundos, sem mexer na TV. Endereço da TV: <a href="telao.html" target="_blank" rel="noopener">telao.html</a></span></p>
+        <div class="seg" role="radiogroup" aria-label="O que a TV mostra" id="tv-escolha">
+          <button type="button" role="radio" data-tv="fantasia">Melhor fantasia</button>
+          <button type="button" role="radio" data-tv="talento">Show de talentos</button>
+        </div>
+      </div>
     </div>
 
     <div class="bloco">
       <h3>Resultados</h3>
       <p class="dica">Atualiza sozinho a cada 5 segundos. Só a organização vê, a menos que "Mostrar resultado para todos" esteja ligado.</p>
-      <p class="dica">Para a TV: <a href="telao.html" target="_blank" rel="noopener">telão da fantasia</a> · <a href="telao.html?categoria=talento" target="_blank" rel="noopener">telão dos talentos</a> (apuração ao vivo em tela cheia, abre sem senha).</p>
+      <p class="dica">Para a TV: abra <a href="telao.html" target="_blank" rel="noopener">telao.html</a> (apuração ao vivo em tela cheia, abre sem senha) e escolha em "Ao vivo" se ela mostra a fantasia ou os talentos. Ao abrir um duelo, a TV vai sozinha para a categoria do duelo.</p>
       <p class="dica"><b>Desempate:</b> se terminar empate total numa posição com prêmio, feche a votação e abra o <b>duelo</b>: o telão e os celulares mostram só os empatados, cada celular escolhe um, e o placar aparece no telão quando o tempo acaba. Se empatar de novo, abra outro duelo ou use "Comissão decide".</p>
       <div class="dupla">
         <div>
@@ -122,7 +129,7 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="impressao" aria-hidden="true"></div>
 
-<script src="dados.js?v=24"></script>
+<script src="dados.js?v=25"></script>
 <script>
 (function () {
   "use strict";
@@ -232,7 +239,26 @@
     adm.timer = setInterval(() => { if (adm.senha && !document.hidden) carregarResultados(); }, 5000);
   }
 
+  // Telão: um endereço só; aqui se escolhe se a TV mostra a fantasia ou os talentos.
+  function renderTV() {
+    const atual = cfg.telao_categoria === "talento" ? "talento" : "fantasia";
+    $$("#tv-escolha button").forEach((b) => {
+      b.setAttribute("aria-selected", String(b.dataset.tv === atual));
+      b.setAttribute("aria-checked", String(b.dataset.tv === atual));
+    });
+  }
+  $$("#tv-escolha button").forEach((b) => b.addEventListener("click", async () => {
+    if (b.getAttribute("aria-selected") === "true") return;
+    const antes = cfg.telao_categoria;
+    cfg.telao_categoria = b.dataset.tv; renderTV();
+    try {
+      await api.adminConfig(adm.senha, "telao_categoria", b.dataset.tv);
+      toast(`A TV vai mostrar ${b.dataset.tv === "talento" ? "o show de talentos" : "a melhor fantasia"} em até 5 segundos.`);
+    } catch (e) { cfg.telao_categoria = antes; renderTV(); toast(e.message, "erro"); }
+  }));
+
   function renderChaves() {
+    renderTV();
     $("#adm-chaves").replaceChildren(...CHAVES.map(([k, titulo, desc]) => {
       const id = "sw-" + k;
       const sw = h("input", { type: "checkbox", role: "switch", class: "switch", id, checked: cfg[k] === "sim" });
@@ -421,7 +447,7 @@
             const sel = h("select", { "aria-label": "Tempo do duelo", class: "des-tempo" }, [60, 120, 180, 300].map((s) => h("option", { value: s, selected: s === adm.duracao, text: s === 60 ? "1 minuto" : `${s / 60} minutos` })));
             sel.addEventListener("change", () => { adm.duracao = Number(sel.value); });
             const abrir = h("button", { type: "button", class: "btn peq", text: "Abrir duelo no telão e nos celulares" });
-            armar(abrir, async () => { await api.adminDesempateAbrir(adm.senha, cat, pos, ids, adm.duracao); toast("Duelo aberto: já aparece no telão e nos celulares."); carregarResultados(); });
+            armar(abrir, async () => { await api.adminDesempateAbrir(adm.senha, cat, pos, ids, adm.duracao); cfg.telao_categoria = cat; renderTV(); toast("Duelo aberto: já aparece no telão e nos celulares."); carregarResultados(); });
             card.append(h("div", { class: "acoes" }, sel, abrir));
           }
           card.append(h("button", { type: "button", class: "link-editar", text: "Comissão decide (sem votação)", onclick: () => { adm.decidindo = { chave: chaveGrupo, ordem: [] }; renderDesempate(cat); } }));

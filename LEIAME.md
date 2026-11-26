@@ -35,7 +35,9 @@ Mantenha todos os arquivos na mesma pasta.
 
 ## Telão (TV)
 
-Tudo vale igual para a **melhor fantasia** e para o **show de talentos** (telão, desempate, duelo, resultado no celular e painel); só muda o endereço do telão (tabela abaixo) e os prêmios (3 na fantasia, 2 nos talentos).
+Tudo vale igual para a **melhor fantasia** e para o **show de talentos** (telão, desempate, duelo, resultado no celular e painel); só mudam os prêmios (3 na fantasia, 2 nos talentos).
+
+**Um endereço só para a TV**: `telao.html`. Quem escolhe o que ela mostra é o painel, em "Ao vivo" → **Telão (TV)**: botões **Melhor fantasia** / **Show de talentos**. A TV troca sozinha em até 5 segundos, com a vinheta de abertura do novo concurso, sem sair da tela cheia e sem ninguém mexer nela. Ao abrir um duelo de desempate, a TV vai sozinha para a categoria do duelo.
 
 Abra `telao.html` direto no navegador da TV (ou num computador ligado na TV). Não pede senha: já abre na apuração. Para tela cheia, aperte **OK** no controle da TV (ou clique na tela / tecla **F** no computador); o navegador só permite tela cheia depois de um toque. **Voltar** ou **Esc** sai. Se o navegador da TV não tiver tela cheia, a apuração se ajusta sozinha ao espaço da tela do mesmo jeito.
 
@@ -54,8 +56,8 @@ Como não tem senha, qualquer pessoa que abrir esse endereço vê o ranking ao v
 
 | Endereço | O que mostra |
 |---|---|
-| `telao.html` | Melhor fantasia |
-| `telao.html?categoria=talento` | Show de talentos |
+| `telao.html` | O que o painel escolher (melhor fantasia ou show de talentos). É este que fica na TV |
+| `telao.html?categoria=talento` / `?categoria=fantasia` | Fixo numa categoria, sem seguir o painel (ex.: uma segunda TV) |
 | `telao.html?demo` | Demonstração com concorrentes e notas inventados (não lê o banco). Serve para testar a TV antes da festa |
 | `telao.html?demo&duelo` | Demonstração com um duelo de desempate de 40 segundos e a revelação no fim (`&duelo=3` ou `&duelo=4` para 3 ou 4 empatados) |
 | `telao.html?demo&encerrada` | Demonstração de como fica com a votação fechada (lista até o 10º) |
@@ -94,4 +96,4 @@ Links diretos (úteis para QR codes específicos):
 6. Abra `.../admin.html` no endereço publicado (senha `trocar123`) e **troque a senha**.
 7. No painel, em "QR code das mesas", confira o endereço e imprima os cartões.
 
-Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=24` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.
+Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=25` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.

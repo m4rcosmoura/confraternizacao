@@ -322,9 +322,13 @@ begin
   if p_chave not in (
     'evento_nome', 'evento_data', 'evento_local', 'aviso',
     'inscricoes_fantasia', 'inscricoes_talento',
-    'votacao_fantasia', 'votacao_talento', 'resultados_publicos'
+    'votacao_fantasia', 'votacao_talento', 'resultados_publicos',
+    'telao_categoria'   -- o que a TV (telao.html) mostra: fantasia ou talento
   ) then
     raise exception 'Configuração desconhecida: %', p_chave;
+  end if;
+  if p_chave = 'telao_categoria' and coalesce(p_valor, '') not in ('fantasia', 'talento') then
+    raise exception 'A TV mostra fantasia ou talento.';
   end if;
   insert into public.confra_config (chave, valor) values (p_chave, coalesce(p_valor, ''))
   on conflict (chave) do update set valor = excluded.valor;
@@ -506,6 +510,9 @@ begin
   insert into public.confra_desempates (categoria, posicao, participantes, fim)
   values (p_categoria, greatest(1, coalesce(p_posicao, 1)), p_participantes, now() + make_interval(secs => p_segundos))
   returning id into v_id;
+  -- a TV passa a mostrar a categoria do duelo
+  insert into public.confra_config (chave, valor) values ('telao_categoria', p_categoria)
+  on conflict (chave) do update set valor = excluded.valor;
   return v_id;
 end $$;
 
@@ -601,7 +608,8 @@ insert into public.confra_config (chave, valor) values
   ('inscricoes_talento', 'sim'),
   ('votacao_fantasia', 'nao'),
   ('votacao_talento', 'nao'),
-  ('resultados_publicos', 'nao')
+  ('resultados_publicos', 'nao'),
+  ('telao_categoria', 'fantasia')
 on conflict (chave) do nothing;
 
 -- Senha inicial do painel: trocar123  (troque no painel logo no primeiro acesso)

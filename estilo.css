@@ -501,3 +501,15 @@ input:focus, select:focus, textarea:focus { border-color: var(--gold); outline: 
 .rk-num b { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .rk-num b small { margin-left: 2px; font-size: 13px; color: var(--gold); }
 .rk-num > small { font-size: 11px; color: var(--muted); }
+
+/* Painel: no ranking, a média e as estrelas vão para a linha de baixo (senão o nome fica sem espaço) */
+.adm-pagina .ranking li { grid-template-columns: 22px minmax(0, 1fr); }
+.adm-pagina .ranking .nm { font-weight: 600; }
+.adm-pagina .ranking .vt, .adm-pagina .ranking .barra { grid-column: 2; }
+
+/* Painel: o que a TV mostra */
+.tv-escolha { margin-top: 6px; padding: 14px 0 4px; border-top: 1px solid var(--line); }
+.tv-tit { margin: 0; }
+.tv-tit strong { display: block; }
+.tv-tit span { display: block; color: var(--muted); font-size: 14px; }
+.tv-escolha .seg { max-width: 420px; margin: 10px 0 0; }

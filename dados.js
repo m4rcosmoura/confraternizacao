@@ -174,6 +174,7 @@ window.api = (function () {
         inscricoes_fantasia: "sim", inscricoes_talento: "sim",
         votacao_fantasia: "nao", votacao_talento: "nao",
         resultados_publicos: "nao",
+        telao_categoria: "fantasia",   // o que a TV (telao.html) mostra
       },
       senha: "trocar123",
       programacao: [
@@ -320,7 +321,7 @@ window.api = (function () {
       if (d.config["votacao_" + cat] === "sim") throw new Error("Feche a votação antes de abrir o desempate.");
       if (d.desempates.some((x) => !x.cancelado && x.fim > Date.now())) throw new Error("Já tem um desempate em andamento. Encerre ou cancele antes de abrir outro.");
       const x = { id: uuid(), categoria: cat, posicao, participantes: ids, inicio: Date.now(), fim: Date.now() + segundos * 1000, decisao: null, cancelado: false };
-      d.desempates.push(x); gravar(d); return x.id;
+      d.desempates.push(x); d.config.telao_categoria = cat; gravar(d); return x.id;   // a TV vai para o duelo
     },
     async adminDesempateDecidir(senha, cat, posicao, ordem) {
       const d = ler(); exigirAdmin(d, senha);
