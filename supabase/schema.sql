@@ -387,6 +387,173 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
+-- Desempate: duelo relâmpago entre os empatados (ou decisão da comissão)
+-- A organização abre no painel; cada celular escolhe UM dos empatados
+-- (pode trocar até o tempo acabar). O placar só é revelado no fim.
+-- Uma "decisão da comissão" é um desempate sem votação (campo decisao).
+-- ---------------------------------------------------------------------
+create table if not exists public.confra_desempates (
+  id uuid primary key default gen_random_uuid(),
+  categoria text not null check (categoria in ('fantasia', 'talento')),
+  posicao int not null check (posicao between 1 and 50),        -- posição que estava empatada (ex.: 2 = empate no 2º lugar)
+  participantes uuid[] not null check (cardinality(participantes) between 2 and 10),
+  inicio timestamptz not null default now(),
+  fim timestamptz not null,                                     -- votação do duelo aceita votos até aqui
+  decisao uuid[],                                               -- ordem escolhida pela comissão (sem votação)
+  cancelado boolean not null default false                      -- "desfazer" no painel
+);
+
+create table if not exists public.confra_votos_desempate (
+  desempate_id uuid not null references public.confra_desempates(id) on delete cascade,
+  eleitor text not null check (char_length(eleitor) between 8 and 64),
+  participante_id uuid not null references public.confra_participantes(id) on delete cascade,
+  criado_em timestamptz not null default now(),
+  primary key (desempate_id, eleitor)                           -- 1 voto por aparelho em cada duelo
+);
+
+create index if not exists confra_votos_desempate_part_idx on public.confra_votos_desempate (participante_id);
+
+alter table public.confra_desempates      enable row level security;
+alter table public.confra_votos_desempate enable row level security;
+
+-- Lista os desempates (sem senha). Enquanto o duelo está aberto, devolve só o total de votos:
+-- quantos votos cada um teve só aparece depois que o tempo acaba.
+-- p_eleitor (opcional): devolve em quem este aparelho votou.
+create or replace function public.confra_desempates(p_categoria text default null, p_eleitor text default null)
+returns table (
+  id uuid, categoria text, posicao int, participantes uuid[], inicio timestamptz, fim timestamptz,
+  agora timestamptz, aberto boolean, total bigint, votos jsonb, decisao uuid[], meu_voto uuid
+)
+language sql stable security definer set search_path = public as $$
+  select d.id, d.categoria, d.posicao, d.participantes, d.inicio, d.fim, now(), d.fim > now(),
+         (select count(*) from public.confra_votos_desempate v where v.desempate_id = d.id),
+         case when d.fim <= now() then coalesce((
+           select jsonb_object_agg(x.participante_id::text, x.n)
+           from (select v.participante_id, count(*) as n from public.confra_votos_desempate v
+                 where v.desempate_id = d.id group by v.participante_id) x), '{}'::jsonb) end,
+         d.decisao,
+         case when p_eleitor is null then null else (
+           select v.participante_id from public.confra_votos_desempate v
+           where v.desempate_id = d.id and v.eleitor = p_eleitor) end
+  from public.confra_desempates d
+  where not d.cancelado and (p_categoria is null or d.categoria = p_categoria)
+  order by d.inicio;
+$$;
+
+create or replace function public.confra_desempate_votar(p_desempate uuid, p_eleitor text, p_participante uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare
+  d public.confra_desempates;
+begin
+  select * into d from public.confra_desempates where id = p_desempate;
+  if not found or d.cancelado then
+    raise exception 'Esse desempate não está mais valendo. Atualize a página.';
+  end if;
+  if d.fim <= now() then
+    raise exception 'O tempo do desempate acabou.';
+  end if;
+  if p_eleitor is null or char_length(p_eleitor) not between 8 and 64 then
+    raise exception 'Não foi possível identificar este aparelho. Recarregue a página.';
+  end if;
+  if p_participante is null or not (p_participante = any (d.participantes)) then
+    raise exception 'Escolha um dos empatados.';
+  end if;
+  insert into public.confra_votos_desempate (desempate_id, eleitor, participante_id)
+  values (p_desempate, p_eleitor, p_participante)
+  on conflict (desempate_id, eleitor)
+  do update set participante_id = excluded.participante_id, criado_em = now();
+end $$;
+
+create or replace function public._confra_conferir_empatados(p_categoria text, p_ids uuid[])
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_categoria not in ('fantasia', 'talento') then
+    raise exception 'Categoria inválida.';
+  end if;
+  if p_ids is null or cardinality(p_ids) < 2 then
+    raise exception 'O desempate precisa de pelo menos 2 concorrentes.';
+  end if;
+  if (select count(distinct x) from unnest(p_ids) x) <> cardinality(p_ids) then
+    raise exception 'Concorrente repetido no desempate.';
+  end if;
+  if (select count(*) from public.confra_participantes where id = any (p_ids) and categoria = p_categoria) <> cardinality(p_ids) then
+    raise exception 'Algum concorrente não está mais na lista. Atualize a página.';
+  end if;
+end $$;
+
+-- Abre o duelo (exige a senha). Só com a votação principal fechada e um duelo por vez.
+create or replace function public.confra_admin_desempate_abrir(
+  p_senha text, p_categoria text, p_posicao int, p_participantes uuid[], p_segundos int
+)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare
+  v_id uuid;
+begin
+  perform public._confra_exigir_admin(p_senha);
+  perform public._confra_conferir_empatados(p_categoria, p_participantes);
+  if cardinality(p_participantes) > 4 then
+    raise exception 'O duelo é entre 2 e 4 concorrentes. Com mais empatados, a comissão decide.';
+  end if;
+  if coalesce(public._confra_cfg('votacao_' || p_categoria), 'nao') = 'sim' then
+    raise exception 'Feche a votação antes de abrir o desempate.';
+  end if;
+  if p_segundos is null or p_segundos not between 30 and 900 then
+    raise exception 'Escolha um tempo entre 30 segundos e 15 minutos.';
+  end if;
+  if exists (select 1 from public.confra_desempates where not cancelado and fim > now()) then
+    raise exception 'Já tem um desempate em andamento. Encerre ou cancele antes de abrir outro.';
+  end if;
+  insert into public.confra_desempates (categoria, posicao, participantes, fim)
+  values (p_categoria, greatest(1, coalesce(p_posicao, 1)), p_participantes, now() + make_interval(secs => p_segundos))
+  returning id into v_id;
+  return v_id;
+end $$;
+
+-- A comissão decide a ordem dos empatados, sem votação (p_ordem: do melhor para o pior).
+create or replace function public.confra_admin_desempate_decidir(p_senha text, p_categoria text, p_posicao int, p_ordem uuid[])
+returns uuid language plpgsql security definer set search_path = public as $$
+declare
+  v_id uuid;
+begin
+  perform public._confra_exigir_admin(p_senha);
+  perform public._confra_conferir_empatados(p_categoria, p_ordem);
+  insert into public.confra_desempates (categoria, posicao, participantes, fim, decisao)
+  values (p_categoria, greatest(1, coalesce(p_posicao, 1)), p_ordem, now(), p_ordem)
+  returning id into v_id;
+  return v_id;
+end $$;
+
+-- Encerra o duelo antes do tempo (os votos já dados valem).
+create or replace function public.confra_admin_desempate_encerrar(p_senha text, p_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform public._confra_exigir_admin(p_senha);
+  update public.confra_desempates set fim = now() where id = p_id and not cancelado and fim > now();
+  if not found then
+    raise exception 'Esse desempate já tinha terminado.';
+  end if;
+end $$;
+
+-- Cancela / desfaz um desempate (o empate volta a aparecer).
+create or replace function public.confra_admin_desempate_cancelar(p_senha text, p_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform public._confra_exigir_admin(p_senha);
+  update public.confra_desempates set cancelado = true where id = p_id;
+end $$;
+
+revoke all on function public._confra_conferir_empatados(text, uuid[]) from public, anon, authenticated;
+
+grant execute on function
+  public.confra_desempates(text, text),
+  public.confra_desempate_votar(uuid, text, uuid),
+  public.confra_admin_desempate_abrir(text, text, int, uuid[], int),
+  public.confra_admin_desempate_decidir(text, text, int, uuid[]),
+  public.confra_admin_desempate_encerrar(text, uuid),
+  public.confra_admin_desempate_cancelar(text, uuid)
+to anon, authenticated;
+
+-- ---------------------------------------------------------------------
 -- Permissões das funções
 -- ---------------------------------------------------------------------
 revoke all on function public._confra_cfg(text)           from public, anon, authenticated;

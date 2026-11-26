@@ -17,6 +17,7 @@
   - telao.html                       → melhor fantasia (abre direto, sem senha)
   - telao.html?categoria=talento     → show de talentos
   - telao.html?demo                  → demonstração com dados inventados (não lê o banco)
+  - telao.html?demo&duelo            → demonstração com um duelo de desempate (&duelo=3 ou 4 para mais empatados)
   Tela cheia: OK no controle da TV, clique em qualquer lugar ou tecla F (Esc ou Voltar sai).
 -->
 <style>
@@ -334,6 +335,74 @@ body.sem-cursor, body.sem-cursor * { cursor: none !important; }
 .cartao span { display: block; margin-top: 4px; font-family: var(--serif); font-style: italic; font-size: 20px; color: var(--gold); }
 .esp-conta { margin: 26px 0 0; font-size: 19px; font-weight: 700; letter-spacing: .32em; text-transform: uppercase; color: var(--gold); }
 
+/* ------------------------------------------------------------ Desempate: duelo entre os empatados */
+.duelo { position: absolute; left: 80px; right: 80px; top: 200px; height: 760px; display: flex; flex-direction: column; align-items: center; }
+.d-cab { text-align: center; animation: e-desce 1s cubic-bezier(.2, .8, .2, 1) both; }
+.d-sobre {
+  margin: 0; display: inline-block; padding: 8px 28px 8px calc(28px + .3em); border-radius: 999px; background: var(--ouro); color: var(--ink);
+  font-weight: 800; font-size: 19px; letter-spacing: .3em; text-transform: uppercase; box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+}
+.d-tit { margin: 12px 0 0; font-family: var(--serif); font-weight: 600; font-size: 60px; line-height: 1.05; text-shadow: 0 6px 24px rgba(0, 0, 0, .55); }
+.d-cartas { position: relative; flex: 1; min-height: 0; width: 100%; margin-top: 30px; display: flex; justify-content: center; align-items: stretch; gap: 170px; }
+.d-cartas.n3, .d-cartas.n4 { gap: 44px; }
+.d-carta { position: relative; width: 440px; transition: transform 1s cubic-bezier(.2, .9, .2, 1), opacity 1s, filter 1s; animation: d-entra 1.1s var(--d, 0s) cubic-bezier(.2, .8, .2, 1) both; }
+.d-cartas.n3 .d-carta { width: 420px; }
+.d-cartas.n4 .d-carta { width: 345px; }
+@keyframes d-entra { from { opacity: 0; transform: translateY(70px) scale(.9); filter: blur(12px); } }
+.d-carta .moldura { border-radius: 26px; }
+.d-carta .poster-in { border-radius: 22px; }
+.d-carta .sem-foto { font-size: 130px; padding-bottom: 150px; }
+.d-carta .scrim { background: linear-gradient(to top, rgba(4, 20, 14, .98) 0%, rgba(4, 20, 14, .9) 38%, rgba(4, 20, 14, .2) 66%, transparent 80%); }
+.d-info { position: absolute; left: 26px; right: 26px; bottom: 22px; z-index: 2; }
+.d-nome { margin: 0; font-weight: 800; font-style: italic; font-size: var(--fs, 42px); line-height: 1.05; text-wrap: balance; text-shadow: 0 4px 16px rgba(0, 0, 0, .6); }
+.d-fant { margin: 6px 0 0; font-family: var(--serif); font-style: italic; font-size: 28px; line-height: 1.15; color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.d-cartas.n4 .d-fant { font-size: 22px; }
+.d-placar { display: flex; align-items: baseline; gap: 16px; margin-top: 14px; }
+.d-num {
+  font-size: 92px; font-weight: 800; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+  background: var(--ouro); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 6px 18px rgba(0, 0, 0, .5));
+}
+.d-cartas.n4 .d-num { font-size: 72px; }
+.d-pct { font-size: 20px; font-weight: 600; color: var(--muted); }
+.d-trilho { position: relative; height: 14px; margin-top: 14px; border-radius: 99px; overflow: hidden; background: rgba(255, 255, 255, .1); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .45); }
+.d-trilho i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: inherit; background: var(--ouro); transition: width 2.6s cubic-bezier(.2, .8, .2, 1); }
+.d-selo {
+  position: absolute; left: 50%; top: -24px; z-index: 4; margin: 0; padding: 9px 24px; border-radius: 999px; white-space: nowrap;
+  background: rgba(3, 20, 14, .92); border: 2px solid rgba(245, 221, 47, .6); color: #fff; font-weight: 800; font-size: 20px; letter-spacing: .16em; text-transform: uppercase;
+  transform: translateX(-50%) scale(.6); opacity: 0; transition: opacity .6s, transform .7s cubic-bezier(.2, 1.4, .4, 1);
+}
+.d-selo.on { opacity: 1; transform: translateX(-50%); }
+.d-carta.vence .d-selo { background: var(--ouro); color: var(--ink); border-color: transparent; box-shadow: 0 0 40px rgba(245, 221, 47, .7); }
+.d-vs {
+  position: absolute; left: 50%; top: 50%; z-index: 5; width: 140px; height: 140px; margin: -70px 0 0 -70px; border-radius: 50%;
+  display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #1d6a4f, #04110c 75%); border: 4px solid var(--gold);
+  font-weight: 800; font-style: italic; font-size: 54px; color: var(--gold); letter-spacing: -.02em;
+  box-shadow: 0 0 60px rgba(245, 221, 47, .45), 0 20px 40px rgba(0, 0, 0, .5); animation: vs-entra 1s .6s cubic-bezier(.2, 1.4, .4, 1) both, vs-pulsa 2.4s 1.6s ease-in-out infinite;
+}
+@keyframes vs-entra { from { opacity: 0; transform: scale(.2) rotate(-30deg); } }
+@keyframes vs-pulsa { 50% { box-shadow: 0 0 110px rgba(245, 221, 47, .75), 0 20px 40px rgba(0, 0, 0, .5); } }
+/* contagem, votos e QR */
+.d-faixa { width: 100%; height: 160px; margin-top: 34px; display: grid; grid-template-columns: 1fr 1fr 1.7fr; gap: 26px; animation: e-sobe 1s .5s cubic-bezier(.2, .8, .2, 1) both; }
+.d-faixa > div {
+  display: flex; flex-direction: column; justify-content: center; padding: 0 30px; border-radius: 22px;
+  background: linear-gradient(120deg, rgba(23, 86, 64, .78), rgba(6, 34, 25, .78)); border: 1px solid rgba(245, 221, 47, .35); box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
+}
+.d-faixa small { font-size: 15px; font-weight: 700; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); }
+.d-faixa .d-grande { font-size: 76px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.d-tempo.urgente .d-grande { color: #ff7a6e; animation: pisca 1s steps(1) infinite; }
+.d-qr { flex-direction: row !important; align-items: center; justify-content: flex-start !important; gap: 26px; }
+.d-qr .ch-qr { width: 126px; height: 126px; padding: 8px; border-radius: 12px; }
+.d-qr p { margin: 6px 0 0; font-size: 22px; font-weight: 600; line-height: 1.3; }
+/* apuração e revelação */
+.duelo.apurando .d-num { animation: d-pisca .7s ease-in-out infinite alternate; }
+.duelo.apurando .d-carta .moldura { animation: ang 6s linear infinite, d-treme .9s ease-in-out infinite alternate; }
+@keyframes d-pisca { from { opacity: .35; } }
+@keyframes d-treme { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+.d-carta.vence { transform: scale(1.06); z-index: 3; }
+.d-carta.vence .moldura { box-shadow: 0 0 0 1px rgba(0, 0, 0, .4), 0 0 150px rgba(245, 221, 47, .85), 0 40px 90px rgba(0, 0, 0, .65); }
+.d-carta.perde { transform: scale(.94); opacity: .55; filter: grayscale(.55) brightness(.85); }
+.duelo.revelado .d-vs { animation: none; opacity: .35; transition: opacity 1s; }
+
 /* ------------------------------------------------------------ Rodapé: letreiro corrido */
 .rodape {
   position: absolute; left: 80px; right: 80px; bottom: 32px; height: 66px; display: flex; overflow: hidden; border-radius: 16px;
@@ -497,6 +566,20 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
       <p class="esp-conta" id="esp-conta"></p>
     </div>
 
+    <!-- Desempate: duelo entre os empatados (abre pelo painel da organização) -->
+    <div class="duelo" id="duelo" hidden>
+      <div class="d-cab">
+        <p class="d-sobre" id="d-sobre">Empate total</p>
+        <h2 class="d-tit" id="d-tit">Quem fica com o 1º lugar?</h2>
+      </div>
+      <div class="d-cartas" id="d-cartas"></div>
+      <div class="d-faixa">
+        <div class="d-tempo" id="d-tempo"><small id="d-tempo-rot">Tempo para votar</small><b class="d-grande" id="d-relogio">0:00</b></div>
+        <div class="d-total"><small id="d-total-rot">Votos no desempate</small><b class="d-grande" id="d-total">0</b></div>
+        <div class="d-qr"><div class="ch-qr" id="d-qr"></div><div><small id="d-qr-rot">Vote pelo celular</small><p id="d-qr-txt">Escaneie e toque em quem merece.<br>1 voto por celular.</p></div></div>
+      </div>
+    </div>
+
     <footer class="rodape">
       <div class="tk-rotulo" id="tk-rotulo">Vote agora</div>
       <div class="tk-trilho" id="tk-trilho"><div class="tk-texto" id="tk-texto"></div></div>
@@ -533,7 +616,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
   <button type="button" id="btn-tela">Tela cheia</button>
 </div>
 
-<script src="dados.js?v=21"></script>
+<script src="dados.js?v=22"></script>
 <script>
 (function () {
   "use strict";
@@ -674,6 +757,7 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     config: () => window.api.getConfig(),
     programacao: () => window.api.getProgramacao(),
     resultados: () => window.api.telao(CAT),   // ranking sem senha (função confra_telao no banco)
+    desempates: () => window.api.desempates(CAT, true),   // duelo de desempate (placar só depois do fim)
   };
   // Demonstração: concorrentes inventados e notas chegando sozinhas (não toca no banco).
   function criarDemo() {
@@ -701,6 +785,9 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
       ["Bianca Torres", "Imitações de famosos", "#3a6ea5", "#0f2240", "#ffe2c6"],
     ];
     const ps = base.map(([nome, titulo, c1, c2, c3], i) => ({ id: "demo-" + i, categoria: CAT, nome, titulo, foto_url: foto(c1, c2, c3) }));
+    // telao.html?demo&duelo (ou &duelo=3 / &duelo=4): mostra também um duelo de desempate de 40 segundos.
+    const NDUELO = params.has("duelo") ? Math.max(2, Math.min(4, Number(params.get("duelo")) || 2)) : 0;
+    const dIni = Date.now() + 9000, dFim = dIni + 40000, dVotos = {};
     const forca = ps.map(() => 2.4 + Math.random() * 2.3);
     const fama = ps.map(() => .5 + Math.random());
     const notas = ps.map(() => []);
@@ -733,6 +820,14 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
         return window.api.classificar(ps.map((p, i) => ({ categoria: CAT, participante_id: p.id, nome: p.nome, titulo: p.titulo,
           media: Math.round(media(i) * 100) / 100, qtd: notas[i].length,
           n5: conta(i, 5), n4: conta(i, 4), n3: conta(i, 3), n2: conta(i, 2), n1: conta(i, 1) })));
+      },
+      desempates: async () => {
+        const agora = Date.now();
+        if (!NDUELO || agora < dIni) return [];
+        const ids = ps.slice(0, NDUELO).map((p) => p.id), aberto = agora < dFim;
+        if (aberto) ids.forEach((id, i) => { dVotos[id] = (dVotos[id] || 0) + Math.floor(Math.random() * (4 - i * .4)); });
+        return [{ id: "demo-duelo", categoria: CAT, posicao: 2, participantes: ids, inicioMs: dIni, fimMs: dFim, desvio: 0, aberto, decisao: null,
+          total: Object.values(dVotos).reduce((s, v) => s + v, 0), votos: aberto ? null : { ...dVotos } }];
       },
     };
   }
@@ -787,16 +882,18 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     } else {
       it.push(["A votação abre em breve. ", { b: "Fique de olho no QR code da sua mesa" }]);
     }
-    it.push(["O ranking é pela ", { b: "média das estrelas" }, ". Desempate: quem recebeu ", { b: "mais notas" }, ", depois ", { b: "mais notas 5 ★" }, ", depois mais notas 4 ★, e assim por diante"]);
+    it.push(["O ranking é pela ", { b: "média das estrelas" }, ". Desempate: quem recebeu ", { b: "mais notas" }, ", depois ", { b: "mais notas 5 ★" }, ", depois mais notas 4 ★, e assim por diante. Se ainda assim empatar, tem ", { b: "duelo relâmpago" }, " aqui no telão"]);
     if (C.premios.length) it.push(["Prêmios: ", ...C.premios.flatMap((p, i) => [i ? "  ·  " : "", { b: `${i + 1}º` }, " " + p])]);
     const div = est.prog.find((x) => /resultado/i.test(x.titulo || ""));
     if (div && div.hora) it.push(["Resultado oficial às ", { b: horaBR(div.hora) }]);
     return it;
   }
-  function definirTicker(itens) {
+  // ja: troca o texto na hora (sem esperar o letreiro atual terminar de passar)
+  function definirTicker(itens, ja) {
     const chave = JSON.stringify(itens);
     if (chave === tk.chave || (tk.pendente && tk.pendente.chave === chave)) return;
     tk.pendente = { itens, chave };
+    if (ja && tk.anim) { tk.anim.onfinish = null; tk.anim.cancel(); tk.anim = null; }
     if (!tk.anim && est.pronto) rodarTicker();
   }
   function rodarTicker() {
@@ -987,11 +1084,17 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
       const path = document.createElementNS(ns, "path");
       path.setAttribute("d", d); path.setAttribute("fill", "#0b2e22");
       svg.append(path);
-      $("#ch-qr").replaceChildren(svg);
+      est.qrSvg = svg;
+      $("#ch-qr").replaceChildren(svg.cloneNode(true));
       est.qrOk = true;
       $("#ch-qr").hidden = !aberta();
+      if (dz.atual) colocarQR($("#d-qr"));
     } catch (e) { /* sem internet para a biblioteca: o cartão fica só com o texto */ }
     est.qrCarregando = false;
+  }
+  function colocarQR(el) {
+    if (est.qrSvg) { if (!el.firstChild) el.replaceChildren(est.qrSvg.cloneNode(true)); }
+    else montarQR();
   }
 
   // ------------------------------------------------------------ Espera / arena
@@ -1080,8 +1183,178 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
     est.prev = new Map(lista.map((p, i) => [p.id, { pos: i, qtd: p.qtd, media: p.media }]));
   }
 
+  // ------------------------------------------------------------ Desempate: duelo entre os empatados
+  // A organização abre no painel. O telão troca a classificação pelo duelo: os empatados lado a lado,
+  // contagem regressiva, total de votos e QR code. O placar de cada um fica escondido ("?") até o
+  // tempo acabar; aí vem a apuração, as barras crescem, o vencedor ganha o destaque e o confete.
+  // Depois de uns 20 segundos o telão volta para a classificação, já com o desempate aplicado.
+  const dz = { atual: null, vistos: new Set(), timers: [], tick: null };
+  const fmtTempo = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+  const restanteD = (d) => d.fimMs - (Date.now() + (d.desvio || 0));
+  function escolherDuelo(lista) {
+    if (dz.atual && dz.atual.fase !== "aberto") return dz.atual.d;   // revelação em andamento: vai até o fim
+    return lista.filter((d) => d.categoria === CAT && !d.decisao && !dz.vistos.has(d.id))
+      .sort((a, b) => b.inicioMs - a.inicioMs)
+      .find((d) => d.aberto || (dz.atual && dz.atual.id === d.id) || -restanteD(d) < 90000) || null;
+  }
+  function nomeCompleto(p) { return p.titulo ? `${p.nome} (${p.titulo})` : p.nome; }
+  function montarDuelo(d) {
+    sairDuelo(true);
+    dz.atual = { id: d.id, d, fase: "aberto", pediu: 0 };
+    $("#arena").hidden = true; $("#espera").hidden = true; est.emArena = null;
+    const box = $("#duelo");
+    box.className = "duelo"; box.hidden = false;
+    $(".titulo .sobre span:nth-child(2)").textContent = "Desempate ao vivo";
+    const premio = C.premios[d.posicao - 1];
+    $("#d-sobre").textContent = `Empate total no ${d.posicao}º lugar` + (premio ? ` · prêmio: ${premio}` : "");
+    $("#d-tit").textContent = `Quem fica com o ${d.posicao}º lugar?`;
+    $("#d-tempo").classList.remove("urgente");
+    $("#d-tempo-rot").textContent = "Tempo para votar";
+    $("#d-qr").hidden = false;
+    $("#d-qr-rot").textContent = "Vote pelo celular";
+    $("#d-qr-txt").replaceChildren("Escaneie e toque em quem merece.", h("br"), "1 voto por celular.");
+    const ps = d.participantes.map((id) => {
+      const p = est.participantes.get(id);
+      if (!p) est.precisaParticipantes = true;
+      return { id, nome: p ? p.nome : "…", titulo: p ? p.titulo : "", foto: p ? p.foto_url : null };
+    });
+    dz.atual.ps = ps;
+    const caixa = $("#d-cartas");
+    caixa.className = "d-cartas n" + ps.length;
+    caixa.replaceChildren(...ps.map((p, i) => h("article", { class: "d-carta", "data-id": p.id, style: `--d:${(.2 + i * .2).toFixed(2)}s` },
+      h("p", { class: "d-selo" }),
+      h("div", { class: "moldura" },
+        h("div", { class: "poster-in" },
+          h("div", { class: "poster-foto" }, fotoDe(p)),
+          h("div", { class: "scrim" }),
+          h("div", { class: "d-info" },
+            h("h3", { class: "d-nome", text: p.nome, style: `--fs:${tamNome(p.nome, ps.length > 2 ? 34 : 44)}px` }),
+            p.titulo ? h("p", { class: "d-fant", text: p.titulo }) : null,
+            h("div", { class: "d-placar" }, h("span", { class: "d-num", text: "?" }), h("span", { class: "d-pct", text: "placar secreto" })),
+            h("div", { class: "d-trilho" }, h("i"))))))));
+    if (ps.length === 2) caixa.append(h("div", { class: "d-vs", text: "VS" }));
+    $("#d-total")._v = null; $("#d-total").textContent = "0";
+    colocarQR($("#d-qr"));
+    const el = $("#aovivo"); el.dataset.estado = "vivo"; $("span", el).textContent = "Desempate";
+    $("#tk-rotulo").textContent = "Desempate";
+    definirTicker([
+      [{ b: "Desempate ao vivo!" }, ` Empate total no ${d.posicao}º lugar: ${juntarNomes(ps.map(nomeCompleto))}`],
+      ["Escaneie o ", { b: "QR code" }, " e toque em quem merece: ", { b: "1 voto por celular" }, ", e dá para trocar até o tempo acabar"],
+      ["O placar fica ", { b: "em segredo" }, " e aparece aqui no telão quando o tempo acabar"],
+    ], true);
+    clearInterval(dz.tick); dz.tick = setInterval(tickDuelo, 250); tickDuelo();
+  }
+  function juntarNomes(n) { return n.length > 1 ? `${n.slice(0, -1).join(", ")} e ${n[n.length - 1]}` : n[0] || ""; }
+  function tickDuelo() {
+    const a = dz.atual;
+    if (!a || a.fase !== "aberto") return;
+    const ms = restanteD(a.d);
+    $("#d-relogio").textContent = fmtTempo(ms);
+    $("#d-tempo").classList.toggle("urgente", ms > 0 && ms <= 10000);
+    if (ms <= 0) {
+      $("#d-tempo-rot").textContent = "Tempo esgotado";
+      $("#duelo").classList.add("apurando");
+      if (Date.now() - a.pediu > 2500) { a.pediu = Date.now(); apressar(); }   // busca o placar
+    }
+  }
+  function mostrarDuelo(d) {
+    if (!dz.atual || dz.atual.id !== d.id) montarDuelo(d);
+    const a = dz.atual;
+    if (a.fase !== "aberto") return;
+    a.d = d;
+    contar($("#d-total"), d.total, (v) => Math.round(v).toLocaleString("pt-BR"), 700);
+    $("#d-total-rot").textContent = d.total === 1 ? "Voto no desempate" : "Votos no desempate";
+    if (!d.aberto && d.votos) revelar(d);
+  }
+  function revelar(d) {
+    const a = dz.atual;
+    a.fase = "apurando"; a.d = d;
+    const box = $("#duelo");
+    box.classList.add("apurando");
+    $("#d-tempo").classList.remove("urgente");
+    $("#d-relogio").textContent = "0:00";
+    $("#d-tempo-rot").textContent = "Apurando os votos";
+    $("span", $("#aovivo")).textContent = "Apurando";
+    $("#aovivo").dataset.estado = "encerrada";
+    definirTicker([[{ b: "Tempo esgotado!" }, " Apurando os votos do desempate"]], true);
+    const votos = d.votos || {}, ids = d.participantes;
+    const v = (id) => votos[id] || 0;
+    const total = ids.reduce((s, id) => s + v(id), 0), max = Math.max(1, ...ids.map(v));
+    const carta = (id) => $(`.d-carta[data-id="${CSS.escape(id)}"]`);
+    const depois = (ms, f) => dz.timers.push(setTimeout(f, ms));
+    depois(3000, () => {   // as barras crescem e os números sobem, todos juntos
+      a.fase = "revelado";
+      box.classList.remove("apurando"); box.classList.add("revelado");
+      $("#d-tempo-rot").textContent = "Votação encerrada";
+      $("#d-qr").hidden = true;
+      $("#d-qr-rot").textContent = "Desempate encerrado";
+      $("#d-qr-txt").replaceChildren("Obrigado a todos que votaram!");
+      ids.forEach((id) => {
+        const c = carta(id); if (!c) return;
+        const num = $(".d-num", c), fmtN = (x) => Math.round(x).toLocaleString("pt-BR");
+        contar(num, v(id), fmtN, 2600);
+        dz.timers.push(setTimeout(() => { num.textContent = fmtN(v(id)); }, 2800));   // garante o número final
+        $(".d-pct", c).textContent = v(id) === 1 ? "voto" : "votos";
+        $(".d-trilho i", c).style.width = (v(id) / max * 100) + "%";
+      });
+    });
+    depois(6000, () => {   // vencedor
+      const pos = (id) => d.posicao + ids.filter((o) => v(o) > v(id)).length;
+      const topo = ids.filter((id) => pos(id) === d.posicao);
+      ids.forEach((id) => {
+        const c = carta(id); if (!c) return;
+        const pct = total ? Math.round(v(id) / total * 100) : 0;
+        $(".d-pct", c).textContent = `${v(id) === 1 ? "voto" : "votos"} · ${pct}%`;
+        const ganhou = topo.length === 1 && topo[0] === id, empatou = topo.length > 1 && topo.includes(id);
+        c.classList.toggle("vence", ganhou || empatou);
+        c.classList.toggle("perde", !ganhou && !empatou);
+        const selo = $(".d-selo", c);
+        selo.textContent = ganhou ? `Vence · ${pos(id)}º lugar` : empatou ? "Empate de novo" : `${pos(id)}º lugar`;
+        selo.classList.add("on");
+      });
+      const ps = dz.atual ? dz.atual.ps : [];
+      const nome = (id) => { const p = ps.find((x) => x.id === id); return p ? p.nome : ""; };
+      if (topo.length === 1) {
+        $("#d-tit").textContent = `${nome(topo[0])} vence o desempate!`;
+        $("#aovivo span").textContent = "Desempate decidido";
+        particulas.explodir(); setTimeout(particulas.explodir, 900);
+        const premio = C.premios[d.posicao - 1];
+        definirTicker([
+          [{ b: `${nome(topo[0])} vence o desempate` }, ` e fica com o ${d.posicao}º lugar` + (premio ? ` (${premio})` : "")],
+          ["Resultado do desempate: ", ...ids.slice().sort((x, y) => v(y) - v(x)).flatMap((id, i) => [i ? "  ·  " : "", { b: nome(id) }, ` ${v(id)} ${v(id) === 1 ? "voto" : "votos"}`])],
+        ], true);
+      } else {
+        $("#d-tit").textContent = "Empate de novo!";
+        $("#aovivo span").textContent = "Empate de novo";
+        definirTicker([[{ b: "Empate de novo no desempate: " }, ids.slice().sort((x, y) => v(y) - v(x)).map((id) => `${nome(id)} ${v(id)}`).join("  ·  ")]], true);
+      }
+    });
+    depois(6000 + 22000, () => sairDuelo());
+  }
+  // Volta para a classificação. silencioso: só limpa (quando já vai montar outro duelo).
+  function sairDuelo(silencioso) {
+    const a = dz.atual;
+    dz.timers.forEach(clearTimeout); dz.timers = [];
+    clearInterval(dz.tick); dz.tick = null;
+    if (!a) return;
+    if (a.fase !== "aberto") dz.vistos.add(a.id);
+    dz.atual = null;
+    if (silencioso) return;
+    $("#duelo").hidden = true; $("#duelo").className = "duelo";
+    $(".titulo .sobre span:nth-child(2)").textContent = "Apuração ao vivo";
+    est.ultimaVirada = Date.now();   // sem "Nova liderança" logo depois do desempate
+    apressar();
+  }
+
+  // Busca de novo já (sem esperar os 5 segundos), sem criar dois ciclos ao mesmo tempo.
+  function apressar() {
+    if (est.emCiclo) { est.pressa = true; return; }
+    clearTimeout(est.timer); est.timer = setTimeout(ciclo, 500);
+  }
   async function ciclo() {
     if (!est.rodando) return;
+    clearTimeout(est.timer);
+    est.emCiclo = true;
     const n = est.n++;
     try {
       if (n % 4 === 0 || est.precisaParticipantes) {
@@ -1091,14 +1364,25 @@ body.mexendo .controles { opacity: 1; pointer-events: auto; }
         est.precisaParticipantes = false;
       }
       if (n % 60 === 0) { try { est.prog = (await fonte.programacao()) || []; } catch (e) { /* segue sem */ } }
-      const res = ((await fonte.resultados()) || []).filter((r) => r.categoria === CAT);
-      est.online = true;
-      aplicar(res);
+      let des = null;
+      try { des = (await fonte.desempates()) || []; } catch (e) { /* sem a função no banco: segue sem desempate */ }
+      const duelo = des ? escolherDuelo(des) : dz.atual && dz.atual.d;
+      if (duelo) {
+        est.online = true;
+        mostrarDuelo(duelo);
+      } else {
+        if (dz.atual) sairDuelo();   // o duelo foi cancelado no painel
+        const res = ((await fonte.resultados()) || []).filter((r) => r.categoria === CAT);
+        est.online = true;
+        aplicar(res);
+      }
     } catch (e) {
       est.online = false;   // sem internet: mantém o último ranking e tenta de novo
-      atualizarSelo();
+      if (!dz.atual) atualizarSelo();
     }
-    est.timer = setTimeout(ciclo, INTERVALO);
+    est.emCiclo = false;
+    est.timer = setTimeout(ciclo, est.pressa ? 500 : dz.atual ? Math.min(INTERVALO, 3000) : INTERVALO);
+    est.pressa = false;
   }
 
   // ------------------------------------------------------------ Abertura e telas

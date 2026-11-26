@@ -190,10 +190,17 @@ window.api = (function () {
       participantes,
       chaves: {},   // id da inscrição -> chave de edição
       notas,        // id da inscrição -> { eleitor: nota }
+      desempates: [],      // duelos de desempate e decisões da comissão
+      votosDesempate: {},  // id do desempate -> { eleitor: id do escolhido }
     };
   }
   let memoria = null;   // usado quando o navegador bloqueia o armazenamento
-  function ler() { let d = store.get(DEMO_KEY, null) || memoria; if (!d) { d = semente(); memoria = d; store.set(DEMO_KEY, d); } return d; }
+  function ler() {
+    let d = store.get(DEMO_KEY, null) || memoria;
+    if (!d) { d = semente(); memoria = d; store.set(DEMO_KEY, d); }
+    d.desempates = d.desempates || []; d.votosDesempate = d.votosDesempate || {};
+    return d;
+  }
   function gravar(d) { memoria = d; store.set(DEMO_KEY, d); }
   function exigirAdmin(d, senha) { if (senha !== d.senha) throw new Error("Senha de administrador incorreta."); }
   function calcularResultados(d) {
@@ -287,6 +294,49 @@ window.api = (function () {
       if (!nova || nova.length < 6) throw new Error("A nova senha precisa ter pelo menos 6 caracteres.");
       d.senha = nova; gravar(d);
     },
+    // Desempate (mesmas regras das funções do banco)
+    async desempates(cat, eu) {
+      await espera(40);
+      const d = ler(), agora = Date.now(), iso = (ms) => new Date(ms).toISOString();
+      return d.desempates.filter((x) => !x.cancelado && (!cat || x.categoria === cat)).map((x) => {
+        const votos = d.votosDesempate[x.id] || {}, aberto = x.fim > agora, cont = {};
+        Object.values(votos).forEach((pid) => { cont[pid] = (cont[pid] || 0) + 1; });
+        return { id: x.id, categoria: x.categoria, posicao: x.posicao, participantes: x.participantes, inicio: iso(x.inicio), fim: iso(x.fim), agora: iso(agora),
+          aberto, total: Object.keys(votos).length, votos: aberto ? null : cont, decisao: x.decisao || null, meu_voto: (eu && votos[eu]) || null };
+      });
+    },
+    async desempateVotar(id, pid) {
+      await espera();
+      const d = ler(), x = d.desempates.find((y) => y.id === id);
+      if (!x || x.cancelado) throw new Error("Esse desempate não está mais valendo. Atualize a página.");
+      if (x.fim <= Date.now()) throw new Error("O tempo do desempate acabou.");
+      if (!x.participantes.includes(pid)) throw new Error("Escolha um dos empatados.");
+      const eu = await eleitor();
+      d.votosDesempate[id] = { ...(d.votosDesempate[id] || {}), [eu]: pid }; gravar(d);
+    },
+    async adminDesempateAbrir(senha, cat, posicao, ids, segundos) {
+      const d = ler(); exigirAdmin(d, senha);
+      if (ids.length < 2 || ids.length > 4) throw new Error("O duelo é entre 2 e 4 concorrentes. Com mais empatados, a comissão decide.");
+      if (d.config["votacao_" + cat] === "sim") throw new Error("Feche a votação antes de abrir o desempate.");
+      if (d.desempates.some((x) => !x.cancelado && x.fim > Date.now())) throw new Error("Já tem um desempate em andamento. Encerre ou cancele antes de abrir outro.");
+      const x = { id: uuid(), categoria: cat, posicao, participantes: ids, inicio: Date.now(), fim: Date.now() + segundos * 1000, decisao: null, cancelado: false };
+      d.desempates.push(x); gravar(d); return x.id;
+    },
+    async adminDesempateDecidir(senha, cat, posicao, ordem) {
+      const d = ler(); exigirAdmin(d, senha);
+      const x = { id: uuid(), categoria: cat, posicao, participantes: ordem, inicio: Date.now(), fim: Date.now(), decisao: ordem, cancelado: false };
+      d.desempates.push(x); gravar(d); return x.id;
+    },
+    async adminDesempateEncerrar(senha, id) {
+      const d = ler(); exigirAdmin(d, senha);
+      const x = d.desempates.find((y) => y.id === id && !y.cancelado && y.fim > Date.now());
+      if (!x) throw new Error("Esse desempate já tinha terminado.");
+      x.fim = Date.now(); gravar(d);
+    },
+    async adminDesempateCancelar(senha, id) {
+      const d = ler(); exigirAdmin(d, senha);
+      const x = d.desempates.find((y) => y.id === id); if (x) x.cancelado = true; gravar(d);
+    },
     resetarTeste() { store.del(DEMO_KEY); store.del("confra_minhas"); minhasMem = {}; memoria = null; },
   };
   function ordenarProg(l) { return l.slice().sort((a, b) => (a.ordem || 0) - (b.ordem || 0) || String(a.hora).localeCompare(String(b.hora))); }
@@ -304,19 +354,59 @@ window.api = (function () {
     return !!a && !!b && a.categoria === b.categoria && a.qtd > 0 && a.qtd === b.qtd && temEstrelas(a) && temEstrelas(b)
       && a.n5 === b.n5 && a.n4 === b.n4 && a.n3 === b.n3 && a.n2 === b.n2 && a.n1 === b.n1;
   }
-  // Ordena e marca a posição (empatados dividem a posição) e quem está empatado.
-  function classificar(lista) {
+  // Ordena e marca a posição (empatados dividem a posição: 1º, 1º, 3º) e quem está empatado.
+  // desempates: duelos já encerrados (ou decisões da comissão). Um duelo só vale para o grupo
+  // de empatados com exatamente os mesmos concorrentes; ele separa o grupo pelos votos do duelo.
+  // Se o duelo também empatar, quem continua empatado segue marcado como EMPATE.
+  function classificar(lista, desempates) {
     const l = lista.slice().sort(ordenarResultado);
-    let pos = 0, cat = null, i0 = 0;
-    return l.map((x, i) => {
-      if (x.categoria !== cat) { cat = x.categoria; i0 = i; }
-      if (!mesmaNota(l[i - 1], x)) pos = i - i0 + 1;
-      return { ...x, pos, empate: mesmaNota(l[i - 1], x) || mesmaNota(l[i + 1], x) };
-    });
+    const des = (desempates || []).filter((d) => !d.aberto && !d.cancelado).sort((a, b) => (b.inicioMs || 0) - (a.inicioMs || 0));
+    const out = [];
+    let cat = null, i0 = 0;
+    for (let i = 0; i < l.length;) {
+      if (l[i].categoria !== cat) { cat = l[i].categoria; i0 = i; }
+      let j = i + 1;
+      while (j < l.length && mesmaNota(l[j - 1], l[j])) j++;
+      const grupo = l.slice(i, j), base = i - i0 + 1;
+      if (grupo.length === 1) out.push({ ...grupo[0], pos: base, empate: false });
+      else out.push(...resolverEmpate(grupo, base, des));
+      i = j;
+    }
+    return out;
   }
-  // Junta a contagem de estrelas (função confra_estrelas) quando o banco não a devolve junto.
+  function resolverEmpate(grupo, base, des) {
+    const ids = new Set(grupo.map((x) => x.participante_id));
+    const d = des.find((x) => x.categoria === grupo[0].categoria && x.participantes.length === ids.size && x.participantes.every((id) => ids.has(id)));
+    if (!d) return grupo.map((x) => ({ ...x, pos: base, empate: true }));
+    const resto = des.filter((x) => x !== d);
+    const placar = (x) => (d.decisao ? d.decisao.length - d.decisao.indexOf(x.participante_id) : Number((d.votos || {})[x.participante_id]) || 0);
+    const ord = grupo.slice().sort((a, b) => placar(b) - placar(a));
+    const out = [];
+    for (let k = 0; k < ord.length;) {
+      let m = k + 1;
+      while (m < ord.length && placar(ord[m]) === placar(ord[k])) m++;
+      const sub = ord.slice(k, m).map((x) => ({ ...x, desempate: { id: d.id, comissao: !!d.decisao, votos: d.decisao ? null : placar(x) } }));
+      if (sub.length === 1) out.push({ ...sub[0], pos: base + k, empate: false });
+      else out.push(...resolverEmpate(sub, base + k, resto));
+      k = m;
+    }
+    return out;
+  }
+  // Desempate vindo do banco, com datas em milissegundos e a diferença do relógio do aparelho para o do servidor.
+  function normDesempate(x) {
+    const agora = Date.parse(x.agora);
+    return {
+      ...x, posicao: Number(x.posicao) || 1, total: Number(x.total) || 0, aberto: !!x.aberto,
+      participantes: x.participantes || [], decisao: x.decisao && x.decisao.length ? x.decisao : null,
+      inicioMs: Date.parse(x.inicio), fimMs: Date.parse(x.fim), desvio: Number.isFinite(agora) ? agora - Date.now() : 0,
+      votos: x.votos ? Object.fromEntries(Object.entries(x.votos).map(([k, v]) => [k, Number(v)])) : null,
+    };
+  }
+  // Junta a contagem de estrelas (função confra_estrelas) quando o banco não a devolve junto,
+  // e os desempates já decididos (função confra_desempates).
   async function completar(res) {
     res = res || [];
+    const desP = res.length ? backend.desempates(null, null).then((l) => (l || []).map(normDesempate)).catch(() => []) : Promise.resolve([]);
     if (res.length && !temEstrelas(res[0])) {
       const cats = [...new Set(res.map((r) => r.categoria))];
       const m = new Map();
@@ -326,7 +416,7 @@ window.api = (function () {
         return e ? { ...r, n5: Number(e.n5), n4: Number(e.n4), n3: Number(e.n3), n2: Number(e.n2), n1: Number(e.n1) } : r;
       });
     }
-    return classificar(res);
+    return classificar(res, await desP);
   }
 
   // ------------------------------------------------ Supabase (quando configurado)
@@ -383,6 +473,13 @@ window.api = (function () {
       },
       // Quantas notas 5, 4, 3, 2 e 1 cada concorrente recebeu (para o desempate).
       estrelas(cat) { return rpc("confra_estrelas", { p_categoria: cat }); },
+      // Desempate (duelo entre empatados)
+      desempates(cat, eu) { return rpc("confra_desempates", { p_categoria: cat || null, p_eleitor: eu || null }); },
+      async desempateVotar(id, pid) { return rpc("confra_desempate_votar", { p_desempate: id, p_eleitor: await eleitor(), p_participante: pid }); },
+      adminDesempateAbrir(senha, cat, posicao, ids, segundos) { return rpc("confra_admin_desempate_abrir", { p_senha: senha, p_categoria: cat, p_posicao: posicao, p_participantes: ids, p_segundos: segundos }); },
+      adminDesempateDecidir(senha, cat, posicao, ordem) { return rpc("confra_admin_desempate_decidir", { p_senha: senha, p_categoria: cat, p_posicao: posicao, p_ordem: ordem }); },
+      adminDesempateEncerrar(senha, id) { return rpc("confra_admin_desempate_encerrar", { p_senha: senha, p_id: id }); },
+      adminDesempateCancelar(senha, id) { return rpc("confra_admin_desempate_cancelar", { p_senha: senha, p_id: id }); },
       adminLogin(senha) { return rpc("confra_admin_login", { p_senha: senha }); },
       adminConfig(senha, chave, valor) { return rpc("confra_admin_config", { p_senha: senha, p_chave: chave, p_valor: valor }); },
       adminItemSalvar(senha, it) { return rpc("confra_admin_item_salvar", { p_senha: senha, p_id: it.id || null, p_hora: it.hora, p_fim: it.fim || null, p_titulo: it.titulo, p_descricao: it.descricao || null, p_ordem: Number(it.ordem) || 0 }); },
@@ -409,11 +506,19 @@ window.api = (function () {
 
   const backend = modoTeste ? teste : supabasePreguicoso();
   const nomes = ["getConfig", "getProgramacao", "getParticipantes", "avaliar", "minhasNotas", "inscrever", "editarInscricao", "resultados", "telao",
-    "adminLogin", "adminConfig", "adminItemSalvar", "adminItemExcluir", "adminParticipanteExcluir", "adminZerarVotos", "adminTrocarSenha", "resetarTeste"];
-  const api = { modoTeste, hojeISO, carregarScript, classificar, souDono: (id) => !!minhas()[id] };
+    "adminLogin", "adminConfig", "adminItemSalvar", "adminItemExcluir", "adminParticipanteExcluir", "adminZerarVotos", "adminTrocarSenha", "resetarTeste",
+    "desempateVotar", "adminDesempateAbrir", "adminDesempateDecidir", "adminDesempateEncerrar", "adminDesempateCancelar"];
+  // Prêmios de cada concurso, na ordem (1º, 2º, ...). O desempate só é necessário nessas posições.
+  const premios = {
+    fantasia: ["Xiaomi Redmi Note 17", "Bicicleta aro 29", "Echo Dot (Alexa)"],
+    talento: ["Caixa de som JBL Xtreme 4", "Air Fryer Electrolux 12 litros"],
+  };
+  const api = { modoTeste, hojeISO, carregarScript, classificar, premios, souDono: (id) => !!minhas()[id] };
   nomes.forEach((n) => { api[n] = (...a) => backend[n](...a); });
   // Resultados já vêm ordenados com o desempate e com { pos, empate } em cada item.
   api.resultados = async (...a) => completar(await backend.resultados(...a));
   api.telao = async (cat) => completar(await backend.telao(cat));
+  // Desempates (todas as categorias se cat for vazio). semVoto: não pergunta em quem este aparelho votou (telão e painel).
+  api.desempates = async (cat, semVoto) => ((await backend.desempates(cat || null, semVoto ? null : await eleitor())) || []).map(normDesempate);
   return api;
 })();

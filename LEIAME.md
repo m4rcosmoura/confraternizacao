@@ -22,7 +22,13 @@ Mantenha todos os arquivos na mesma pasta.
 - **Foto**: dois botões, "Tirar foto" (abre a câmera do celular) e "Escolher da galeria". É sempre opcional.
 - **Editar inscrição**: quem se inscreveu vê "Sua inscrição" com o botão **Editar** (nome, fantasia/apresentação, setor, foto). Só funciona no celular que fez a inscrição.
 - **Votação por nota**: fica bloqueada até a organização liberar no `admin.html`. Liberada, a aba passa a se chamar "Votar". A pessoa toca no candidato e dá de 1 a 5 estrelas, e pode avaliar todos. O ranking é pela **média das notas**.
-- **Desempate**, nesta ordem: 1) quem recebeu **mais notas**; 2) quem recebeu **mais notas 5**; 3) mais notas 4; 4) mais notas 3; 5) mais notas 2. Se mesmo assim tudo for igual (mesma média, mesma quantidade e as mesmas estrelas), é **EMPATE**: os dois dividem a posição (ex.: 1º, 1º, 3º) e aparecem marcados como empate no telão, no painel e no site. Aí a **organização decide** (aplausos da plateia ou voto da comissão). No painel aparece quantas notas de cada estrela cada um recebeu.
+- **Desempate**, nesta ordem: 1) quem recebeu **mais notas**; 2) quem recebeu **mais notas 5**; 3) mais notas 4; 4) mais notas 3; 5) mais notas 2. Se mesmo assim tudo for igual (mesma média, mesma quantidade e as mesmas estrelas), é **EMPATE**: os empatados dividem a posição (ex.: 2º, 2º, 4º) e aparecem marcados como empate no telão, no painel e no site. Se o empate for numa posição com prêmio, vale o **duelo relâmpago** (veja abaixo). No painel aparece quantas notas de cada estrela cada um recebeu.
+- **Duelo relâmpago (desempate)**: no painel, em Resultados, cada empate em posição com prêmio ganha um cartão com o botão **Abrir duelo no telão e nos celulares** (escolha 1, 2, 3 ou 5 minutos). Antes, desligue a votação daquela categoria em "Ao vivo".
+  - No celular, aparece "Desempate ao vivo" na tela inicial e, na lista, um cartão só com os empatados. Cada celular **escolhe um** (pode trocar até o tempo acabar).
+  - No telão, a classificação dá lugar ao duelo: os empatados lado a lado, contagem regressiva, total de votos e QR code. **O placar fica em segredo** (ninguém vê quantos votos cada um tem, nem no painel). Quando o tempo acaba, o telão faz a apuração, revela os votos, destaca o vencedor com confete e, depois de uns 20 segundos, volta para a classificação já com a nova ordem.
+  - Ninguém é empurrado: dois empatados em 2º ocupam o 2º e o 3º; o duelo só decide quem fica com qual. Quem estava em 4º continua em 4º.
+  - Se o duelo também empatar, o empate continua aparecendo: abra **outro duelo** ou use **Comissão decide (sem votação)**, em que a comissão toca nos nomes na ordem. Duelos e decisões ficam em "Desempates feitos", com o botão **Desfazer**.
+  - Só um duelo por vez, de 2 a 4 concorrentes (com mais de 4 empatados, só a comissão). "Encerrar agora" termina antes e já mostra o resultado; "Cancelar duelo" descarta.
 - **Trava por aparelho**: cada celular dá **uma nota por candidato**. Se tentar de novo, a nota nova substitui a anterior (não soma). A identificação do aparelho fica guardada em 3 lugares do navegador; só apagando todos os dados do site ou usando aba anônima dá para votar de novo.
 - **Voltar do celular**: de qualquer seção, volta direto para a tela inicial. Com a janela de estrelas aberta, o voltar só fecha a janela.
 
@@ -39,7 +45,8 @@ Como não tem senha, qualquer pessoa que abrir esse endereço vê o ranking ao v
 - **Empate no 1º lugar**: os empatados (até 4) dividem o destaque, lado a lado, cada um com sua foto, nota e o selo "1º · Empate". Empatados em outras posições aparecem com a mesma posição e a marca EMPATE.
 - **QR code sempre na tela**: o cartão "Vote pelo celular" com QR code fica embaixo da classificação. Com até 6 concorrentes ele aparece grande; com 7 ou mais fica compacto, para caber a lista.
 - **Votação fechada no painel**: o selo vira "Votação encerrada" e o ranking fica parado.
-- **Letreiro no rodapé**: como votar, regra do desempate, prêmios, e horário da divulgação (lido do cronograma).
+- **Duelo de desempate**: quando a organização abre um duelo, o telão troca a classificação pela tela do duelo e, no fim, revela o resultado (veja "Duelo relâmpago" acima).
+- **Letreiro no rodapé**: como votar, regra do desempate (incluindo o duelo relâmpago), prêmios, e horário da divulgação (lido do cronograma).
 - A TV não apaga sozinha enquanto o telão estiver aberto (em navegadores que permitem) e o mouse some depois de alguns segundos parado (mexa o mouse para ver o botão "Tela cheia").
 
 | Endereço | O que mostra |
@@ -47,6 +54,7 @@ Como não tem senha, qualquer pessoa que abrir esse endereço vê o ranking ao v
 | `telao.html` | Melhor fantasia |
 | `telao.html?categoria=talento` | Show de talentos |
 | `telao.html?demo` | Demonstração com concorrentes e notas inventados (não lê o banco). Serve para testar a TV antes da festa |
+| `telao.html?demo&duelo` | Demonstração com um duelo de desempate de 40 segundos e a revelação no fim (`&duelo=3` ou `&duelo=4` para 3 ou 4 empatados) |
 
 ## Arte do evento
 
@@ -81,4 +89,4 @@ Links diretos (úteis para QR codes específicos):
 6. Abra `.../admin.html` no endereço publicado (senha `trocar123`) e **troque a senha**.
 7. No painel, em "QR code das mesas", confira o endereço e imprima os cartões.
 
-Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=21` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.
+Ao alterar `estilo.css` ou `dados.js` depois de publicado, aumente o número em `?v=22` nos links do `index.html` e do `admin.html`, para os celulares não usarem a versão antiga guardada.

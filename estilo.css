@@ -410,3 +410,56 @@ input:focus, select:focus, textarea:focus { border-color: var(--gold); outline: 
 .adm-topo { padding-top: 6px; }
 .adm-topo h1 { font-style: italic; color: var(--gold); }
 .switch:checked { background: var(--gold); border-color: var(--gold); }
+
+/* ------------------------------------------------------------ Desempate (duelo entre empatados) */
+/* Celular: cartão do duelo no topo da lista */
+.duelo {
+  position: relative; margin: 0 0 20px; padding: 16px; border-radius: var(--r);
+  background: linear-gradient(160deg, rgba(245, 221, 47, .16), rgba(6, 34, 25, .9) 55%);
+  border: 2px solid var(--gold); box-shadow: 0 0 0 4px rgba(245, 221, 47, .1), 0 10px 30px rgba(0, 0, 0, .35);
+}
+.duelo-sobre { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+.duelo-sobre::before { content: ""; flex: none; width: 9px; height: 9px; border-radius: 50%; background: #ff4a3d; animation: duelo-bip 1.6s infinite; }
+.duelo.fim .duelo-sobre::before { background: var(--muted); animation: none; }
+.duelo h3 { font-size: 22px; font-weight: 800; font-style: italic; }
+.duelo-txt { margin: 6px 0 14px; color: var(--muted); font-size: 14px; }
+.duelo-opcoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.duelo-opcoes.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.duelo-op {
+  display: flex; flex-direction: column; min-width: 0; padding: 0; overflow: hidden; text-align: left; cursor: pointer;
+  border-radius: 12px; background: var(--surface); border: 2px solid var(--line); transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+.duelo-op:active:not(:disabled) { transform: scale(.98); }
+.duelo-op:disabled { cursor: default; opacity: .75; }
+.duelo-op .op-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 8px 10px 10px; }
+.duelo-op .op-tit { font-weight: 700; font-size: 15px; line-height: 1.25; overflow-wrap: anywhere; }
+.duelo-op .op-sub { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.duelo-op .op-marca { align-self: flex-start; margin-top: 8px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--gold); color: var(--gold); font-size: 13px; font-weight: 800; font-style: italic; }
+.duelo-op.escolhido { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245, 221, 47, .3); }
+.duelo-op.escolhido .op-marca { background: var(--gold); color: var(--gold-ink); }
+.duelo-opcoes.n3 .op-tit { font-size: 13px; }
+.duelo-opcoes.n3 .op-sub { display: none; }
+.duelo-opcoes.n3 .op-marca { padding: 3px 8px; font-size: 12px; }
+.duelo-tempo { margin: 14px 0 0; text-align: center; color: var(--muted); font-size: 15px; }
+.duelo-tempo b { color: var(--gold); font-size: 20px; font-variant-numeric: tabular-nums; }
+@keyframes duelo-bip { 0% { box-shadow: 0 0 0 0 rgba(255, 74, 61, .7); } 70% { box-shadow: 0 0 0 10px rgba(255, 74, 61, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 74, 61, 0); } }
+/* Tela inicial: chamada para o duelo */
+.menu a.duelo-chamada {
+  grid-column: 1 / -1; flex-direction: row; gap: 10px; padding: 12px 10px; font-size: 16px;
+  background: #0b2e22; color: var(--gold); border: 2px solid var(--gold);
+  animation: duelo-pulsa 1.8s ease-in-out infinite;
+}
+.menu a.duelo-chamada::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 50%; background: #ff4a3d; animation: duelo-bip 1.6s infinite; }
+@keyframes duelo-pulsa { 50% { box-shadow: 0 0 0 4px rgba(245, 221, 47, .25), 0 6px 22px rgba(245, 221, 47, .35); } }
+/* Painel: cartões do desempate */
+.des-card { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+.des-card.vivo { border: 2px solid var(--gold); }
+.des-tit { margin: 0 0 2px; font-weight: 800; color: var(--gold); }
+.des-nomes { margin: 4px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.des-card .acoes { gap: 8px; margin-top: 10px; align-items: center; }
+.des-card > .link-editar { display: inline-block; margin-top: 10px; font-size: 14px; }
+.des-card .erro { margin: 8px 0 0; font-size: 14px; }
+.des-pergunta { margin: 12px 0 0; font-weight: 700; }
+.des-tempo { width: auto; padding: 8px 10px; border-radius: 10px; }
+.des-feito { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.des-feito span { overflow-wrap: anywhere; }

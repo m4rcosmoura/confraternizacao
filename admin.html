@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,500;1,600;1,700;1,800&family=Playfair+Display:wght@500;600&display=swap">
-<link rel="stylesheet" href="estilo.css?v=21">
+<link rel="stylesheet" href="estilo.css?v=22">
 </head>
 <body>
 <div class="recorte de-confra faixa-topo faixa-interna" style="--x:0;--y:0;--w:902;--h:118;--px:0%" aria-hidden="true"></div>
@@ -44,17 +44,20 @@
 
     <div class="bloco">
       <h3>Resultados</h3>
-      <p class="dica">Atualiza sozinho a cada 10 segundos. Só a organização vê, a menos que "Mostrar resultado para todos" esteja ligado.</p>
+      <p class="dica">Atualiza sozinho a cada 5 segundos. Só a organização vê, a menos que "Mostrar resultado para todos" esteja ligado.</p>
       <p class="dica">Para a TV: <a href="telao.html" target="_blank" rel="noopener">telão da fantasia</a> · <a href="telao.html?categoria=talento" target="_blank" rel="noopener">telão dos talentos</a> (apuração ao vivo em tela cheia, abre sem senha).</p>
+      <p class="dica"><b>Desempate:</b> se terminar empate total numa posição com prêmio, feche a votação e abra o <b>duelo</b>: o telão e os celulares mostram só os empatados, cada celular escolhe um, e o placar aparece no telão quando o tempo acaba. Se empatar de novo, abra outro duelo ou use "Comissão decide".</p>
       <div class="dupla">
         <div>
           <h4 class="sub-h">Melhor fantasia</h4>
           <div id="adm-res-fantasia"></div>
+          <div id="adm-des-fantasia"></div>
           <button type="button" class="btn perigo peq" data-zerar="fantasia" style="margin-top:12px">Zerar notas da fantasia</button>
         </div>
         <div>
           <h4 class="sub-h">Show de talentos</h4>
           <div id="adm-res-talento"></div>
+          <div id="adm-des-talento"></div>
           <button type="button" class="btn perigo peq" data-zerar="talento" style="margin-top:12px">Zerar notas dos talentos</button>
         </div>
       </div>
@@ -119,7 +122,7 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="impressao" aria-hidden="true"></div>
 
-<script src="dados.js?v=21"></script>
+<script src="dados.js?v=22"></script>
 <script>
 (function () {
   "use strict";
@@ -226,7 +229,7 @@
     carregarInscritos();
     carregarResultados();
     clearInterval(adm.timer);
-    adm.timer = setInterval(() => { if (adm.senha && !document.hidden) carregarResultados(); }, 10000);
+    adm.timer = setInterval(() => { if (adm.senha && !document.hidden) carregarResultados(); }, 5000);
   }
 
   function renderChaves() {
@@ -239,6 +242,7 @@
           await api.adminConfig(adm.senha, k, sw.checked ? "sim" : "nao");
           cfg[k] = sw.checked ? "sim" : "nao";
           toast(`${titulo}: ${sw.checked ? "ligado" : "desligado"}.`);
+          if (k.startsWith("votacao_")) carregarResultados();   // libera ou bloqueia o botão do desempate
         } catch (e) { sw.checked = !sw.checked; toast(e.message, "erro"); }
         finally { sw.disabled = false; }
       });
@@ -327,27 +331,130 @@
   }
 
   // Resultados
+  const ultimo = { res: {}, des: [] };
   async function carregarResultados() {
-    let res;
-    try { res = await api.resultados(adm.senha); }
+    let res, des;
+    try { [res, des] = await Promise.all([api.resultados(adm.senha), api.desempates(null, true).catch(() => null)]); }
     catch (e) { ["fantasia", "talento"].forEach((c) => $("#adm-res-" + c).replaceChildren(erroBox(e, carregarResultados))); return; }
+    if (des) ultimo.des = des;
     ["fantasia", "talento"].forEach((cat) => {
       const r = res.filter((x) => x.categoria === cat);
+      ultimo.res[cat] = r;
       const box = $("#adm-res-" + cat);
+      renderDesempate(cat);
       if (!r.length) { box.replaceChildren(h("p", { class: "vazio", style: "padding:8px 0", text: "Sem participantes." })); return; }
       const total = r.reduce((s, x) => s + x.qtd, 0);
       const fmt = (m) => m.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      const nPremios = (api.premios[cat] || []).length;
+      const desTxt = (d) => (d ? (d.comissao ? " · desempate: comissão" : ` · desempate: ${d.votos} ${d.votos === 1 ? "voto" : "votos"}`) : "");
       box.replaceChildren(
         h("ol", { class: "ranking" }, r.map((x, i) => h("li", null,
           h("span", { class: "pos", text: String(x.pos || i + 1) }),
           h("span", { class: "nm", text: `${x.titulo || ""} · ${x.nome}` }),
           h("span", { class: "vt", text: (x.qtd ? `${fmt(x.media)} ★ · ${x.qtd} ${x.qtd === 1 ? "nota" : "notas"}` : "sem notas")
-            + (x.n5 != null && x.qtd ? ` (5★ ${x.n5} · 4★ ${x.n4} · 3★ ${x.n3} · 2★ ${x.n2} · 1★ ${x.n1})` : "") + (x.empate ? " · EMPATE" : "") }),
+            + (x.n5 != null && x.qtd ? ` (5★ ${x.n5} · 4★ ${x.n4} · 3★ ${x.n3} · 2★ ${x.n2} · 1★ ${x.n1})` : "") + (x.empate ? " · EMPATE" : "") + desTxt(x.desempate) }),
           h("span", { class: "barra" }, h("span", { style: `width:${Math.round((x.media / 5) * 100)}%` }))))),
-        r.some((x) => x.empate) ? h("p", { class: "erro", text: "Empate total (mesma média, mesma quantidade e as mesmas estrelas): os empatados dividem a posição e a organização decide (aplausos ou voto da comissão)." }) : null,
-        h("p", { class: "dica", text: `Ranking pela média das notas (1 a 5). Desempate: mais notas, depois mais notas 5★, depois 4★, 3★ e 2★. ${total} ${total === 1 ? "nota" : "notas"} no total.` }));
+        r.some((x) => x.empate && x.pos <= nPremios) ? h("p", { class: "erro", text: "Empate total (mesma média, mesma quantidade e as mesmas estrelas) em posição com prêmio: resolva no desempate logo abaixo." }) : null,
+        h("p", { class: "dica", text: `Ranking pela média das notas (1 a 5). Desempate: mais notas, depois mais notas 5★, depois 4★, 3★ e 2★; se ainda empatar, o duelo. ${total} ${total === 1 ? "nota" : "notas"} no total.` }));
     });
   }
+
+  // Desempate: duelo entre os empatados (ou decisão da comissão)
+  const fmtTempo = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+  const restante = (d) => d.fimMs - (Date.now() + d.desvio);
+  adm.duracao = 120;      // tempo do duelo (segundos)
+  adm.decidindo = null;   // { chave, ordem: [ids] } enquanto a comissão escolhe a ordem
+  function renderDesempate(cat) {
+    const box = $("#adm-des-" + cat), r = ultimo.res[cat] || [], des = ultimo.des || [];
+    const premios = api.premios[cat] || [];
+    const curto = (id) => { const x = r.find((y) => y.participante_id === id); return x ? (x.titulo ? `${x.nome} (${x.titulo})` : x.nome) : "(removido)"; };
+    const meus = des.filter((d) => d.categoria === cat);
+    const vivo = meus.find((d) => d.aberto), algumVivo = des.some((d) => d.aberto);
+    const porPos = new Map();
+    r.forEach((x) => { if (x.empate && x.pos <= premios.length) porPos.set(x.pos, [...(porPos.get(x.pos) || []), x]); });
+    const mesmo = (a, b) => a.length === b.length && a.every((id) => b.includes(id));
+    const grupos = [...porPos.entries()].map(([pos, g]) => ({ pos, g, ids: g.map((x) => x.participante_id), chave: cat + pos + g.map((x) => x.participante_id).join() }))
+      .filter((x) => !(vivo && mesmo(x.ids, vivo.participantes)));
+    const feitos = meus.filter((d) => !d.aberto).sort((a, b) => b.inicioMs - a.inicioMs);
+    const votAberta = cfg["votacao_" + cat] === "sim";
+    // Só redesenha quando algo muda (para não desarmar o "toque de novo para confirmar").
+    const chave = JSON.stringify([vivo && [vivo.id, vivo.fimMs], algumVivo, grupos.map((x) => x.chave), feitos.map((d) => [d.id, d.votos, d.decisao]), votAberta, adm.decidindo, r.map((x) => [x.participante_id, x.nome, x.titulo])]);
+    if (box._chave !== chave) {
+      box._chave = chave;
+      const partes = [];
+      if (vivo) {
+        const encerrar = h("button", { type: "button", class: "btn peq", text: "Encerrar agora e mostrar o resultado" });
+        const cancelar = h("button", { type: "button", class: "btn perigo peq", text: "Cancelar duelo" });
+        armar(encerrar, async () => { await api.adminDesempateEncerrar(adm.senha, vivo.id); toast("Duelo encerrado. O resultado aparece no telão."); carregarResultados(); });
+        armar(cancelar, async () => { await api.adminDesempateCancelar(adm.senha, vivo.id); toast("Duelo cancelado."); carregarResultados(); });
+        partes.push(h("div", { class: "des-card vivo" },
+          h("span", { class: "pill aberta", text: "Desempate ao vivo" }),
+          h("p", { class: "des-nomes", text: `${vivo.posicao}º lugar: ${vivo.participantes.map(curto).join(" × ")}` }),
+          h("p", { class: "dica" }, "Faltam ", h("b", { "data-fim": vivo.fimMs, "data-desvio": vivo.desvio, text: fmtTempo(restante(vivo)) }), " · ", h("b", { "data-total": "" }), " (quantos votos cada um teve só aparece no fim)"),
+          h("div", { class: "acoes" }, encerrar, cancelar)));
+      }
+      grupos.forEach(({ pos, g, ids, chave: chaveGrupo }) => {
+        const emJogo = premios.slice(pos - 1, pos - 1 + g.length);
+        const card = h("div", { class: "des-card" },
+          h("p", { class: "des-tit", text: `Empate no ${pos}º lugar` }),
+          h("p", { class: "des-nomes", text: g.map((x) => curto(x.participante_id)).join(" · ") }),
+          h("p", { class: "dica", text: emJogo.length > 1 ? `Em jogo: ${emJogo.join(" e ")}. O desempate decide quem leva qual.` : `Em jogo: ${emJogo[0]}. Só quem vencer o desempate leva.` }));
+        const dec = adm.decidindo && adm.decidindo.chave === chaveGrupo ? adm.decidindo : null;
+        if (dec) {
+          const faltam = g.filter((x) => !dec.ordem.includes(x.participante_id));
+          card.append(
+            h("p", { class: "des-pergunta", text: `Comissão: quem fica em ${pos + dec.ordem.length}º?` }),
+            h("div", { class: "acoes des-opcoes" }, faltam.map((x) => h("button", { type: "button", class: "btn sec peq", text: curto(x.participante_id), onclick: async () => {
+              dec.ordem.push(x.participante_id);
+              if (dec.ordem.length < g.length - 1) { renderDesempate(cat); return; }
+              const ordem = dec.ordem.concat(ids.filter((id) => !dec.ordem.includes(id)));
+              adm.decidindo = null;
+              try { await api.adminDesempateDecidir(adm.senha, cat, pos, ordem); toast("Decisão da comissão registrada."); } catch (e) { toast(e.message, "erro"); }
+              carregarResultados();
+            } }))),
+            h("button", { type: "button", class: "link-editar", text: "Cancelar", onclick: () => { adm.decidindo = null; renderDesempate(cat); } }));
+        } else {
+          if (votAberta) card.append(h("p", { class: "erro", text: `Para abrir o duelo, desligue antes a votação ${cat === "fantasia" ? "da melhor fantasia" : "do show de talentos"} (em "Ao vivo").` }));
+          else if (g.length > 4) card.append(h("p", { class: "dica", text: "Mais de 4 empatados: o duelo não cabe no telão. Use \"Comissão decide\"." }));
+          else if (algumVivo) card.append(h("p", { class: "dica", text: "Espere o desempate que está em andamento terminar." }));
+          else {
+            const sel = h("select", { "aria-label": "Tempo do duelo", class: "des-tempo" }, [60, 120, 180, 300].map((s) => h("option", { value: s, selected: s === adm.duracao, text: s === 60 ? "1 minuto" : `${s / 60} minutos` })));
+            sel.addEventListener("change", () => { adm.duracao = Number(sel.value); });
+            const abrir = h("button", { type: "button", class: "btn peq", text: "Abrir duelo no telão e nos celulares" });
+            armar(abrir, async () => { await api.adminDesempateAbrir(adm.senha, cat, pos, ids, adm.duracao); toast("Duelo aberto: já aparece no telão e nos celulares."); carregarResultados(); });
+            card.append(h("div", { class: "acoes" }, sel, abrir));
+          }
+          card.append(h("button", { type: "button", class: "link-editar", text: "Comissão decide (sem votação)", onclick: () => { adm.decidindo = { chave: chaveGrupo, ordem: [] }; renderDesempate(cat); } }));
+        }
+        partes.push(card);
+      });
+      if (feitos.length) {
+        partes.push(h("div", { class: "des-card feitos" },
+          h("p", { class: "des-tit", text: "Desempates feitos" }),
+          ...feitos.map((d) => {
+            const desfazer = h("button", { type: "button", class: "btn perigo peq", text: "Desfazer" });
+            armar(desfazer, async () => { await api.adminDesempateCancelar(adm.senha, d.id); toast("Desempate desfeito: o empate volta a aparecer."); carregarResultados(); });
+            const txt = d.decisao
+              ? `${d.posicao}º lugar · comissão: ${d.decisao.map(curto).join(" > ")}`
+              : `${d.posicao}º lugar · duelo: ${d.participantes.slice().sort((a, b) => (d.votos[b] || 0) - (d.votos[a] || 0)).map((id) => `${curto(id)} ${d.votos[id] || 0}`).join(" × ")}`;
+            return h("div", { class: "des-feito" }, h("span", { text: txt }), desfazer);
+          })));
+      }
+      box.replaceChildren(...partes);
+    }
+    const tot = box.querySelector("[data-total]");
+    if (tot && vivo) tot.textContent = `${vivo.total} ${vivo.total === 1 ? "voto" : "votos"}`;
+  }
+  // Contagem regressiva do duelo; quando o tempo acaba, busca o resultado.
+  setInterval(() => {
+    let acabou = false;
+    $$("[data-fim]").forEach((el) => {
+      const ms = Number(el.dataset.fim) - (Date.now() + Number(el.dataset.desvio || 0));
+      el.textContent = fmtTempo(ms);
+      if (ms <= 0 && !el.dataset.acabou) { el.dataset.acabou = "1"; acabou = true; }
+    });
+    if (acabou && adm.senha) setTimeout(carregarResultados, 1500);
+  }, 1000);
   $$("[data-zerar]").forEach((b) => armar(b, async () => {
     await api.adminZerarVotos(adm.senha, b.dataset.zerar);
     toast("Notas zeradas."); carregarResultados();
