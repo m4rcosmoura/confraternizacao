@@ -93,15 +93,12 @@ Fica na pasta `presenca/`, fora do site da votação (o site dos convidados não
 | Endereço | Para quem | O que é |
 |---|---|---|
 | `presenca/` | Todo mundo (é o link que vai no grupo / QR code) | A pessoa responde **Vou / Ainda não sei / Não vou** e, se vai ou ainda não sabe, a pergunta das bebidas (opcional) |
-| `presenca/painel.html` | Só a organização (mesma senha do `admin.html`) | Painel ao vivo das respostas |
-| `presenca/resumo.html` | Quem tiver o link (**sem senha**) | **Resumo para celular**: só as quantidades (confirmados, ainda não sabem, não vão, total, planejamento e bebidas de quem vai). Atualiza a cada 5 segundos |
-| `...?teste` (em todos) | Para testar | Respostas de exemplo, salvas só no navegador (senha do teste: `trocar123`) |
+| `presenca/resumo.html` | Quem tiver o link (**sem senha**) | **O painel** (o único): só as quantidades (confirmados, ainda não sabem, não vão, total, planejamento e bebidas de quem vai). Atualiza a cada 5 segundos |
+| `...?teste` (nos dois) | Para testar | Respostas de exemplo, salvas só no navegador |
 
 - **Uma resposta por celular**: o celular guarda uma chave secreta. Ao abrir o link de novo, a pessoa vê a própria resposta e o botão **"Alterar minha resposta"** (a alteração substitui a anterior, não soma). Outro celular, outro navegador ou aba anônima contam como resposta nova, porque não há nome para conferir.
-- **Bebida** (opcional): "Para organizarmos melhor as bebidas da confraternização, qual opção combina com você?" → *Cerveja e/ou outras bebidas alcoólicas* · *Somente bebidas sem álcool* · *Tanto faz, posso consumir ambas* · *Prefiro não responder*. No painel aparecem como "Com álcool", "Só sem álcool", "Tanto faz (ambas)", "Prefere não dizer" e "Não respondeu", com o planejamento "bebida alcoólica para X a Y pessoas; só sem álcool para X a Y" (o "tanto faz" entra nos dois).
-- **Painel** (atualiza a cada 5 segundos): confirmados (e quantos nas últimas 24 horas), ainda não sabem, não vão, total de respostas; barra da situação com o planejamento ("prepare para X a Y pessoas"); respostas acumuladas ao longo do tempo; bebidas; atividade recente (sem identificação) com aviso de cada resposta nova.
-- **Link e QR code**: copia o link e baixa o QR code para imprimir.
-- **Configurações**: abrir ou encerrar as confirmações, prazo que aparece no link (ex.: "até 01/12") e **apagar todas as respostas** (para começar do zero depois de testar; pede dois toques).
+- **Bebida** (opcional): "Para organizarmos melhor as bebidas da confraternização, qual opção combina com você?" → *Cerveja e/ou outras bebidas alcoólicas* · *Somente bebidas sem álcool* · *Tanto faz, posso consumir ambas* · *Prefiro não responder*. O painel mostra o total de cada opção entre quem vai.
+- **Sem tela de configuração**: abrir/encerrar as confirmações (`presenca_aberta`), o prazo que aparece no link (`presenca_prazo`) e apagar as respostas de teste ficam no banco (função `confra_admin_presenca_zerar`, com a senha do painel); hoje as confirmações estão abertas e sem prazo.
 - A lista de colaboradores que existiu numa versão anterior foi apagada do banco; nenhum nome é guardado.
 
 ## Depois: ligar o banco para a festa de verdade

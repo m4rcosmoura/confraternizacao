@@ -13,7 +13,7 @@
 <!--
   RESUMO DAS CONFIRMAÇÕES (versão para celular, só as quantidades)
   Abre sem senha: o banco só envia números. Atualiza a cada 5 segundos.
-  ?teste → dados de exemplo. O painel completo (com senha) é o painel.html.
+  ?teste → dados de exemplo. É o único painel da confirmação.
 -->
 <style>
 :root { --cartao: #0e3527; --borda: rgba(245, 221, 47, .16); --s-sim: #c98500; --s-talvez: #3987e5; --s-nao: #d55181; }
@@ -84,7 +84,7 @@ body { background-color: #071d15; }
       <dl class="beb" id="beb"></dl>
     </section>
 
-    <div class="rodape"><span id="r-ultima"></span><a href="painel.html" id="r-completo">Painel completo</a></div>
+    <div class="rodape"><span id="r-ultima"></span></div>
   </main>
 </div>
 
@@ -103,7 +103,6 @@ body { background-color: #071d15; }
     filhos.flat().forEach((f) => { if (f != null) e.append(f instanceof Node ? f : String(f)); });
     return e;
   }
-  if (P.TESTE) $("#r-completo").href = "painel.html?teste";
   const est = { r: { sim: 0, talvez: 0, nao: 0, bebidas: {}, ultima: null }, timer: null };
 
   async function buscar() {
