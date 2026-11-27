@@ -88,26 +88,21 @@ Links diretos (úteis para QR codes específicos):
 
 ## Confirmação de presença (link separado)
 
-Fica na pasta `presenca/`, fora do site da votação (o site dos convidados não tem link para ela).
+Fica na pasta `presenca/`, fora do site da votação (o site dos convidados não tem link para ela). **É anônima**: não pede nome nem departamento.
 
 | Endereço | Para quem | O que é |
 |---|---|---|
-| `presenca/` | Todo mundo (é o link que vai no grupo / QR code) | A pessoa **procura o próprio nome** (digita 3 letras e toca no nome; o departamento vem junto), responde **Vou / Ainda não sei / Não vou** e, se vai ou talvez vá, a bebida preferida (opcional) |
+| `presenca/` | Todo mundo (é o link que vai no grupo / QR code) | A pessoa responde **Vou / Ainda não sei / Não vou** e, se vai ou ainda não sabe, a pergunta das bebidas (opcional) |
 | `presenca/painel.html` | Só a organização (mesma senha do `admin.html`) | Painel ao vivo das respostas |
-| `presenca/resumo.html` | Quem tiver o link (**sem senha**) | **Resumo para celular**: só as quantidades (confirmados, talvez, não vão, faltam, quantos responderam, planejamento, por departamento e bebidas de quem vai). Atualiza a cada 5 segundos. O banco manda só números para essa página, nunca nomes |
-| `...?teste` (nos dois) | Para testar | Respostas de exemplo, salvas só no navegador (senha do teste: `trocar123`) |
+| `presenca/resumo.html` | Quem tiver o link (**sem senha**) | **Resumo para celular**: só as quantidades (confirmados, ainda não sabem, não vão, total, planejamento e bebidas de quem vai). Atualiza a cada 5 segundos |
+| `...?teste` (em todos) | Para testar | Respostas de exemplo, salvas só no navegador (senha do teste: `trocar123`) |
 
-- **Lista de pessoas**: os 407 colaboradores da planilha `Lista Confraternização.xlsx` estão no banco (tabela `confra_colaboradores`), **sem leitura pública**: a busca do link devolve no máximo 8 nomes a partir de 3 letras, sem acento e com as palavras em qualquer ordem (digitar "silva moura" acha quem tem Silva e Moura no nome). Os nomes não estão no GitHub (o site é público).
-- **Uma resposta por pessoa**: cada nome só tem uma resposta. Quem já respondeu vê o resumo e o botão "Alterar minha resposta" (vale só no celular que respondeu). Se outra pessoa tentar responder pelo mesmo nome em outro celular, aparece "Esse nome já tem uma resposta… fale com a organização"; a organização remove a resposta no painel e a pessoa responde de novo.
-- **Bebida** (opcional, para quem vai ou talvez vá): "Para organizarmos melhor as bebidas da confraternização, qual opção combina com você?" → *Cerveja e/ou outras bebidas alcoólicas* · *Somente bebidas sem álcool* · *Tanto faz, posso consumir ambas* · *Prefiro não responder*. No painel aparecem como "Com álcool", "Só sem álcool", "Tanto faz (ambas)", "Prefere não dizer" e "Não respondeu", com o planejamento "bebida alcoólica para X a Y pessoas; só sem álcool para X a Y" (o "tanto faz" entra nos dois).
-- A bebida é vista só em **totais** (por departamento e situação). O banco não envia a bebida de cada pessoa nem para o painel, e a planilha exportada não tem essa coluna.
-- **Painel** (atualiza a cada 5 segundos): confirmados, talvez, não vão, total e departamentos que já responderam; barra da situação com o planejamento ("prepare para X a Y pessoas"); respostas acumuladas ao longo do tempo; respostas por departamento (toque num departamento para filtrar o painel inteiro); bebidas; lista com busca, ordenação, aviso de **nome repetido** e botão para remover; atividade recente com aviso de cada resposta nova.
-- **Filtros** no topo (departamento, situação e busca por nome) valem para o painel todo.
-- **Exportar planilha**: baixa um CSV (abre no Excel) com nome, departamento, situação e datas, respeitando os filtros.
+- **Uma resposta por celular**: o celular guarda uma chave secreta. Ao abrir o link de novo, a pessoa vê a própria resposta e o botão **"Alterar minha resposta"** (a alteração substitui a anterior, não soma). Outro celular, outro navegador ou aba anônima contam como resposta nova, porque não há nome para conferir.
+- **Bebida** (opcional): "Para organizarmos melhor as bebidas da confraternização, qual opção combina com você?" → *Cerveja e/ou outras bebidas alcoólicas* · *Somente bebidas sem álcool* · *Tanto faz, posso consumir ambas* · *Prefiro não responder*. No painel aparecem como "Com álcool", "Só sem álcool", "Tanto faz (ambas)", "Prefere não dizer" e "Não respondeu", com o planejamento "bebida alcoólica para X a Y pessoas; só sem álcool para X a Y" (o "tanto faz" entra nos dois).
+- **Painel** (atualiza a cada 5 segundos): confirmados (e quantos nas últimas 24 horas), ainda não sabem, não vão, total de respostas; barra da situação com o planejamento ("prepare para X a Y pessoas"); respostas acumuladas ao longo do tempo; bebidas; atividade recente (sem identificação) com aviso de cada resposta nova.
 - **Link e QR code**: copia o link e baixa o QR code para imprimir.
-- **Quem falta responder**: no filtro de situação, **Sem resposta** troca a lista pelas pessoas que ainda não responderam (com filtro de departamento e busca); "Exportar planilha" baixa essa lista para cobrar o pessoal. No gráfico por departamento aparece "10 de 29" e a ordem "Faltam responder".
-- **Configurações**: abrir ou encerrar as confirmações, prazo que aparece no link (ex.: "até 01/12") e **incluir alguém que não está na lista** (nome completo + departamento; já aparece na busca).
-- A lista veio da planilha (407 pessoas, 22 departamentos; "Terceirizado/Comercial Vendas" entrou em Comercial Vendas; nomes com a primeira letra maiúscula). A planilha **não** vai para o GitHub (`*.xlsx` está no `.gitignore`). Para trocar a lista inteira por uma planilha nova, é preciso carregar de novo no banco (não dá pelo painel).
+- **Configurações**: abrir ou encerrar as confirmações, prazo que aparece no link (ex.: "até 01/12") e **apagar todas as respostas** (para começar do zero depois de testar; pede dois toques).
+- A lista de colaboradores que existiu numa versão anterior foi apagada do banco; nenhum nome é guardado.
 
 ## Depois: ligar o banco para a festa de verdade
 

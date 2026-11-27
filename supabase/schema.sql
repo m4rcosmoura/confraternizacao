@@ -565,175 +565,28 @@ grant execute on function
 to anon, authenticated;
 
 -- ---------------------------------------------------------------------
--- Confirmação de presença (link separado: presenca/)
--- Cada pessoa informa nome, departamento, se vai (sim / não / talvez) e,
--- opcionalmente, o que prefere beber. Só o celular que respondeu pode
--- alterar a resposta (chave secreta guardada no aparelho).
--- O painel (presenca/painel.html, com a senha da organização) vê a lista
--- de nomes e departamentos; a bebida aparece SÓ em totais, nunca por nome.
+-- Confirmação de presença (link separado: presenca/) - ANÔNIMA
+-- A pessoa responde só: Vou / Ainda não sei / Não vou e, se vai ou talvez vá,
+-- a pergunta das bebidas (opcional). Não há nome nem departamento.
+-- Uma resposta por aparelho: o celular guarda uma chave secreta e pode alterar
+-- a própria resposta (outro celular ou aba anônima conta como resposta nova).
+-- Painel (presenca/painel.html, com a senha) e resumo (presenca/resumo.html,
+-- sem senha) mostram só quantidades.
 -- ---------------------------------------------------------------------
 create table if not exists public.confra_presenca (
   id uuid primary key default gen_random_uuid(),
-  nome text not null check (char_length(nome) between 2 and 80),
-  departamento text not null check (char_length(departamento) between 1 and 60),
   resposta text not null check (resposta in ('sim', 'nao', 'talvez')),
-  bebida text check (bebida in ('alcool', 'sem_alcool', 'tanto_faz', 'prefiro_nao')),   -- alcool = cerveja e/ou outras alcoólicas; sem_alcool = só sem álcool; vazio = não respondeu
+  bebida text check (bebida in ('alcool', 'sem_alcool', 'tanto_faz', 'prefiro_nao')),   -- vazio = não respondeu
   chave_hash text not null,
   criado_em timestamptz not null default now(),
   atualizado_em timestamptz not null default now()
 );
 alter table public.confra_presenca enable row level security;   -- sem política: ninguém lê direto
 
--- Responder (p_id vazio) ou alterar a própria resposta (p_id + chave do aparelho).
-create or replace function public.confra_presenca_responder(
-  p_id uuid, p_chave text, p_nome text, p_departamento text, p_resposta text, p_bebida text default null
-)
+-- Responder (p_id vazio) ou alterar a resposta deste aparelho (p_id + chave).
+create or replace function public.confra_presenca_votar(p_id uuid, p_chave text, p_resposta text, p_bebida text default null)
 returns uuid language plpgsql security definer set search_path = public, extensions as $$
 declare
-  v_id uuid;
-  v_deps text := coalesce(public._confra_cfg('presenca_departamentos'), '');
-begin
-  if coalesce(public._confra_cfg('presenca_aberta'), 'sim') <> 'sim' then
-    raise exception 'As confirmações estão encerradas.';
-  end if;
-  if char_length(trim(coalesce(p_nome, ''))) < 2 then
-    raise exception 'Informe seu nome.';
-  end if;
-  if char_length(trim(coalesce(p_departamento, ''))) < 1 then
-    raise exception 'Escolha o seu departamento.';
-  end if;
-  -- cada linha da lista: "Departamento" ou "Departamento | quantidade de pessoas"
-  if v_deps <> '' and not (trim(p_departamento) = any (
-       select trim(split_part(x, '|', 1)) from unnest(string_to_array(v_deps, E'\n')) x where trim(x) <> '')) then
-    raise exception 'Escolha o departamento na lista.';
-  end if;
-  if p_resposta not in ('sim', 'nao', 'talvez') then
-    raise exception 'Diga se você vai.';
-  end if;
-  if p_bebida is not null and p_bebida not in ('alcool', 'sem_alcool', 'tanto_faz', 'prefiro_nao') then
-    raise exception 'Opção de bebida inválida.';
-  end if;
-  if p_chave is null or char_length(p_chave) not between 16 and 64 then
-    raise exception 'Não foi possível identificar este aparelho. Recarregue a página.';
-  end if;
-
-  if p_id is null then
-    if (select count(*) from public.confra_presenca where criado_em > now() - interval '1 minute') >= 60 then
-      raise exception 'Muitas confirmações ao mesmo tempo. Tente de novo em 1 minuto.';
-    end if;
-    insert into public.confra_presenca (nome, departamento, resposta, bebida, chave_hash)
-    values (trim(p_nome), trim(p_departamento), p_resposta,
-            case when p_resposta = 'nao' then null else p_bebida end,
-            extensions.crypt(p_chave, extensions.gen_salt('bf')))
-    returning id into v_id;
-    return v_id;
-  end if;
-
-  update public.confra_presenca set
-    nome = trim(p_nome), departamento = trim(p_departamento), resposta = p_resposta,
-    bebida = case when p_resposta = 'nao' then null else p_bebida end, atualizado_em = now()
-  where id = p_id and chave_hash = extensions.crypt(p_chave, chave_hash)
-  returning id into v_id;
-  if v_id is null then
-    raise exception 'Não encontramos sua resposta anterior. Envie de novo.';
-  end if;
-  return v_id;
-end $$;
-
--- Painel: lista de quem respondeu (sem a bebida).
-create or replace function public.confra_presenca_painel(p_senha text)
-returns table (id uuid, nome text, departamento text, resposta text, criado_em timestamptz, atualizado_em timestamptz)
-language plpgsql stable security definer set search_path = public as $$
-#variable_conflict use_column
-begin
-  perform public._confra_exigir_admin(p_senha);
-  return query select p.id, p.nome, p.departamento, p.resposta, p.criado_em, p.atualizado_em
-    from public.confra_presenca p order by p.criado_em;
-end $$;
-
--- Painel: bebida só em totais (por departamento e resposta).
-create or replace function public.confra_presenca_bebidas(p_senha text)
-returns table (departamento text, resposta text, bebida text, qtd bigint)
-language plpgsql stable security definer set search_path = public as $$
-#variable_conflict use_column
-begin
-  perform public._confra_exigir_admin(p_senha);
-  return query select p.departamento, p.resposta, coalesce(p.bebida, 'sem_resposta'), count(*)
-    from public.confra_presenca p where p.resposta <> 'nao'
-    group by 1, 2, 3;
-end $$;
-
--- Painel: remover uma resposta (duplicada ou de brincadeira).
-create or replace function public.confra_admin_presenca_excluir(p_senha text, p_id uuid)
-returns void language plpgsql security definer set search_path = public as $$
-begin
-  perform public._confra_exigir_admin(p_senha);
-  delete from public.confra_presenca where id = p_id;
-end $$;
-
-grant execute on function
-  public.confra_presenca_responder(uuid, text, text, text, text, text),
-  public.confra_presenca_painel(text),
-  public.confra_presenca_bebidas(text),
-  public.confra_admin_presenca_excluir(text, uuid)
-to anon, authenticated;
-
--- Configuração da confirmação (o painel edita): aberta ou não, prazo e lista de departamentos (um por linha).
-insert into public.confra_config (chave, valor) values
-  ('presenca_aberta', 'sim'),
-  ('presenca_prazo', ''),
-  -- um departamento por linha; "| número" = quantas pessoas o departamento tem (o painel mostra quantos já responderam)
-  ('presenca_departamentos', E'Administrativo | 5\nAmbulatório | 3\nBalança / Faturamento | 9\nCampo | 18\nCampo / Milho | 3\nCantina | 6\nComercial Cooperados | 4\nComercial Vendas | 12\nConstrução Civil | 1\nControle de Qualidade | 29\nElétrica e Manutenção | 26\nFrotas | 2\nGestão da Qualidade | 3\nGrãos | 19\nLaboratório | 23\nLimpeza | 20\nLogística | 8\nPortaria | 18\nProdução | 175\nSegurança do Trabalho | 5\nSuprimentos / Compras | 7\nTI | 11')
-on conflict (chave) do nothing;
-
--- ---------------------------------------------------------------------
--- Confirmação de presença: lista de colaboradores
--- A pessoa procura o próprio nome e toca nele (não digita o nome).
--- Os NOMES não ficam neste arquivo (o repositório é público): são carregados
--- direto no banco a partir da planilha da empresa. A tabela não tem leitura
--- pública; a busca devolve no máximo 8 nomes, a partir de 3 letras.
--- ---------------------------------------------------------------------
-create or replace function public._confra_normalizar(t text) returns text
-language sql immutable set search_path = public as $$
-  select trim(lower(regexp_replace(translate(coalesce(t, ''),
-    'ÁÀÂÃÄáàâãäÉÈÊËéèêëÍÌÎÏíìîïÓÒÔÕÖóòôõöÚÙÛÜúùûüÇçÑñ',
-    'AAAAAaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUUuuuuCcNn'), '\s+', ' ', 'g')))
-$$;
-
-create table if not exists public.confra_colaboradores (
-  id uuid primary key default gen_random_uuid(),
-  nome text not null check (char_length(nome) between 2 and 120),
-  nome_busca text generated always as (public._confra_normalizar(nome)) stored,
-  departamento text not null check (char_length(departamento) between 1 and 60),
-  obs text,
-  criado_em timestamptz not null default now()
-);
-alter table public.confra_colaboradores enable row level security;   -- sem política: ninguém lê direto
-
-alter table public.confra_presenca add column if not exists colaborador_id uuid references public.confra_colaboradores(id) on delete set null;
-create unique index if not exists confra_presenca_colaborador_uq on public.confra_presenca (colaborador_id) where colaborador_id is not null;
-
--- Busca do próprio nome: pelo menos 3 letras, no máximo 8 nomes (sem acento, palavras em qualquer ordem).
-create or replace function public.confra_presenca_buscar(p_texto text)
-returns table (id uuid, nome text, departamento text)
-language sql stable security definer set search_path = public as $$
-  with t as (select public._confra_normalizar(p_texto) as q)
-  select c.id, c.nome, c.departamento
-  from public.confra_colaboradores c, t
-  where char_length(replace(t.q, ' ', '')) >= 3
-    and not exists (select 1 from unnest(string_to_array(t.q, ' ')) w where w <> '' and position(w in c.nome_busca) = 0)
-  order by (c.nome_busca like t.q || '%') desc, c.nome
-  limit 8;
-$$;
-
--- Responder escolhendo o nome da lista. Cada nome tem uma resposta só; só o aparelho que respondeu altera.
-create or replace function public.confra_presenca_confirmar(
-  p_id uuid, p_chave text, p_colaborador uuid, p_resposta text, p_bebida text default null
-)
-returns uuid language plpgsql security definer set search_path = public, extensions as $$
-declare
-  c public.confra_colaboradores;
-  v_exist public.confra_presenca;
   v_id uuid;
   v_beb text := case when p_resposta = 'nao' then null else p_bebida end;
 begin
@@ -744,106 +597,51 @@ begin
     raise exception 'Diga se você vai.';
   end if;
   if p_bebida is not null and p_bebida not in ('alcool', 'sem_alcool', 'tanto_faz', 'prefiro_nao') then
-    raise exception 'Opção de bebida inválida.';
+    raise exception 'Opção de bebida inválida. Recarregue a página.';
   end if;
   if p_chave is null or char_length(p_chave) not between 16 and 64 then
     raise exception 'Não foi possível identificar este aparelho. Recarregue a página.';
   end if;
-  select * into c from public.confra_colaboradores where id = p_colaborador;
-  if not found then
-    raise exception 'Procure e toque no seu nome na lista.';
-  end if;
-
-  select * into v_exist from public.confra_presenca where colaborador_id = p_colaborador;
-  if found then
-    if v_exist.chave_hash <> extensions.crypt(p_chave, v_exist.chave_hash) then
-      raise exception 'Esse nome já tem uma resposta, enviada de outro celular. Se for você e quiser mudar, fale com a organização.';
-    end if;
-    update public.confra_presenca set resposta = p_resposta, bebida = v_beb, nome = c.nome, departamento = c.departamento, atualizado_em = now()
-    where id = v_exist.id;
-    if p_id is not null and p_id <> v_exist.id then   -- este aparelho tinha escolhido outro nome antes
-      delete from public.confra_presenca where id = p_id and chave_hash = extensions.crypt(p_chave, chave_hash);
-    end if;
-    return v_exist.id;
-  end if;
-
   if p_id is not null then
-    update public.confra_presenca set colaborador_id = c.id, nome = c.nome, departamento = c.departamento,
-      resposta = p_resposta, bebida = v_beb, atualizado_em = now()
+    update public.confra_presenca set resposta = p_resposta, bebida = v_beb, atualizado_em = now()
     where id = p_id and chave_hash = extensions.crypt(p_chave, chave_hash)
     returning id into v_id;
     if v_id is not null then return v_id; end if;
   end if;
-
   if (select count(*) from public.confra_presenca where criado_em > now() - interval '1 minute') >= 60 then
     raise exception 'Muitas confirmações ao mesmo tempo. Tente de novo em 1 minuto.';
   end if;
-  insert into public.confra_presenca (colaborador_id, nome, departamento, resposta, bebida, chave_hash)
-  values (c.id, c.nome, c.departamento, p_resposta, v_beb, extensions.crypt(p_chave, extensions.gen_salt('bf')))
+  insert into public.confra_presenca (resposta, bebida, chave_hash)
+  values (p_resposta, v_beb, extensions.crypt(p_chave, extensions.gen_salt('bf')))
   returning id into v_id;
   return v_id;
 end $$;
 
--- A versão antiga (nome digitado) deixou de valer.
-create or replace function public.confra_presenca_responder(
-  p_id uuid, p_chave text, p_nome text, p_departamento text, p_resposta text, p_bebida text default null
-)
-returns uuid language plpgsql security definer set search_path = public as $$
-begin
-  raise exception 'A confirmação mudou: recarregue a página e procure seu nome na lista.';
-end $$;
-
--- Painel: quem ainda não respondeu (com a senha).
-create or replace function public.confra_presenca_pendentes(p_senha text)
-returns table (id uuid, nome text, departamento text)
+-- Painel (com a senha): as respostas, sem identificação nenhuma.
+create or replace function public.confra_presenca_respostas(p_senha text)
+returns table (id uuid, resposta text, bebida text, criado_em timestamptz, atualizado_em timestamptz)
 language plpgsql stable security definer set search_path = public as $$
 #variable_conflict use_column
 begin
   perform public._confra_exigir_admin(p_senha);
-  return query select c.id, c.nome, c.departamento from public.confra_colaboradores c
-    where not exists (select 1 from public.confra_presenca p where p.colaborador_id = c.id)
-    order by c.departamento, c.nome;
+  return query select p.id, p.resposta, p.bebida, p.criado_em, p.atualizado_em from public.confra_presenca p order by p.criado_em;
 end $$;
 
--- Painel: incluir alguém que não estava na lista.
-create or replace function public.confra_admin_colaborador_adicionar(p_senha text, p_nome text, p_departamento text)
-returns uuid language plpgsql security definer set search_path = public as $$
-declare v_id uuid;
+-- Painel: apagar todas as respostas (ex.: depois de testar).
+create or replace function public.confra_admin_presenca_zerar(p_senha text)
+returns void language plpgsql security definer set search_path = public as $$
 begin
   perform public._confra_exigir_admin(p_senha);
-  if char_length(trim(coalesce(p_nome, ''))) < 2 then raise exception 'Informe o nome.'; end if;
-  if char_length(trim(coalesce(p_departamento, ''))) < 1 then raise exception 'Informe o departamento.'; end if;
-  if exists (select 1 from public.confra_colaboradores where nome_busca = public._confra_normalizar(p_nome)) then
-    raise exception 'Esse nome já está na lista.';
-  end if;
-  insert into public.confra_colaboradores (nome, departamento) values (trim(p_nome), trim(p_departamento)) returning id into v_id;
-  return v_id;
+  delete from public.confra_presenca where true;
 end $$;
 
-revoke all on function public._confra_normalizar(text) from public, anon, authenticated;
-grant execute on function
-  public.confra_presenca_buscar(text),
-  public.confra_presenca_confirmar(uuid, text, uuid, text, text),
-  public.confra_presenca_pendentes(text),
-  public.confra_admin_colaborador_adicionar(text, text, text)
-to anon, authenticated;
-
--- Resumo público (sem senha) para o resumo.html: só quantidades, nunca nomes.
--- Por departamento: vou / talvez / não / ainda sem resposta. Bebida: só o total geral de quem vai.
+-- Resumo público (sem senha): só quantidades.
 create or replace function public.confra_presenca_resumo()
 returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
-    'deps', coalesce((
-      select jsonb_agg(x order by x->>'d') from (
-        select jsonb_build_object(
-          'd', c.departamento,
-          'sim', count(p.id) filter (where p.resposta = 'sim'),
-          'talvez', count(p.id) filter (where p.resposta = 'talvez'),
-          'nao', count(p.id) filter (where p.resposta = 'nao'),
-          'sem', count(*) filter (where p.id is null)) as x
-        from public.confra_colaboradores c
-        left join public.confra_presenca p on p.colaborador_id = c.id
-        group by c.departamento) t), '[]'::jsonb),
+    'sim', (select count(*) from public.confra_presenca where resposta = 'sim'),
+    'talvez', (select count(*) from public.confra_presenca where resposta = 'talvez'),
+    'nao', (select count(*) from public.confra_presenca where resposta = 'nao'),
     'bebidas', coalesce((
       select jsonb_object_agg(b, n) from (
         select coalesce(bebida, 'sem_resposta') as b, count(*) as n
@@ -851,7 +649,19 @@ returns jsonb language sql stable security definer set search_path = public as $
     'ultima', (select max(atualizado_em) from public.confra_presenca)
   );
 $$;
-grant execute on function public.confra_presenca_resumo() to anon, authenticated;
+
+grant execute on function
+  public.confra_presenca_votar(uuid, text, text, text),
+  public.confra_presenca_respostas(text),
+  public.confra_admin_presenca_zerar(text),
+  public.confra_presenca_resumo()
+to anon, authenticated;
+
+-- Configuração da confirmação (o painel edita): aberta ou não e prazo que aparece no link.
+insert into public.confra_config (chave, valor) values
+  ('presenca_aberta', 'sim'),
+  ('presenca_prazo', '')
+on conflict (chave) do nothing;
 
 -- ---------------------------------------------------------------------
 -- Permissões das funções

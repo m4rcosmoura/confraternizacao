@@ -12,38 +12,22 @@
 <link rel="stylesheet" href="../estilo.css?v=26">
 <!--
   PAINEL AO VIVO DAS CONFIRMAÇÕES (só a organização, com a senha do painel)
-  Atualiza a cada 5 segundos. Filtros de departamento, situação e nome valem para o painel inteiro.
-  A bebida aparece só em totais (o banco nem envia a bebida de cada pessoa).
-  ?teste → respostas de exemplo, só no navegador (senha do teste: trocar123)
+  As respostas são anônimas: só quantidades (vou / ainda não sei / não vou e bebidas).
+  Atualiza a cada 5 segundos. ?teste → respostas de exemplo, só no navegador (senha do teste: trocar123)
 -->
 <style>
-/* ------------------------------------------------------------ Tokens do painel (tema escuro da festa) */
 .dash {
-  --plano: #071d15;
-  --cartao: #0e3527;          /* superfície dos gráficos (validada com as cores abaixo) */
-  --cartao-2: #123f2f;
+  --plano: #071d15; --cartao: #0e3527; --cartao-2: #123f2f;
   --borda: rgba(245, 221, 47, .16);
-  --tinta: #ffffff;
-  --tinta-2: #cfe0d6;
-  --tinta-3: #8fae9f;
-  --grade: rgba(255, 255, 255, .07);
-  --eixo: rgba(255, 255, 255, .22);
-  /* situação: dourado = vou, azul = talvez, magenta = não vou (validado: daltonismo e visão normal, fundo #0e3527) */
-  --s-sim: #c98500;
-  --s-talvez: #3987e5;
-  --s-nao: #d55181;
-  --s-sem: #4b6b5e;           /* ainda sem resposta: cinza-esverdeado neutro, não é uma situação */
+  --tinta: #ffffff; --tinta-2: #cfe0d6; --tinta-3: #8fae9f;
+  --grade: rgba(255, 255, 255, .07); --eixo: rgba(255, 255, 255, .22);
+  /* situação: dourado = vou, azul = ainda não sei, magenta = não vou (validado: daltonismo e visão normal, fundo #0e3527) */
+  --s-sim: #c98500; --s-talvez: #3987e5; --s-nao: #d55181;
   --vivo: #ff4a3d;
   color-scheme: dark;
 }
-body.dash {
-  background-color: var(--plano);
-  background-image: var(--flocos), radial-gradient(120% 60% at 50% 0%, #12503b 0%, #0b2e22 45%, var(--plano) 100%);
-  background-size: 240px 240px, 100% 100%;
-}
-.d-wrap { max-width: 1440px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px)); }
-
-/* ------------------------------------------------------------ Cabeçalho */
+body.dash { background-color: var(--plano); background-image: var(--flocos), radial-gradient(120% 60% at 50% 0%, #12503b 0%, #0b2e22 45%, var(--plano) 100%); background-size: 240px 240px, 100% 100%; }
+.d-wrap { max-width: 1280px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px)); }
 .d-topo { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; padding: 6px 0 18px; }
 .d-marca { width: 210px; flex: none; }
 .d-titulos { flex: 1 1 420px; min-width: 260px; }
@@ -51,70 +35,41 @@ body.dash {
 .d-h1 { margin: 2px 0 0; font-family: var(--serif); font-weight: 600; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; }
 .d-ev { margin: 4px 0 0; color: var(--tinta-2); font-size: 14px; }
 .d-status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-.d-vivo { display: inline-flex; align-items: center; gap: 9px; padding: 7px 14px 7px 11px; border-radius: 999px; background: rgba(0, 0, 0, .35); border: 1px solid rgba(255, 255, 255, .14); font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; white-space: nowrap; }
+.d-vivo { margin: 0; display: inline-flex; align-items: center; gap: 9px; padding: 7px 14px 7px 11px; border-radius: 999px; background: rgba(0, 0, 0, .35); border: 1px solid rgba(255, 255, 255, .14); font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; white-space: nowrap; }
 .d-vivo i { width: 10px; height: 10px; border-radius: 50%; background: var(--vivo); animation: d-bip 1.6s infinite; }
-.d-vivo[data-estado="off"] i { background: #8a9a92; animation: none; }
+.d-vivo.off i { background: #8a9a92; animation: none; }
 .d-vivo small { font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--tinta-2); }
 @keyframes d-bip { 0% { box-shadow: 0 0 0 0 rgba(255, 74, 61, .7); } 70% { box-shadow: 0 0 0 9px rgba(255, 74, 61, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 74, 61, 0); } }
-.d-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--borda); background: rgba(14, 53, 39, .9); color: var(--tinta); font: 600 14px var(--body); cursor: pointer; white-space: nowrap; transition: border-color .15s, background .15s; }
+.d-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--borda); background: rgba(14, 53, 39, .9); color: var(--tinta); font: 600 14px var(--body); cursor: pointer; white-space: nowrap; text-decoration: none; transition: border-color .15s, background .15s; }
 .d-btn:hover { border-color: rgba(245, 221, 47, .5); background: var(--cartao-2); }
 .d-btn svg { color: var(--gold); flex: none; }
 .d-btn.ouro { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); font-weight: 800; }
-.d-btn.ouro svg { color: var(--gold-ink); }
-
-/* ------------------------------------------------------------ Filtros (uma linha, valem para tudo) */
-.d-filtros { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 -16px 18px; padding: 10px 16px; background: rgba(7, 29, 21, .88); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--borda); }
-.d-filtros label.vh + * { margin: 0; }
-.d-sel, .d-busca { width: auto; height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--borda); background: var(--cartao); color: var(--tinta); font: 600 14px var(--body); }
-.d-sel { appearance: none; -webkit-appearance: none; padding-right: 36px; min-width: 210px; background-image: linear-gradient(45deg, transparent 50%, var(--gold) 50%), linear-gradient(135deg, var(--gold) 50%, transparent 50%); background-position: calc(100% - 20px) 52%, calc(100% - 14px) 52%; background-size: 6px 6px; background-repeat: no-repeat; }
-.d-busca { min-width: 220px; flex: 1; max-width: 340px; }
-.d-busca::placeholder { color: var(--tinta-3); }
-.d-sel:focus, .d-busca:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245, 221, 47, .2); }
-.d-seg { display: inline-flex; padding: 3px; border-radius: 11px; border: 1px solid var(--borda); background: var(--cartao); }
-.d-seg button { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: var(--tinta-2); font: 600 13px var(--body); cursor: pointer; }
-.d-seg button[aria-pressed="true"] { background: var(--gold); color: var(--gold-ink); font-weight: 800; }
-.d-seg .ponto { width: 9px; height: 9px; border-radius: 50%; }
-.d-limpar { margin-left: auto; background: none; border: 0; color: var(--gold); font: 600 13px var(--body); text-decoration: underline; cursor: pointer; }
-.d-ativo { font-size: 13px; color: var(--tinta-2); }
-
-/* ------------------------------------------------------------ Grade de cartões */
 .d-grade { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
-.card { position: relative; min-width: 0; padding: 18px 20px 20px; border-radius: 18px; background: var(--cartao); border: 1px solid var(--borda); box-shadow: 0 18px 40px rgba(0, 0, 0, .28); transition: opacity .3s; }
-.card.carregando { opacity: .55; }
+.card { position: relative; min-width: 0; padding: 18px 20px 20px; border-radius: 18px; background: var(--cartao); border: 1px solid var(--borda); box-shadow: 0 18px 40px rgba(0, 0, 0, .28); }
 .card-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.card h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .01em; }
+.card h2 { margin: 0; font-size: 15px; font-weight: 700; }
 .card-sub { margin: 3px 0 0; font-size: 13px; color: var(--tinta-3); }
+.s4 { grid-column: span 4; } .s5 { grid-column: span 5; } .s7 { grid-column: span 7; } .s8 { grid-column: span 8; }
 .coluna { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.feed-card { flex: 1; display: flex; flex-direction: column; min-height: 260px; }
-.feed-card .feed { flex: 1 1 0; min-height: 200px; max-height: none; }
-.s4 { grid-column: span 4; } .s5 { grid-column: span 5; } .s7 { grid-column: span 7; } .s8 { grid-column: span 8; } .s12 { grid-column: span 12; }
-
 /* KPIs */
-.kpis { grid-column: span 12; display: grid; grid-template-columns: 1.6fr repeat(4, minmax(0, 1fr)); gap: 16px; }
+.kpis { grid-column: span 12; display: grid; grid-template-columns: 1.6fr repeat(3, minmax(0, 1fr)); gap: 16px; }
 .kpi { padding: 16px 18px; border-radius: 18px; background: var(--cartao); border: 1px solid var(--borda); box-shadow: 0 18px 40px rgba(0, 0, 0, .28); min-width: 0; }
 .kpi-rot { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 600; color: var(--tinta-2); }
 .kpi-rot .ponto { width: 10px; height: 10px; border-radius: 3px; }
 .kpi-val { margin: 6px 0 0; font-size: 36px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
 .kpi-det { margin: 6px 0 0; font-size: 13px; color: var(--tinta-3); }
-.kpi-det b { color: var(--tinta-2); font-weight: 700; }
 .kpi.heroi { position: relative; overflow: hidden; background: linear-gradient(135deg, #17503b 0%, var(--cartao) 60%); border-color: rgba(245, 221, 47, .4); }
 .kpi.heroi::after { content: ""; position: absolute; right: -60px; top: -60px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(245, 221, 47, .18), transparent 65%); pointer-events: none; }
 .kpi.heroi .kpi-val { font-size: 64px; }
 .kpi-linha { display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
 .kpi-pct { margin: 0 0 8px; font-size: 15px; color: var(--tinta-2); }
 .kpi-pct b { color: var(--tinta); font-size: 22px; }
-.delta { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, .07); color: var(--tinta-2); font-size: 12px; font-weight: 700; }
-.delta.sobe { color: #7fe0a8; }
-
-/* Barra segmentada (situação geral) */
+.delta { display: inline-flex; padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, .07); color: #7fe0a8; font-size: 12px; font-weight: 700; }
+/* situação */
 .seg-bar { display: flex; gap: 2px; height: 28px; margin: 6px 0 14px; }
-.seg-bar > div { position: relative; min-width: 0; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-size: 13px; font-weight: 800; color: #fff; white-space: nowrap; overflow: visible; cursor: default; transition: filter .15s; }
+.seg-bar > div { min-width: 0; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-size: 13px; font-weight: 800; color: #fff; white-space: nowrap; cursor: default; }
 .seg-bar > div:hover, .seg-bar > div:focus-visible { filter: brightness(1.12); outline: none; }
-.legenda { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--tinta-2); }
-.legenda li { display: inline-flex; align-items: center; gap: 7px; }
-.legenda i { width: 12px; height: 12px; border-radius: 3px; flex: none; }
-.legenda b { color: var(--tinta); }
-.situ-lista { display: grid; gap: 10px; margin: 0; }
+.situ-lista { display: grid; margin: 0; }
 .situ-lista div { display: grid; grid-template-columns: 12px 1fr auto auto; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--grade); }
 .situ-lista div:first-child { border-top: 0; }
 .situ-lista i { width: 12px; height: 12px; border-radius: 3px; }
@@ -123,8 +78,10 @@ body.dash {
 .situ-lista small { color: var(--tinta-3); font-size: 13px; min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
 .plano { margin: 16px 0 0; padding: 12px 14px; border-radius: 12px; background: rgba(245, 221, 47, .08); border: 1px solid rgba(245, 221, 47, .22); font-size: 14px; color: var(--tinta-2); }
 .plano b { color: var(--gold); font-size: 16px; }
-
-/* Gráficos (SVG) */
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--tinta-2); }
+.legenda li { display: inline-flex; align-items: center; gap: 7px; }
+.legenda i { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+/* gráficos */
 .graf { position: relative; width: 100%; }
 .graf svg { display: block; width: 100%; height: auto; overflow: visible; }
 .graf text { font-family: var(--body); }
@@ -133,103 +90,51 @@ body.dash {
 .t-val { fill: var(--tinta); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .linha-grade { stroke: var(--grade); stroke-width: 1; }
 .linha-base { stroke: var(--eixo); stroke-width: 1; }
-.dep-linha { cursor: pointer; }
-.dep-linha .fundo { fill: transparent; }
-.dep-linha:hover .fundo, .dep-linha:focus-visible .fundo { fill: rgba(255, 255, 255, .04); }
-.dep-linha:focus-visible { outline: none; }
-.dep-linha.sel .fundo { fill: rgba(245, 221, 47, .08); }
-.dep-linha.apagada { opacity: .35; }
-.seg-ret { transition: filter .15s; }
 .seg-ret:hover { filter: brightness(1.18); }
 .mira { stroke: rgba(255, 255, 255, .35); stroke-width: 1; }
-/* Tooltip */
-.dica-graf { position: fixed; z-index: 50; pointer-events: none; min-width: 170px; padding: 10px 12px; border-radius: 10px; background: #061a12; border: 1px solid rgba(245, 221, 47, .35); box-shadow: 0 14px 34px rgba(0, 0, 0, .5); font-size: 13px; opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; }
-.dica-graf.on { opacity: 1; transform: none; }
+.vazio-graf { padding: 30px 14px; text-align: center; color: var(--tinta-3); }
+.dica-graf { position: fixed; z-index: 50; pointer-events: none; min-width: 170px; padding: 10px 12px; border-radius: 10px; background: #061a12; border: 1px solid rgba(245, 221, 47, .35); box-shadow: 0 14px 34px rgba(0, 0, 0, .5); font-size: 13px; opacity: 0; transition: opacity .12s; }
+.dica-graf.on { opacity: 1; }
 .dica-graf .tt { margin: 0 0 6px; color: var(--tinta-3); font-size: 12px; font-weight: 600; }
 .dica-graf .tl { display: grid; grid-template-columns: 14px auto 1fr; align-items: center; gap: 8px; margin-top: 4px; }
 .dica-graf .tl i { width: 14px; height: 3px; border-radius: 2px; }
 .dica-graf .tl b { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .dica-graf .tl span { color: var(--tinta-2); }
-.alterna { display: inline-flex; padding: 2px; border-radius: 9px; border: 1px solid var(--borda); }
-.alterna button { border: 0; background: none; color: var(--tinta-3); font: 600 12px var(--body); padding: 5px 10px; border-radius: 7px; cursor: pointer; }
-.alterna button[aria-pressed="true"] { background: var(--cartao-2); color: var(--tinta); }
-.privado { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--tinta-3); }
+.privado { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--tinta-3); white-space: nowrap; }
 .privado svg { color: var(--gold); }
-
-/* Tabelas */
-.tab-wrap { max-height: 520px; overflow: auto; margin: 0 -20px -20px; border-top: 1px solid var(--grade); }
-table.d-tab { width: 100%; border-collapse: collapse; font-size: 14px; }
-.d-tab th { position: sticky; top: 0; z-index: 1; background: var(--cartao-2); text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-3); white-space: nowrap; }
-.d-tab th button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-.d-tab th button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.d-tab th[aria-sort="descending"] button::after { content: "▾"; color: var(--gold); }
-.d-tab th[aria-sort="ascending"] button::after { content: "▴"; }
-.d-tab td { padding: 10px 14px; border-top: 1px solid var(--grade); vertical-align: middle; }
-.d-tab tbody tr:hover { background: rgba(255, 255, 255, .03); }
-.d-tab tr.novo { animation: d-novo 3s ease-out; }
-@keyframes d-novo { 0% { background: rgba(245, 221, 47, .22); } }
-.d-tab .num { text-align: right; font-variant-numeric: tabular-nums; }
-.d-tab .quando { color: var(--tinta-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.d-tab .nome { font-weight: 600; }
-.tag-sit { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; white-space: nowrap; }
-.tag-sit i { width: 9px; height: 9px; border-radius: 50%; }
-.tag-dup { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 5px; background: rgba(255, 164, 154, .14); color: var(--erro); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; vertical-align: 1px; }
-.rm { padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(255, 164, 154, .4); background: none; color: var(--erro); font: 600 12px var(--body); cursor: pointer; white-space: nowrap; }
-.rm.armado { background: var(--erro); color: var(--plano); }
-.tab-vazia { padding: 30px 14px; text-align: center; color: var(--tinta-3); }
-.tab-rodape { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; font-size: 13px; color: var(--tinta-3); }
-
-/* Atividade recente */
-.feed { list-style: none; margin: 0; padding: 0; max-height: 520px; overflow: auto; }
-.feed li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 11px 0; border-top: 1px solid var(--grade); }
+/* atividade */
+.feed-card { flex: 1; display: flex; flex-direction: column; min-height: 260px; }
+.feed { list-style: none; margin: 0; padding: 0; flex: 1 1 0; min-height: 200px; overflow: auto; }
+.feed li { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--grade); }
 .feed li:first-child { border-top: 0; }
 .feed li.novo { animation: d-novo 3s ease-out; border-radius: 10px; }
-.av { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; font-size: 12px; font-weight: 800; color: #fff; }
-.feed p { margin: 0; font-size: 14px; line-height: 1.35; }
-.feed p b { font-weight: 700; }
-.feed small { display: block; margin-top: 2px; color: var(--tinta-3); font-size: 12px; }
-
-/* Login */
-.d-login { max-width: 420px; margin: 40px auto; padding: 26px 24px; border-radius: 18px; background: var(--cartao); border: 1px solid var(--borda); box-shadow: 0 18px 40px rgba(0, 0, 0, .3); }
+@keyframes d-novo { 0% { background: rgba(245, 221, 47, .22); } }
+.feed .av { width: 30px; height: 30px; border-radius: 50%; }
+.feed p { margin: 0; font-size: 14px; }
+.feed small { display: block; color: var(--tinta-3); font-size: 12px; }
+/* login e janelas */
+.d-login { max-width: 420px; margin: 40px auto; padding: 26px 24px; border-radius: 18px; background: var(--cartao); border: 1px solid var(--borda); }
 .d-login h2 { font-family: var(--serif); font-weight: 600; font-size: 26px; margin-bottom: 6px; }
-
-/* Configurações e link (janela) */
-dialog.d-jan { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; border-radius: 18px; border: 1px solid rgba(245, 221, 47, .35); background: #0b2e22; color: var(--tinta); box-shadow: 0 30px 80px rgba(0, 0, 0, .6); }
-dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3px); }
+dialog.d-jan { width: min(540px, calc(100vw - 32px)); padding: 0; border-radius: 18px; border: 1px solid rgba(245, 221, 47, .35); background: #0b2e22; color: var(--tinta); box-shadow: 0 30px 80px rgba(0, 0, 0, .6); }
+dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); }
 .jan-cab { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--borda); }
 .jan-cab h2 { margin: 0; font-size: 18px; }
 .jan-corpo { padding: 18px 20px 22px; }
 .jan-fechar { background: none; border: 0; color: var(--tinta-2); font-size: 26px; line-height: 1; cursor: pointer; }
-.jan-corpo textarea { min-height: 200px; font-size: 15px; line-height: 1.5; }
 .link-caixa { display: flex; gap: 8px; }
 .link-caixa input { flex: 1; min-width: 0; font-size: 14px; }
-.add-pessoa { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--borda); }
-.add-tit { margin: 0 0 4px; font-weight: 700; }
-.add-linha { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 8px; }
-.add-linha input, .add-linha select { width: 100%; padding: 10px 12px; font-size: 15px; }
-@media (max-width: 520px) { .add-linha { grid-template-columns: 1fr; } }
 .qr-caixa { display: flex; gap: 18px; align-items: center; margin-top: 16px; }
 .qr-caixa .qr { flex: none; width: 150px; height: 150px; padding: 10px; border-radius: 14px; background: #fff; }
 .qr-caixa .qr svg { display: block; width: 100%; height: 100%; }
-
-/* ------------------------------------------------------------ Telas menores */
-@media (max-width: 1180px) {
+.zona { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--borda); }
+.zona p { margin: 0 0 10px; font-size: 14px; color: var(--tinta-2); }
+@media (max-width: 1080px) {
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kpi.heroi { grid-column: span 2; }
   .s4, .s5, .s7, .s8 { grid-column: span 12; }
 }
-@media (max-width: 640px) {
-  .d-marca { width: 150px; }
-  .d-filtros { position: static; }
-  .kpi.heroi .kpi-val { font-size: 52px; }
-  .kpi-val { font-size: 30px; }
-  .d-sel, .d-busca { min-width: 0; flex: 1 1 100%; max-width: none; }
-  .d-limpar { margin-left: 0; }
-  .card { padding: 16px 14px 16px; }
-  .tab-wrap { margin: 0 -14px -16px; }
-  .d-tab .col-quando { display: none; }
-}
-@media (prefers-reduced-motion: reduce) { .d-vivo i { animation: none; } .d-tab tr.novo, .feed li.novo { animation: none; } }
+@media (max-width: 640px) { .d-marca { width: 150px; } .kpi.heroi .kpi-val { font-size: 52px; } .kpi-val { font-size: 30px; } .card { padding: 16px 14px; } }
+@media (prefers-reduced-motion: reduce) { .d-vivo i, .feed li.novo { animation: none; } }
 </style>
 </head>
 <body class="dash">
@@ -244,76 +149,38 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
       <p class="d-ev" id="d-ev">Confraternização 2026</p>
     </div>
     <div class="d-status" id="d-acoes" hidden>
-      <p class="d-vivo" id="d-vivo" data-estado="vivo" style="margin:0"><i></i>Ao vivo <small id="d-atual">agora</small></p>
+      <p class="d-vivo" id="d-vivo"><i></i><span id="d-vivo-txt">Ao vivo</span> <small id="d-atual"></small></p>
       <button type="button" class="d-btn" id="b-link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>Link e QR code</button>
-      <button type="button" class="d-btn" id="b-csv"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Exportar planilha</button>
-      <button type="button" class="d-btn" id="b-cfg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Configurações</button>
-      <a class="d-btn" id="b-resumo" href="resumo.html" style="text-decoration:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18h2"/></svg>Versão celular</a>
+      <a class="d-btn" id="b-resumo" href="resumo.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18h2"/></svg>Versão celular</a>
+      <button type="button" class="d-btn" id="b-cfg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Configurações</button>
       <button type="button" class="d-btn" id="b-sair">Sair</button>
     </div>
   </header>
 
-  <!-- Login -->
   <form class="d-login" id="d-login" novalidate hidden>
     <h2>Entrar no painel</h2>
     <p class="lead" style="margin-bottom:16px">Use a mesma senha do painel da organização.</p>
-    <div class="campo"><label for="d-senha">Senha</label><input type="password" id="d-senha" autocomplete="current-password" required></div>
+    <div class="campo"><label for="d-senha">Senha</label><input type="password" id="d-senha" autocomplete="current-password"></div>
     <p class="dica" id="d-dica-teste" hidden style="margin:-8px 0 14px">Modo de teste: a senha é trocar123.</p>
     <p class="erro" id="d-login-erro" role="alert" hidden></p>
     <button class="btn cheio" type="submit">Entrar</button>
   </form>
 
   <main id="d-painel" hidden>
-    <!-- Filtros: valem para o painel inteiro -->
-    <div class="d-filtros" role="search">
-      <label class="vh" for="f-dep">Departamento</label>
-      <select class="d-sel" id="f-dep"><option value="">Todos os departamentos</option></select>
-      <div class="d-seg" role="group" aria-label="Situação" id="f-sit">
-        <button type="button" data-sit="" aria-pressed="true">Todas</button>
-        <button type="button" data-sit="sim" aria-pressed="false"><span class="ponto" style="background:var(--s-sim)"></span>Vou</button>
-        <button type="button" data-sit="talvez" aria-pressed="false"><span class="ponto" style="background:var(--s-talvez)"></span>Talvez</button>
-        <button type="button" data-sit="nao" aria-pressed="false"><span class="ponto" style="background:var(--s-nao)"></span>Não vou</button>
-        <button type="button" data-sit="sem" aria-pressed="false" id="f-sem"><span class="ponto" style="background:var(--s-sem)"></span>Sem resposta</button>
-      </div>
-      <label class="vh" for="f-busca">Buscar nome</label>
-      <input class="d-busca" id="f-busca" type="search" placeholder="Buscar nome…" autocomplete="off">
-      <button type="button" class="d-limpar" id="f-limpar" hidden>Limpar filtros</button>
-    </div>
-
     <div class="d-grade">
       <section class="kpis" aria-label="Resumo">
         <div class="kpi heroi">
           <p class="kpi-rot"><span class="ponto" style="background:var(--s-sim)"></span>Confirmados</p>
-          <div class="kpi-linha">
-            <p class="kpi-val" id="k-sim">0</p>
-            <p class="kpi-pct"><b id="k-sim-pct">0%</b> das respostas</p>
-          </div>
-          <p class="kpi-det"><span class="delta sobe" id="k-sim-24">+0</span> nas últimas 24 horas</p>
+          <div class="kpi-linha"><p class="kpi-val" id="k-sim">0</p><p class="kpi-pct"><b id="k-sim-pct">0%</b> das respostas</p></div>
+          <p class="kpi-det"><span class="delta" id="k-sim-24">+0</span> nas últimas 24 horas</p>
         </div>
-        <div class="kpi">
-          <p class="kpi-rot"><span class="ponto" style="background:var(--s-talvez)"></span>Talvez</p>
-          <p class="kpi-val" id="k-talvez">0</p>
-          <p class="kpi-det" id="k-talvez-det">ainda podem confirmar</p>
-        </div>
-        <div class="kpi">
-          <p class="kpi-rot"><span class="ponto" style="background:var(--s-nao)"></span>Não vão</p>
-          <p class="kpi-val" id="k-nao">0</p>
-          <p class="kpi-det" id="k-nao-det">avisaram que não vão</p>
-        </div>
-        <div class="kpi">
-          <p class="kpi-rot">Respostas</p>
-          <p class="kpi-val" id="k-total">0</p>
-          <p class="kpi-det" id="k-ultima">nenhuma ainda</p>
-        </div>
-        <div class="kpi">
-          <p class="kpi-rot">Departamentos</p>
-          <p class="kpi-val" id="k-deps">0</p>
-          <p class="kpi-det" id="k-deps-det">com pelo menos 1 resposta</p>
-        </div>
+        <div class="kpi"><p class="kpi-rot"><span class="ponto" style="background:var(--s-talvez)"></span>Ainda não sabem</p><p class="kpi-val" id="k-talvez">0</p><p class="kpi-det" id="k-talvez-det"></p></div>
+        <div class="kpi"><p class="kpi-rot"><span class="ponto" style="background:var(--s-nao)"></span>Não vão</p><p class="kpi-val" id="k-nao">0</p><p class="kpi-det" id="k-nao-det"></p></div>
+        <div class="kpi"><p class="kpi-rot">Respostas</p><p class="kpi-val" id="k-total">0</p><p class="kpi-det" id="k-ultima">nenhuma ainda</p></div>
       </section>
 
       <section class="card s4" aria-labelledby="t-situ">
-        <div class="card-cab"><div><h2 id="t-situ">Situação das respostas</h2><p class="card-sub" id="situ-sub">Todos os departamentos</p></div></div>
+        <div class="card-cab"><div><h2 id="t-situ">Situação das respostas</h2><p class="card-sub">Respostas anônimas, 1 por celular</p></div></div>
         <div class="seg-bar" id="situ-bar" role="img"></div>
         <dl class="situ-lista" id="situ-lista"></dl>
         <p class="plano" id="situ-plano"></p>
@@ -321,69 +188,36 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
 
       <section class="card s8" aria-labelledby="t-tempo">
         <div class="card-cab">
-          <div><h2 id="t-tempo">Respostas ao longo do tempo</h2><p class="card-sub">Total acumulado de cada situação (pela hora da primeira resposta)</p></div>
+          <div><h2 id="t-tempo">Respostas ao longo do tempo</h2><p class="card-sub">Total acumulado de cada situação</p></div>
           <ul class="legenda" id="leg-tempo"></ul>
         </div>
         <div class="graf" id="g-tempo" role="img" aria-label="Respostas acumuladas ao longo do tempo"></div>
       </section>
 
-      <section class="card s7" aria-labelledby="t-dep">
+      <section class="card s7" aria-labelledby="t-beb">
         <div class="card-cab">
-          <div><h2 id="t-dep">Por departamento</h2><p class="card-sub">Toque num departamento para filtrar o painel</p></div>
-          <div class="alterna" role="group" aria-label="Ordem">
-            <button type="button" data-ord="total" aria-pressed="true">Mais respostas</button>
-            <button type="button" data-ord="sim" aria-pressed="false">Mais confirmados</button>
-            <button type="button" data-ord="falta" aria-pressed="false">Faltam responder</button>
-            <button type="button" data-ord="az" aria-pressed="false">A–Z</button>
-          </div>
-        </div>
-        <ul class="legenda" id="leg-dep" style="margin-bottom:10px"></ul>
-        <div class="graf" id="g-dep"></div>
-      </section>
-
-      <div class="coluna s5">
-      <section class="card" aria-labelledby="t-beb">
-        <div class="card-cab">
-          <div><h2 id="t-beb">Bebidas</h2><p class="card-sub">Preferência de quem vai e de quem talvez vá</p></div>
-          <span class="privado"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Só totais</span>
+          <div><h2 id="t-beb">Bebidas</h2><p class="card-sub">“Qual opção combina com você?” — de quem vai e de quem ainda não sabe</p></div>
+          <span class="privado"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Anônimo</span>
         </div>
         <ul class="legenda" id="leg-beb" style="margin-bottom:10px"></ul>
         <div class="graf" id="g-beb"></div>
         <p class="plano" id="beb-plano" style="margin-top:12px"></p>
       </section>
 
-      <section class="card feed-card" aria-labelledby="t-feed">
-        <div class="card-cab"><div><h2 id="t-feed">Atividade recente</h2><p class="card-sub">Últimas respostas e alterações</p></div></div>
-        <ul class="feed" id="feed"></ul>
-      </section>
+      <div class="coluna s5">
+        <section class="card feed-card" aria-labelledby="t-feed">
+          <div class="card-cab"><div><h2 id="t-feed">Atividade recente</h2><p class="card-sub">Últimas respostas e alterações (sem identificação)</p></div></div>
+          <ul class="feed" id="feed"></ul>
+        </section>
       </div>
-
-      <section class="card s12" aria-labelledby="t-tab">
-        <div class="card-cab">
-          <div><h2 id="t-tab">Respostas</h2><p class="card-sub" id="tab-sub">Lista de quem respondeu</p></div>
-        </div>
-        <div class="tab-wrap">
-          <table class="d-tab">
-            <thead><tr>
-              <th aria-sort="none" data-col="nome"><button type="button">Nome</button></th>
-              <th aria-sort="none" data-col="departamento"><button type="button">Departamento</button></th>
-              <th aria-sort="none" data-col="resposta"><button type="button">Situação</button></th>
-              <th aria-sort="descending" data-col="atualizado" class="col-quando"><button type="button">Atualizado</button></th>
-              <th><span class="vh">Ações</span></th>
-            </tr></thead>
-            <tbody id="tab-corpo"></tbody>
-          </table>
-        </div>
-      </section>
     </div>
   </main>
 </div>
 
-<!-- Link para enviar ao pessoal -->
 <dialog class="d-jan" id="jan-link" aria-labelledby="jl-t">
   <div class="jan-cab"><h2 id="jl-t">Link da confirmação</h2><button type="button" class="jan-fechar" data-fechar aria-label="Fechar">×</button></div>
   <div class="jan-corpo">
-    <p class="dica" style="margin:0 0 12px">Envie este link no grupo da empresa ou imprima o QR code. O painel não aparece para quem abre o link.</p>
+    <p class="dica" style="margin:0 0 12px">Envie este link no grupo da empresa ou imprima o QR code.</p>
     <div class="link-caixa"><input type="text" id="jl-url" readonly aria-label="Link da confirmação"><button type="button" class="d-btn ouro" id="jl-copiar">Copiar</button></div>
     <div class="qr-caixa">
       <div class="qr" id="jl-qr"></div>
@@ -392,7 +226,6 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
   </div>
 </dialog>
 
-<!-- Configurações da confirmação -->
 <dialog class="d-jan" id="jan-cfg" aria-labelledby="jc-t">
   <form method="dialog" id="cfg-form" novalidate>
     <div class="jan-cab"><h2 id="jc-t">Configurações da confirmação</h2><button type="button" class="jan-fechar" data-fechar aria-label="Fechar">×</button></div>
@@ -404,14 +237,9 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
       <div class="campo" style="margin-top:12px"><label for="cfg-prazo">Prazo <span class="opc">(aparece no link, opcional)</span></label><input type="text" id="cfg-prazo" maxlength="40" placeholder="Ex.: até 01/12"></div>
       <p class="erro" id="cfg-erro" role="alert" hidden></p>
       <div class="acoes" style="justify-content:flex-end"><button type="button" class="btn sec peq" data-fechar>Cancelar</button><button type="submit" class="btn peq" id="cfg-salvar">Salvar</button></div>
-      <div class="add-pessoa">
-        <p class="add-tit">Incluir alguém que não está na lista</p>
-        <p class="dica" id="add-dica" style="margin:0 0 10px">As pessoas vêm da planilha da empresa. Quem você incluir aqui já aparece na busca do link.</p>
-        <div class="add-linha">
-          <label class="vh" for="add-nome">Nome completo</label><input type="text" id="add-nome" maxlength="120" placeholder="Nome completo">
-          <label class="vh" for="add-dep">Departamento</label><select id="add-dep"></select>
-          <button type="button" class="btn sec peq" id="add-btn">Incluir</button>
-        </div>
+      <div class="zona">
+        <p><strong>Apagar todas as respostas</strong><br>Use para começar do zero (por exemplo, depois de testar). Não dá para desfazer.</p>
+        <button type="button" class="btn perigo peq" id="cfg-zerar">Apagar todas as respostas</button>
       </div>
     </div>
   </form>
@@ -420,7 +248,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
 <div class="dica-graf" id="dica" role="status" aria-live="off"></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="presenca.js?v=31"></script>
+<script src="presenca.js?v=32"></script>
 <script>
 (function () {
   "use strict";
@@ -451,48 +279,24 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 4200);
   }
 
-  // ------------------------------------------------------------ Constantes
   const SIT = ["sim", "talvez", "nao"];
-  const NOME_SIT = { sim: "Vou", talvez: "Talvez", nao: "Não vou", sem: "Sem resposta" };
-  const COR = { sim: "var(--s-sim)", talvez: "var(--s-talvez)", nao: "var(--s-nao)", sem: "var(--s-sem)" };
-  // Quantas pessoas cada departamento tem: pela lista de colaboradores (quem respondeu + quem falta);
-  // sem a lista, pela configuração ("Produção | 175").
-  function quadroDeps() {
-    if (!est.pendentes) return P.quadro(est.cfg);
-    const m = new Map();
-    est.linhas.concat(est.pendentes).forEach((x) => m.set(x.departamento, (m.get(x.departamento) || 0) + 1));
-    return m;
-  }
-  function listaDeps() {
-    const base = est.pendentes ? [...quadroDeps().keys()] : P.departamentos(est.cfg);
-    return [...new Set(base.concat(est.linhas.map((l) => l.departamento)))].sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }
-  function pessoasNoFiltro() {
-    const qd = quadroDeps();
-    return est.filtro.dep ? qd.get(est.filtro.dep) || 0 : [...qd.values()].reduce((a, b) => a + b, 0);
-  }
+  const NOME_SIT = { sim: "Vou", talvez: "Ainda não sei", nao: "Não vou" };
+  const COR = { sim: "var(--s-sim)", talvez: "var(--s-talvez)", nao: "var(--s-nao)" };
   const BEB = ["alcool", "sem_alcool", "tanto_faz", "prefiro_nao", "sem_resposta"];
-  // nomes curtos para o gráfico (o texto completo da pergunta aparece na dica)
   const ROT_BEB = { alcool: "Com álcool", sem_alcool: "Só sem álcool", tanto_faz: "Tanto faz (ambas)", prefiro_nao: "Prefere não dizer", sem_resposta: "Não respondeu" };
   const nf = (n) => Number(n).toLocaleString("pt-BR");
   const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
-  const normal = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
-  const iniciais = (n) => String(n || "").trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
   function relativo(ms) {
-    const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
-    if (s < 45) return "agora mesmo";
-    const m = Math.round(s / 60); if (m < 60) return `há ${m} min`;
+    const x = Math.max(0, Math.round((Date.now() - ms) / 1000));
+    if (x < 45) return "agora mesmo";
+    const m = Math.round(x / 60); if (m < 60) return `há ${m} min`;
     const hh = Math.round(m / 60); if (hh < 24) return `há ${hh} h`;
     const d = Math.round(hh / 24); return d === 1 ? "ontem" : `há ${d} dias`;
   }
   const dataHora = (ms) => new Date(ms).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
-  // ------------------------------------------------------------ Estado
   const SENHA_KEY = P.TESTE ? "confra_presenca_senha_teste" : "confra_admin";
-  const est = {
-    senha: null, cfg: {}, linhas: [], bebidas: [], pendentes: null, vistos: null, ultimaBusca: 0, timer: null, online: true,
-    filtro: { dep: "", sit: "", busca: "" }, ordemDep: "total", ordemTab: { col: "atualizado", dir: -1 }, novos: new Set(),
-  };
+  const est = { senha: null, cfg: {}, linhas: [], vistos: null, novos: new Set(), ultimaBusca: 0, ultimaCfg: 0, timer: null, online: true };
   try { est.senha = sessionStorage.getItem(SENHA_KEY); } catch (e) { /* ignora */ }
   if (P.TESTE) $("#b-resumo").href = "resumo.html?teste";
 
@@ -501,14 +305,14 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     const ok = !!est.senha;
     $("#d-login").hidden = ok; $("#d-painel").hidden = !ok; $("#d-acoes").hidden = !ok;
     $("#d-dica-teste").hidden = !P.TESTE;
-    if (ok) iniciarPainel(); else { clearTimeout(est.timer); $("#d-senha").focus(); }
+    if (ok) { est.ultimaCfg = 0; buscar(); } else { clearTimeout(est.timer); $("#d-senha").focus(); }
   }
   $("#d-login").addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    const s = $("#d-senha").value, err = $("#d-login-erro"); err.hidden = true;
+    const x = $("#d-senha").value, err = $("#d-login-erro"); err.hidden = true;
     try {
-      if (!(await P.login(s))) throw new Error("Senha incorreta.");
-      est.senha = s; try { sessionStorage.setItem(SENHA_KEY, s); } catch (e) { /* ignora */ }
+      if (!(await P.login(x))) throw new Error("Senha incorreta.");
+      est.senha = x; try { sessionStorage.setItem(SENHA_KEY, x); } catch (e) { /* ignora */ }
       $("#d-senha").value = ""; mostrar();
     } catch (e) { err.textContent = e.message; err.hidden = false; }
   });
@@ -518,170 +322,89 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
   async function buscar() {
     clearTimeout(est.timer);
     if (!est.senha) return;
-    $$(".card").forEach((c) => c.classList.add("carregando"));
     try {
-      const precisaCfg = Date.now() - est.ultimaCfg > 30000 || !est.ultimaCfg;
-      const [linhas, bebidas, pendentes, cfg] = await Promise.all([P.painel(est.senha), P.bebidas(est.senha),
-        P.pendentes(est.senha).catch(() => null), precisaCfg ? P.config() : null]);
+      const precisaCfg = !est.ultimaCfg || Date.now() - est.ultimaCfg > 30000;
+      const [linhas, cfg] = await Promise.all([P.respostas(est.senha), precisaCfg ? P.config() : null]);
+      if (cfg) { est.cfg = cfg; est.ultimaCfg = Date.now(); evento(); }
       est.linhas = linhas.map((l) => ({ ...l, criadoMs: Date.parse(l.criado_em), atualizadoMs: Date.parse(l.atualizado_em) }));
-      est.bebidas = bebidas;
-      est.pendentes = pendentes;
-      if (cfg) { est.cfg = cfg; est.ultimaCfg = Date.now(); }
-      evento();
-      // novidades desde a última busca
       const assinatura = (l) => `${l.id}|${l.resposta}|${l.atualizado_em}`;
       const agora = new Set(est.linhas.map(assinatura));
       if (est.vistos) {
         const novas = est.linhas.filter((l) => !est.vistos.has(assinatura(l)));
         est.novos = new Set(novas.map((l) => l.id));
-        if (novas.length === 1) { const l = novas[0]; toast(`${l.nome} (${l.departamento}) ${l.resposta === "sim" ? "confirmou presença" : l.resposta === "talvez" ? "respondeu talvez" : "avisou que não vai"}`); }
+        if (novas.length === 1) toast(`Nova resposta: ${NOME_SIT[novas[0].resposta]}`);
         else if (novas.length > 1) toast(`${novas.length} respostas novas`);
       }
-      est.vistos = agora;
-      est.online = true; est.ultimaBusca = Date.now();
+      est.vistos = agora; est.online = true; est.ultimaBusca = Date.now();
       renderTudo();
     } catch (e) {
       if (/senha/i.test(e.message)) { toast("Senha incorreta ou trocada. Entre de novo.", "erro"); est.senha = null; try { sessionStorage.removeItem(SENHA_KEY); } catch (x) { /* ignora */ } mostrar(); return; }
       est.online = false; vivo();
-    } finally {
-      $$(".card").forEach((c) => c.classList.remove("carregando"));
-      if (est.senha) est.timer = setTimeout(buscar, 5000);
-    }
+    } finally { if (est.senha) est.timer = setTimeout(buscar, 5000); }
   }
   function vivo() {
-    const v = $("#d-vivo");
-    v.dataset.estado = est.online ? "vivo" : "off";
-    v.firstChild.nextSibling.textContent = est.online ? "Ao vivo " : "Reconectando ";
+    $("#d-vivo").classList.toggle("off", !est.online);
+    $("#d-vivo-txt").textContent = est.online ? "Ao vivo" : "Reconectando";
     $("#d-atual").textContent = est.ultimaBusca ? "atualizado " + relativo(est.ultimaBusca) : "";
   }
   setInterval(() => { if (est.senha) { vivo(); $$("[data-rel]").forEach((el) => { el.textContent = relativo(Number(el.dataset.rel)); }); } }, 1000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden && est.senha && Date.now() - est.ultimaBusca > 5000) buscar(); });
-
   function evento() {
     const c = est.cfg, m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(c.evento_data || "");
     const data = m ? new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date(+m[1], +m[2] - 1, +m[3])) : "";
     $("#d-ev").textContent = [c.evento_nome || "Confraternização", data, c.evento_local, c.presenca_aberta === "nao" ? "confirmações encerradas" : c.presenca_prazo ? `respostas ${c.presenca_prazo}` : ""].filter(Boolean).join(" · ") + (P.TESTE ? " · MODO DE TESTE" : "");
-    const sel = $("#f-dep"), atual = sel.value;
-    const deps = listaDeps(), chave = deps.join("|");
-    if (sel.dataset.chave !== chave) {   // só refaz o menu se a lista mudou
-      sel.dataset.chave = chave;
-      sel.replaceChildren(new Option("Todos os departamentos", ""), ...deps.map((d) => new Option(d, d)));
-    }
-    sel.value = deps.includes(atual) ? atual : "";
   }
 
-  // ------------------------------------------------------------ Filtros
-  const doDep = () => est.linhas.filter((l) => !est.filtro.dep || l.departamento === est.filtro.dep);
-  const buscaOk = (l) => !est.filtro.busca || normal(l.nome).includes(normal(est.filtro.busca));
-  // "Sem resposta": a lista de quem ainda não respondeu (vem da lista de colaboradores)
-  const filtradas = () => (est.filtro.sit === "sem"
-    ? (est.pendentes || []).filter((p) => (!est.filtro.dep || p.departamento === est.filtro.dep) && buscaOk(p)).map((p) => ({ ...p, resposta: "sem", pendente: true, criadoMs: 0, atualizadoMs: 0 }))
-    : doDep().filter((l) => (!est.filtro.sit || l.resposta === est.filtro.sit) && buscaOk(l)));
-  function definirFiltro(mud) {
-    Object.assign(est.filtro, mud);
-    $("#f-dep").value = est.filtro.dep;
-    $$("#f-sit button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sit === est.filtro.sit)));
-    $("#f-limpar").hidden = !(est.filtro.dep || est.filtro.sit || est.filtro.busca);
-    renderTudo();
-  }
-  $("#f-dep").addEventListener("change", (e) => definirFiltro({ dep: e.target.value }));
-  $$("#f-sit button").forEach((b) => b.addEventListener("click", () => definirFiltro({ sit: b.dataset.sit })));
-  $("#f-busca").addEventListener("input", (e) => definirFiltro({ busca: e.target.value }));
-  $("#f-limpar").addEventListener("click", () => { $("#f-busca").value = ""; definirFiltro({ dep: "", sit: "", busca: "" }); });
-  $$(".alterna button").forEach((b) => b.addEventListener("click", () => {
-    est.ordemDep = b.dataset.ord;
-    $$(".alterna button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-    renderDep();
-  }));
+  // ------------------------------------------------------------ Render
+  function renderTudo() { vivo(); renderKpis(); renderSitu(); renderTempo(); renderBeb(); renderFeed(); }
+  function contagem() { const c = { sim: 0, talvez: 0, nao: 0 }; est.linhas.forEach((l) => { c[l.resposta]++; }); return c; }
 
-  // ------------------------------------------------------------ Render geral
-  function renderTudo() { vivo(); renderKpis(); renderSitu(); renderTempo(); renderDep(); renderBeb(); renderTab(); renderFeed(); }
-
-  function contagem(lista) { const c = { sim: 0, talvez: 0, nao: 0 }; lista.forEach((l) => { c[l.resposta]++; }); return c; }
   function renderKpis() {
-    const base = doDep(), c = contagem(base), total = base.length;
-    const dia = Date.now() - 86400000;
+    const c = contagem(), total = est.linhas.length, dia = Date.now() - 86400000;
     $("#k-sim").textContent = nf(c.sim);
     $("#k-sim-pct").textContent = pct(c.sim, total) + "%";
-    $("#k-sim-24").textContent = "+" + nf(base.filter((l) => l.resposta === "sim" && l.atualizadoMs >= dia).length);
-    $("#k-talvez").textContent = nf(c.talvez);
-    $("#k-talvez-det").textContent = `${pct(c.talvez, total)}% · ainda podem confirmar`;
-    $("#k-nao").textContent = nf(c.nao);
-    $("#k-nao-det").textContent = `${pct(c.nao, total)}% · avisaram que não vão`;
+    $("#k-sim-24").textContent = "+" + nf(est.linhas.filter((l) => l.resposta === "sim" && l.atualizadoMs >= dia).length);
+    $("#k-talvez").textContent = nf(c.talvez); $("#k-talvez-det").textContent = `${pct(c.talvez, total)}% · ainda podem confirmar`;
+    $("#k-nao").textContent = nf(c.nao); $("#k-nao-det").textContent = `${pct(c.nao, total)}% · avisaram que não vão`;
     $("#k-total").textContent = nf(total);
-    const ult = base.reduce((m, l) => Math.max(m, l.atualizadoMs), 0);
-    const ku = $("#k-ultima");
-    const pessoas = pessoasNoFiltro();
-    const de = pessoas ? `de ${nf(pessoas)} pessoas (${pct(total, pessoas)}%) · ` : "";
-    if (ult) { ku.replaceChildren(de + "última ", h("span", { "data-rel": ult, text: relativo(ult) })); } else ku.textContent = de + "nenhuma ainda";
-    const lista = listaDeps(), com = new Set(est.linhas.map((l) => l.departamento));
-    if (est.filtro.dep) {
-      $("#k-deps").textContent = nf(base.length);
-      $("#k-deps-det").textContent = `respostas em ${est.filtro.dep}`;
-      $(".kpi:last-child .kpi-rot").textContent = "Departamento filtrado";
-    } else {
-      $(".kpi:last-child .kpi-rot").textContent = "Departamentos";
-      $("#k-deps").textContent = `${nf(lista.filter((d) => com.has(d)).length)} de ${nf(lista.length)}`;
-      const sem = lista.filter((d) => !com.has(d));
-      $("#k-deps-det").textContent = sem.length ? `sem resposta: ${sem.slice(0, 3).join(", ")}${sem.length > 3 ? ` e mais ${sem.length - 3}` : ""}` : "todos com pelo menos 1 resposta";
-    }
+    const ult = est.linhas.reduce((m, l) => Math.max(m, l.atualizadoMs), 0), ku = $("#k-ultima");
+    if (ult) ku.replaceChildren("última ", h("span", { "data-rel": ult, text: relativo(ult) })); else ku.textContent = "nenhuma ainda";
   }
 
-  // Situação geral: barra segmentada + lista + planejamento
   function renderSitu() {
-    const base = doDep(), c = contagem(base), total = base.length;
-    // com o quadro de pessoas, a barra é o departamento (ou a empresa) inteiro: quem ainda não respondeu fica em cinza
-    const pessoas = pessoasNoFiltro();
-    c.sem = pessoas ? Math.max(0, pessoas - total) : 0;
-    const partes = pessoas ? SIT.concat("sem") : SIT, todo = pessoas ? Math.max(pessoas, total) : total;
-    $("#situ-sub").textContent = (est.filtro.dep || "Todos os departamentos") + (pessoas ? ` · ${nf(pessoas)} pessoas` : "");
-    const bar = $("#situ-bar");
-    bar.setAttribute("aria-label", partes.map((k) => `${NOME_SIT[k]}: ${c[k]} (${pct(c[k], todo)}%)`).join(", "));
-    bar.replaceChildren(...partes.filter((k) => c[k] > 0).map((k) => {
+    const c = contagem(), total = est.linhas.length, bar = $("#situ-bar");
+    bar.setAttribute("aria-label", SIT.map((k) => `${NOME_SIT[k]}: ${c[k]} (${pct(c[k], total)}%)`).join(", "));
+    bar.replaceChildren(...(total ? SIT.filter((k) => c[k] > 0).map((k) => {
       const d = h("div", { style: `flex:${c[k]} 1 0;background:${COR[k]}`, tabindex: "0", "aria-label": `${NOME_SIT[k]}: ${c[k]}` });
-      d.dataset.txt = pct(c[k], todo) + "%";
-      dicaEm(d, () => [NOME_SIT[k], [[COR[k], nf(c[k]), `${pct(c[k], todo)}% ${pessoas ? "das pessoas" : "das respostas"}`]]]);
+      d.dataset.txt = pct(c[k], total) + "%";
+      dicaEm(d, () => [NOME_SIT[k], [[COR[k], nf(c[k]), `${pct(c[k], total)}% das respostas`]]]);
       return d;
-    }));
-    if (!todo) bar.replaceChildren(h("div", { style: "flex:1;background:rgba(255,255,255,.08)" }));
-    // percentual dentro do bloco só se couber
+    }) : [h("div", { style: "flex:1;background:rgba(255,255,255,.08)" })]));
     requestAnimationFrame(() => $$("#situ-bar > div").forEach((d) => { if (d.dataset.txt && d.clientWidth >= 52) d.textContent = d.dataset.txt; }));
-    $("#situ-lista").replaceChildren(...partes.map((k) => h("div", null, h("i", { style: `background:${COR[k]}` }), h("dt", { text: NOME_SIT[k] }), h("dd", { text: nf(c[k]) }), h("small", { text: pct(c[k], todo) + "%" }))));
-    const p = $("#situ-plano");
-    p.replaceChildren("Planejamento: prepare para ", h("b", { text: nf(c.sim) }), ...(c.talvez ? [" a ", h("b", { text: nf(c.sim + c.talvez) })] : []), " pessoas", c.talvez ? " (contando os talvez)." : ".");
+    $("#situ-lista").replaceChildren(...SIT.map((k) => h("div", null, h("i", { style: `background:${COR[k]}` }), h("dt", { text: NOME_SIT[k] }), h("dd", { text: nf(c[k]) }), h("small", { text: pct(c[k], total) + "%" }))));
+    $("#situ-plano").replaceChildren("Planejamento: prepare para ", h("b", { text: nf(c.sim) }), ...(c.talvez ? [" a ", h("b", { text: nf(c.sim + c.talvez) })] : []), " pessoas", c.talvez ? " (contando quem ainda não sabe)." : ".");
   }
 
-  // Linha do tempo: acumulado por situação
-  const graficos = {};
-  function largura(el) { return Math.max(280, Math.round(el.clientWidth || el.getBoundingClientRect().width || 600)); }
+  const largura = (el) => Math.max(280, Math.round(el.clientWidth || el.getBoundingClientRect().width || 600));
   function ticksBonitos(max, n = 4) {
     if (max <= 0) return [0, 1];
-    const passo0 = max / n, mag = Math.pow(10, Math.floor(Math.log10(passo0)));
-    const passo = [1, 2, 5, 10].map((m) => m * mag).find((p) => p >= passo0) || 10 * mag;
-    const passoInt = Math.max(1, Math.round(passo));
-    const r = []; for (let v = 0; v <= max + passoInt * .001; v += passoInt) r.push(v);
-    if (r[r.length - 1] < max) r.push(r[r.length - 1] + passoInt);
+    const p0 = max / n, mag = Math.pow(10, Math.floor(Math.log10(p0)));
+    const passo = Math.max(1, Math.round([1, 2, 5, 10].map((x) => x * mag).find((x) => x >= p0) || 10 * mag));
+    const r = []; for (let v = 0; v <= max; v += passo) r.push(v);
+    if (r[r.length - 1] < max) r.push(r[r.length - 1] + passo);
     return r;
   }
   function renderTempo() {
-    const el = $("#g-tempo"), base = doDep().slice().sort((a, b) => a.criadoMs - b.criadoMs);
-    if (est.filtro.sit === "sem") {
-      $("#leg-tempo").replaceChildren();
-      el.replaceChildren(h("p", { class: "tab-vazia", text: "Este gráfico mostra quem já respondeu. Quem falta está na lista “Respostas”, logo abaixo." }));
-      return;
-    }
-    const sits = est.filtro.sit ? [est.filtro.sit] : SIT;
-    $("#leg-tempo").replaceChildren(...sits.map((k) => h("li", null, h("i", { style: `background:${COR[k]};height:3px;border-radius:2px` }), NOME_SIT[k])));
+    const el = $("#g-tempo"), base = est.linhas.slice().sort((a, b) => a.criadoMs - b.criadoMs);
+    $("#leg-tempo").replaceChildren(...SIT.map((k) => h("li", null, h("i", { style: `background:${COR[k]};height:3px;border-radius:2px` }), NOME_SIT[k])));
+    if (!base.length) { el.replaceChildren(h("p", { class: "vazio-graf", text: "As respostas aparecem aqui conforme chegam." })); return; }
     const W = largura(el), H = 260, m = { t: 12, r: 46, b: 30, l: 40 };
-    if (!base.length) { el.replaceChildren(h("p", { class: "tab-vazia", text: "As respostas aparecem aqui conforme chegam." })); return; }
     const t0 = base[0].criadoMs, t1 = Math.max(Date.now(), t0 + 3600000);
-    // série acumulada: em cada resposta, quantos de cada situação já existiam
-    const pts = []; const acc = { sim: 0, talvez: 0, nao: 0 };
+    const pts = [], acc = { sim: 0, talvez: 0, nao: 0 };
     pts.push({ t: t0 - 1, ...acc });
     base.forEach((l) => { acc[l.resposta]++; pts.push({ t: l.criadoMs, ...acc }); });
     pts.push({ t: t1, ...acc });
-    const maxY = Math.max(1, ...sits.map((k) => acc[k]));
-    const ticks = ticksBonitos(maxY), yMax = ticks[ticks.length - 1];
+    const ticks = ticksBonitos(Math.max(1, ...SIT.map((k) => acc[k]))), yMax = ticks[ticks.length - 1];
     const x = (t) => m.l + ((t - t0) / (t1 - t0)) * (W - m.l - m.r);
     const y = (v) => H - m.b - (v / yMax) * (H - m.t - m.b);
     const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H });
@@ -689,131 +412,55 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
       svg.append(s("line", { class: v ? "linha-grade" : "linha-base", x1: m.l, x2: W - m.r, y1: y(v), y2: y(v) }));
       svg.append(s("text", { class: "t-eixo", x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, nf(v)));
     });
-    // marcas de data no eixo x
     const span = t1 - t0, nT = W < 520 ? 3 : 5;
     for (let i = 0; i <= nT; i++) {
-      const t = t0 + (span * i) / nT;
-      const d = new Date(t);
-      const dia = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-      const rot = span > 6 * 86400000 ? dia : `${dia} ${String(d.getHours()).padStart(2, "0")}h`;
-      svg.append(s("text", { class: "t-eixo", x: x(t), y: H - 8, "text-anchor": i === 0 ? "start" : i === nT ? "end" : "middle" }, rot));
+      const t = t0 + (span * i) / nT, d = new Date(t), dia = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+      svg.append(s("text", { class: "t-eixo", x: x(t), y: H - 8, "text-anchor": i === 0 ? "start" : i === nT ? "end" : "middle" }, span > 6 * 86400000 ? dia : `${dia} ${String(d.getHours()).padStart(2, "0")}h`));
     }
-    sits.forEach((k) => {
-      let d = "";
-      pts.forEach((p, i) => { d += i ? `H${x(p.t).toFixed(1)}V${y(p[k]).toFixed(1)}` : `M${x(p.t).toFixed(1)} ${y(p[k]).toFixed(1)}`; });
+    SIT.forEach((k) => {
+      let d = ""; pts.forEach((p, i) => { d += i ? `H${x(p.t).toFixed(1)}V${y(p[k]).toFixed(1)}` : `M${x(p.t).toFixed(1)} ${y(p[k]).toFixed(1)}`; });
       svg.append(s("path", { d: d + `V${y(0)}H${x(pts[0].t)}Z`, fill: COR[k], "fill-opacity": ".1", stroke: "none" }));
       svg.append(s("path", { d, fill: "none", stroke: COR[k], "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
-      const ult = pts[pts.length - 1];
-      svg.append(s("circle", { cx: x(ult.t), cy: y(ult[k]), r: 4.5, fill: COR[k], stroke: "var(--cartao)", "stroke-width": 2 }));
+      const u = pts[pts.length - 1];
+      svg.append(s("circle", { cx: x(u.t), cy: y(u[k]), r: 4.5, fill: COR[k], stroke: "var(--cartao)", "stroke-width": 2 }));
     });
-    // valor no fim de cada linha; se dois ficarem colados, mostra só o maior (o outro fica na dica e na legenda)
     const fim = pts[pts.length - 1], postos = [];
-    sits.slice().sort((a, b) => fim[b] - fim[a]).forEach((k) => {
-      const yy = y(fim[k]);
-      if (postos.some((p) => Math.abs(p - yy) < 15)) return;
-      postos.push(yy);
-      svg.append(s("text", { class: "t-val", x: x(fim.t) + 9, y: yy + 4 }, nf(fim[k])));
+    SIT.slice().sort((a, b) => fim[b] - fim[a]).forEach((k) => {
+      const yy = y(fim[k]); if (postos.some((p) => Math.abs(p - yy) < 15)) return;
+      postos.push(yy); svg.append(s("text", { class: "t-val", x: x(fim.t) + 9, y: yy + 4 }, nf(fim[k])));
     });
-    // mira + dica
     const mira = s("line", { class: "mira", y1: m.t, y2: H - m.b, x1: -10, x2: -10, visibility: "hidden" });
     const alvo = s("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" });
     svg.append(mira, alvo);
-    const mover = (ev) => {
+    alvo.addEventListener("pointermove", (ev) => {
       const r = svg.getBoundingClientRect(), px = ((ev.clientX - r.left) / r.width) * W;
-      const t = t0 + ((px - m.l) / (W - m.l - m.r)) * (t1 - t0);
+      const t = Math.min(Math.max(t0 + ((px - m.l) / (W - m.l - m.r)) * (t1 - t0), t0), t1);
       let p = pts[0]; for (const q of pts) { if (q.t <= t) p = q; else break; }
-      const cx = Math.min(Math.max(x(Math.min(Math.max(t, t0), t1)), m.l), W - m.r);
-      mira.setAttribute("x1", cx); mira.setAttribute("x2", cx); mira.setAttribute("visibility", "visible");
-      mostrarDica(ev, dataHora(Math.min(Math.max(t, t0), t1)), sits.map((k) => [COR[k], nf(p[k]), NOME_SIT[k]]).concat(sits.length > 1 ? [[null, nf(p.sim + p.talvez + p.nao), "respostas no total"]] : []));
-    };
-    alvo.addEventListener("pointermove", mover);
+      mira.setAttribute("x1", x(t)); mira.setAttribute("x2", x(t)); mira.setAttribute("visibility", "visible");
+      mostrarDica(ev, dataHora(t), SIT.map((k) => [COR[k], nf(p[k]), NOME_SIT[k]]).concat([[null, nf(p.sim + p.talvez + p.nao), "respostas no total"]]));
+    });
     alvo.addEventListener("pointerleave", () => { mira.setAttribute("visibility", "hidden"); esconderDica(); });
     el.replaceChildren(svg);
-    graficos.tempo = true;
   }
 
-  // Por departamento: barras empilhadas (vou / talvez / não vou)
-  function renderDep() {
-    const el = $("#g-dep");
-    const sits = est.filtro.sit ? [est.filtro.sit] : SIT;
-    $("#leg-dep").replaceChildren(...sits.map((k) => h("li", null, h("i", { style: `background:${COR[k]}` }), NOME_SIT[k])));
-    const busca = normal(est.filtro.busca);
-    const linhas = est.linhas.filter((l) => !busca || normal(l.nome).includes(busca));
-    const deps = listaDeps();
-    const qd = quadroDeps();
-    let dados = deps.map((d) => {
-      const c = contagem(linhas.filter((l) => l.departamento === d)), resp = c.sim + c.talvez + c.nao, q = qd.get(d) || 0;
-      c.sem = q ? Math.max(0, q - est.linhas.filter((l) => l.departamento === d).length) : 0;   // quem ainda não respondeu
-      return { d, c, tot: sits.reduce((a, k) => a + c[k], 0), q, falta: q ? Math.max(0, q - resp) : 0 };
-    });
-    if (est.ordemDep === "az") dados.sort((a, b) => a.d.localeCompare(b.d, "pt-BR"));
-    else if (est.ordemDep === "sim") dados.sort((a, b) => b.c.sim - a.c.sim || b.tot - a.tot || a.d.localeCompare(b.d));
-    else if (est.ordemDep === "falta") dados.sort((a, b) => b.falta - a.falta || a.d.localeCompare(b.d));
-    else dados.sort((a, b) => b.tot - a.tot || a.d.localeCompare(b.d));
-    const W = largura(el), linhaH = 34, barH = 18, rotW = Math.min(170, Math.round(W * .32)), m = { t: 4, r: qd.size ? 92 : 44, b: 24 };
-    const H = m.t + dados.length * linhaH + m.b;
-    const max = Math.max(1, ...dados.map((x) => x.tot));
-    const ticks = ticksBonitos(max, W < 480 ? 3 : 5), xMax = ticks[ticks.length - 1];
-    const x0 = rotW + 12, x = (v) => x0 + (v / xMax) * (W - x0 - m.r);
-    const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "list", "aria-label": "Respostas por departamento" });
-    ticks.forEach((v) => {
-      svg.append(s("line", { class: v ? "linha-grade" : "linha-base", x1: x(v), x2: x(v), y1: m.t, y2: H - m.b }));
-      svg.append(s("text", { class: "t-eixo", x: x(v), y: H - 6, "text-anchor": "middle" }, nf(v)));
-    });
-    dados.forEach((r, i) => {
-      const y0 = m.t + i * linhaH, yb = y0 + (linhaH - barH) / 2;
-      const sel = est.filtro.dep === r.d;
-      const g = s("g", { class: "dep-linha" + (sel ? " sel" : "") + (est.filtro.dep && !sel ? " apagada" : ""), tabindex: "0", role: "listitem",
-        "aria-label": `${r.d}: ${sits.map((k) => `${NOME_SIT[k]} ${r.c[k]}`).join(", ")}` });
-      g.append(s("rect", { class: "fundo", x: 0, y: y0, width: W, height: linhaH, rx: 8 }));
-      const nome = r.d.length > 24 && W < 600 ? r.d.slice(0, 22) + "…" : r.d;
-      g.append(s("text", { class: "t-rot", x: rotW, y: y0 + linhaH / 2 + 4, "text-anchor": "end" }, nome));
-      let acc = 0;
-      const vis = sits.filter((k) => r.c[k] > 0);
-      vis.forEach((k, j) => {
-        const a = x(acc), b = x(acc + r.c[k]);
-        const w = Math.max(0, b - a - (j < vis.length - 1 ? 2 : 0));   // 2px de respiro entre segmentos
-        const ultimo = j === vis.length - 1;
-        const ret = s("path", { class: "seg-ret", fill: COR[k], d: barra(a, yb, w, barH, ultimo ? 4 : 0) });
-        dicaEm(ret, () => [r.q ? `${r.d} · ${nf(r.q)} pessoas` : r.d, sits.map((q) => [COR[q], nf(r.c[q]), NOME_SIT[q] + (r.tot ? ` · ${pct(r.c[q], r.tot)}%` : "")])
-          .concat(r.q ? [[COR.sem, nf(r.falta), "ainda não responderam"]] : [])]);
-        g.append(ret);
-        acc += r.c[k];
-      });
-      const fim = s("text", { class: "t-val", x: x(acc) + 8, y: y0 + linhaH / 2 + 4 }, r.tot ? nf(r.tot) : "—");
-      if (r.q) fim.append(s("tspan", { class: "t-eixo", dx: 4 }, `de ${nf(r.q)}`));
-      g.append(fim);
-      const alternar = () => definirFiltro({ dep: est.filtro.dep === r.d ? "" : r.d });
-      g.addEventListener("click", alternar);
-      g.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); alternar(); } });
-      svg.append(g);
-    });
-    el.replaceChildren(svg);
-  }
-  // barra horizontal: base reta, ponta arredondada (4px)
   function barra(x, y, w, hgt, r) {
     if (w <= 0) return "";
     r = Math.min(r, w, hgt / 2);
     return `M${x} ${y}H${x + w - r}Q${x + w} ${y} ${x + w} ${y + r}V${y + hgt - r}Q${x + w} ${y + hgt} ${x + w - r} ${y + hgt}H${x}Z`;
   }
-
-  // Bebidas: só totais (quem vai e quem talvez vá)
   function renderBeb() {
-    const el = $("#g-beb");
-    const sits = est.filtro.sit === "nao" || est.filtro.sit === "sem" ? [] : est.filtro.sit ? [est.filtro.sit] : ["sim", "talvez"];
+    const el = $("#g-beb"), sits = ["sim", "talvez"];
     $("#leg-beb").replaceChildren(...sits.map((k) => h("li", null, h("i", { style: `background:${COR[k]}` }), NOME_SIT[k])));
-    if (!sits.length) { el.replaceChildren(h("p", { class: "tab-vazia", text: est.filtro.sit === "sem" ? "Quem ainda não respondeu não tem bebida informada." : "Quem não vai não responde a bebida." })); $("#beb-plano").hidden = true; return; }
     const dados = BEB.map((b) => {
       const c = { sim: 0, talvez: 0 };
-      est.bebidas.filter((x) => x.bebida === b && (!est.filtro.dep || x.departamento === est.filtro.dep)).forEach((x) => { if (c[x.resposta] != null) c[x.resposta] += Number(x.qtd); });
-      return { b, c, tot: sits.reduce((a, k) => a + c[k], 0) };
+      est.linhas.forEach((l) => { if ((l.bebida || "sem_resposta") === b && c[l.resposta] != null) c[l.resposta]++; });
+      return { b, c, tot: c.sim + c.talvez };
     });
     const totalGeral = dados.reduce((a, d) => a + d.tot, 0);
-    const W = largura(el), linhaH = 36, barH = 18, rotW = Math.min(190, Math.round(W * .42)), m = { t: 2, r: 64, b: 4 };
-    const H = m.t + dados.length * linhaH + m.b;
-    const max = Math.max(1, ...dados.map((d) => d.tot));
+    const W = largura(el), linhaH = 36, barH = 18, rotW = Math.min(150, Math.round(W * .32)), m = { t: 2, r: 74, b: 4 };
+    const H = m.t + dados.length * linhaH + m.b, max = Math.max(1, ...dados.map((d) => d.tot));
     const x0 = rotW + 12, x = (v) => x0 + (v / max) * (W - x0 - m.r);
-    const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "list", "aria-label": "Preferência de bebida, só totais" });
+    const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "list", "aria-label": "Bebidas, totais" });
     svg.append(s("line", { class: "linha-base", x1: x0, x2: x0, y1: m.t, y2: H - m.b }));
     dados.forEach((d, i) => {
       const y0 = m.t + i * linhaH, yb = y0 + (linhaH - barH) / 2;
@@ -821,91 +468,33 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
       g.append(s("text", { class: "t-rot", x: rotW, y: y0 + linhaH / 2 + 4, "text-anchor": "end", style: d.b === "sem_resposta" || d.b === "prefiro_nao" ? "fill:var(--tinta-3);font-style:italic" : null }, ROT_BEB[d.b]));
       let acc = 0; const vis = sits.filter((k) => d.c[k] > 0);
       vis.forEach((k, j) => {
-        const a = x(acc), b = x(acc + d.c[k]), ultimo = j === vis.length - 1;
-        const ret = s("path", { class: "seg-ret", fill: COR[k], d: barra(a, yb, Math.max(0, b - a - (ultimo ? 0 : 2)), barH, ultimo ? 4 : 0) });
+        const a = x(acc), b2 = x(acc + d.c[k]), ultimo = j === vis.length - 1;
+        const ret = s("path", { class: "seg-ret", fill: COR[k], d: barra(a, yb, Math.max(0, b2 - a - (ultimo ? 0 : 2)), barH, ultimo ? 4 : 0) });
         dicaEm(ret, () => [P.BEBIDAS[d.b], sits.map((q) => [COR[q], nf(d.c[q]), NOME_SIT[q]])]);
         g.append(ret); acc += d.c[k];
       });
-      g.append(s("text", { class: "t-val", x: x(acc) + 8, y: y0 + linhaH / 2 + 4 }, d.tot ? `${nf(d.tot)}  ·  ${pct(d.tot, totalGeral)}%` : "—"));
+      g.append(s("text", { class: "t-val", x: x(acc) + 8, y: y0 + linhaH / 2 + 4 }, d.tot ? `${nf(d.tot)} · ${pct(d.tot, totalGeral)}%` : "—"));
       svg.append(g);
     });
     el.replaceChildren(svg);
-    // planejamento entre os confirmados: quem quer álcool, e quem também aceita (tanto faz)
-    const qtd = (b) => (dados.find((d) => d.b === b) || { c: {} }).c.sim || 0;
-    const al = qtd("alcool"), sa = qtd("sem_alcool"), tf = qtd("tanto_faz");
-    const p = $("#beb-plano"); p.hidden = !sits.includes("sim");
-    p.replaceChildren("Entre os confirmados: bebida alcoólica para ", h("b", { text: nf(al) }), ...(tf ? [" a ", h("b", { text: nf(al + tf) })] : []),
+    const q = (b) => (dados.find((d) => d.b === b) || { c: {} }).c.sim || 0;
+    const al = q("alcool"), sa = q("sem_alcool"), tf = q("tanto_faz");
+    $("#beb-plano").replaceChildren("Entre os confirmados: bebida alcoólica para ", h("b", { text: nf(al) }), ...(tf ? [" a ", h("b", { text: nf(al + tf) })] : []),
       " pessoas; só sem álcool para ", h("b", { text: nf(sa) }), ...(tf ? [" a ", h("b", { text: nf(sa + tf) })] : []), tf ? " (o “tanto faz” entra nos dois)." : ".");
   }
 
-  // Tabela de respostas
-  function renderTab() {
-    const nomes = new Map(); est.linhas.forEach((l) => { const k = normal(l.nome); nomes.set(k, (nomes.get(k) || 0) + 1); });
-    const lista = filtradas().slice();
-    const { col, dir } = est.ordemTab;
-    const val = (l) => (col === "atualizado" ? l.atualizadoMs : col === "resposta" ? SIT.indexOf(l.resposta) : normal(l[col]));
-    lista.sort((a, b) => (val(a) < val(b) ? -1 : val(a) > val(b) ? 1 : 0) * dir || a.nome.localeCompare(b.nome, "pt-BR"));
-    $$(".d-tab th[data-col]").forEach((th) => th.setAttribute("aria-sort", th.dataset.col === col ? (dir > 0 ? "ascending" : "descending") : "none"));
-    const dups = [...nomes.values()].filter((n) => n > 1).length;
-    const semResp = est.filtro.sit === "sem";
-    $("#t-tab").textContent = semResp ? "Quem ainda não respondeu" : "Respostas";
-    $("#tab-sub").textContent = semResp
-      ? `${nf(lista.length)} ${lista.length === 1 ? "pessoa" : "pessoas"}${est.filtro.dep ? " em " + est.filtro.dep : ""} · use “Exportar planilha” para cobrar o pessoal`
-      : `${nf(lista.length)} de ${nf(est.linhas.length)} respostas` + (dups ? ` · ${dups} ${dups === 1 ? "nome repetido" : "nomes repetidos"} (verifique e remova o duplicado)` : "");
-    const corpo = $("#tab-corpo");
-    if (!lista.length) {
-      const vazio = semResp ? (est.pendentes ? "Todo mundo já respondeu. 🎉" : "A lista de colaboradores não está disponível.") : est.linhas.length ? "Ninguém com esses filtros." : "Ninguém respondeu ainda. Envie o link (botão “Link e QR code”).";
-      corpo.replaceChildren(h("tr", null, h("td", { colspan: "5", class: "tab-vazia", text: vazio }))); return;
-    }
-    corpo.replaceChildren(...lista.map((l) => {
-      if (l.pendente) {
-        return h("tr", null, h("td", { class: "nome", text: l.nome }), h("td", { text: l.departamento }),
-          h("td", null, h("span", { class: "tag-sit" }, h("i", { style: `background:${COR.sem}` }), NOME_SIT.sem)),
-          h("td", { class: "quando col-quando", text: "—" }), h("td"));
-      }
-      const rm = h("button", { type: "button", class: "rm", text: "Remover", "aria-label": `Remover a resposta de ${l.nome}` });
-      armar(rm, async () => { await P.excluir(est.senha, l.id); toast(`Resposta de ${l.nome} removida.`); buscar(); });
-      return h("tr", { class: est.novos.has(l.id) ? "novo" : null },
-        h("td", { class: "nome" }, l.nome, nomes.get(normal(l.nome)) > 1 ? h("span", { class: "tag-dup", text: "repetido" }) : null),
-        h("td", { text: l.departamento }),
-        h("td", null, h("span", { class: "tag-sit" }, h("i", { style: `background:${COR[l.resposta]}` }), NOME_SIT[l.resposta])),
-        h("td", { class: "quando col-quando", title: `Respondeu: ${dataHora(l.criadoMs)}${l.atualizadoMs - l.criadoMs > 2000 ? ` · alterou: ${dataHora(l.atualizadoMs)}` : ""}` }, h("span", { "data-rel": l.atualizadoMs, text: relativo(l.atualizadoMs) })),
-        h("td", { class: "num" }, rm));
-    }));
-  }
-  $$(".d-tab th[data-col] button").forEach((b) => b.addEventListener("click", () => {
-    const col = b.parentElement.dataset.col, o = est.ordemTab;
-    est.ordemTab = { col, dir: o.col === col ? -o.dir : col === "atualizado" ? -1 : 1 };
-    renderTab();
-  }));
-  function armar(btn, acao) {
-    btn.addEventListener("click", async () => {
-      if (btn.dataset.armado !== "1") {
-        btn.dataset.armado = "1"; btn.textContent = "Confirmar"; btn.classList.add("armado");
-        clearTimeout(btn._t); btn._t = setTimeout(() => { btn.dataset.armado = ""; btn.textContent = "Remover"; btn.classList.remove("armado"); }, 4000);
-        return;
-      }
-      clearTimeout(btn._t); btn.disabled = true;
-      try { await acao(); } catch (e) { toast(e.message, "erro"); btn.disabled = false; }
-    });
-  }
-
-  // Atividade recente
   function renderFeed() {
-    const lista = doDep().slice().sort((a, b) => b.atualizadoMs - a.atualizadoMs).slice(0, 30);
-    const feed = $("#feed");
-    if (!lista.length) { feed.replaceChildren(h("li", null, h("span"), h("p", { class: "tab-vazia", style: "padding:10px 0", text: "Sem respostas ainda." }))); return; }
+    const lista = est.linhas.slice().sort((a, b) => b.atualizadoMs - a.atualizadoMs).slice(0, 30), feed = $("#feed");
+    if (!lista.length) { feed.replaceChildren(h("li", null, h("span"), h("p", { class: "vazio-graf", style: "padding:10px 0", text: "Sem respostas ainda." }))); return; }
     feed.replaceChildren(...lista.map((l) => {
       const alterou = l.atualizadoMs - l.criadoMs > 2000;
-      const verbo = l.resposta === "sim" ? "confirmou presença" : l.resposta === "talvez" ? "respondeu talvez" : "avisou que não vai";
-      return h("li", { class: est.novos.has(l.id) ? "novo" : null },
-        h("span", { class: "av", style: `background:${COR[l.resposta]}`, "aria-hidden": "true", text: iniciais(l.nome) }),
-        h("div", null, h("p", null, h("b", { text: l.nome }), ` ${alterou ? "mudou para: " + NOME_SIT[l.resposta].toLowerCase() : verbo}`),
-          h("small", null, `${l.departamento} · `, h("span", { "data-rel": l.atualizadoMs, text: relativo(l.atualizadoMs) }))));
+      const txt = alterou ? `Uma resposta mudou para: ${NOME_SIT[l.resposta].toLowerCase()}` : l.resposta === "sim" ? "Nova confirmação de presença" : l.resposta === "talvez" ? "Nova resposta: ainda não sabe" : "Nova resposta: não vai";
+      return h("li", { class: est.novos.has(l.id) ? "novo" : null }, h("span", { class: "av", style: `background:${COR[l.resposta]}`, "aria-hidden": "true" }),
+        h("div", null, h("p", { text: txt }), h("small", null, h("span", { "data-rel": l.atualizadoMs, text: relativo(l.atualizadoMs) }))));
     }));
   }
 
-  // ------------------------------------------------------------ Dica (tooltip) dos gráficos
+  // ------------------------------------------------------------ Dica dos gráficos
   const dica = $("#dica");
   function mostrarDica(ev, titulo, linhas) {
     dica.replaceChildren(h("p", { class: "tt", text: titulo }), ...linhas.map(([cor, valor, rot]) => h("div", { class: "tl" }, cor ? h("i", { style: `background:${cor}` }) : h("span"), h("b", { text: valor }), h("span", { text: rot }))));
@@ -919,50 +508,34 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
   function esconderDica() { dica.classList.remove("on"); }
   function dicaEm(el, conteudo) {
     const ver = (ev) => { const [t, l] = conteudo(); mostrarDica(ev, t, l); };
-    el.addEventListener("pointermove", ver);
-    el.addEventListener("pointerleave", esconderDica);
+    el.addEventListener("pointermove", ver); el.addEventListener("pointerleave", esconderDica);
     el.addEventListener("focus", () => { const r = el.getBoundingClientRect(); ver({ clientX: r.right, clientY: r.top }); });
     el.addEventListener("blur", esconderDica);
   }
 
-  // ------------------------------------------------------------ Exportar planilha (sem a bebida: ela é só em totais)
-  $("#b-csv").addEventListener("click", () => {
-    const lista = filtradas().slice().sort((a, b) => a.departamento.localeCompare(b.departamento, "pt-BR") || a.nome.localeCompare(b.nome, "pt-BR"));
-    const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
-    const linhas = [["Nome", "Departamento", "Situação", "Respondeu em", "Atualizado em"].map(q).join(";"),
-      ...lista.map((l) => [l.nome, l.departamento, NOME_SIT[l.resposta], l.pendente ? "" : dataHora(l.criadoMs), l.pendente ? "" : dataHora(l.atualizadoMs)].map(q).join(";"))];
-    const blob = new Blob(["﻿" + linhas.join("\r\n")], { type: "text/csv;charset=utf-8" });
-    const a = h("a", { href: URL.createObjectURL(blob), download: `${est.filtro.sit === "sem" ? "falta-responder" : "confirmacoes"}-${new Date().toISOString().slice(0, 10)}.csv` });
-    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    toast(`Planilha com ${lista.length} ${lista.length === 1 ? "resposta" : "respostas"} baixada.`);
-  });
-
-  // ------------------------------------------------------------ Janelas: link/QR e configurações
+  // ------------------------------------------------------------ Link/QR e configurações
   $$("dialog [data-fechar]").forEach((b) => b.addEventListener("click", () => b.closest("dialog").close()));
   const linkPublico = () => new URL("./" + (P.TESTE ? "?teste" : ""), location.href).href;
   let qrAtual = null;
   $("#b-link").addEventListener("click", async () => {
-    $("#jl-url").value = linkPublico();
-    $("#jan-link").showModal();
-    if (!qrAtual) {
-      try {
-        if (!window.qrcode) await P.carregarScript("https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js");
-        const q = window.qrcode(0, "M"); q.addData(linkPublico()); q.make();
-        const n = q.getModuleCount(); let d = "";
-        for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
-        $("#jl-qr").replaceChildren(s("svg", { viewBox: `0 0 ${n} ${n}`, "shape-rendering": "crispEdges", role: "img", "aria-label": "QR code do link" }, s("path", { d, fill: "#0b2e22" })));
-        qrAtual = { q, n };
-      } catch (e) { $("#jl-qr").textContent = "Sem internet para gerar o QR code."; }
-    }
+    $("#jl-url").value = linkPublico(); $("#jan-link").showModal();
+    if (qrAtual) return;
+    try {
+      if (!window.qrcode) await P.carregarScript("https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js");
+      const q = window.qrcode(0, "M"); q.addData(linkPublico()); q.make();
+      const n = q.getModuleCount(); let d = "";
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
+      $("#jl-qr").replaceChildren(s("svg", { viewBox: `0 0 ${n} ${n}`, "shape-rendering": "crispEdges", role: "img", "aria-label": "QR code do link" }, s("path", { d, fill: "#0b2e22" })));
+      qrAtual = { q, n };
+    } catch (e) { $("#jl-qr").textContent = "Sem internet para gerar o QR code."; }
   });
   $("#jl-copiar").addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText($("#jl-url").value); toast("Link copiado."); }
-    catch (e) { $("#jl-url").select(); document.execCommand("copy"); toast("Link copiado."); }
+    try { await navigator.clipboard.writeText($("#jl-url").value); } catch (e) { $("#jl-url").select(); document.execCommand("copy"); }
+    toast("Link copiado.");
   });
   $("#jl-png").addEventListener("click", () => {
     if (!qrAtual) return;
-    const esc = 16, marg = 4, lado = (qrAtual.n + marg * 2) * esc;
-    const c = document.createElement("canvas"); c.width = c.height = lado;
+    const esc = 16, marg = 4, lado = (qrAtual.n + marg * 2) * esc, c = document.createElement("canvas"); c.width = c.height = lado;
     const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, lado, lado); g.fillStyle = "#0b2e22";
     for (let r = 0; r < qrAtual.n; r++) for (let k = 0; k < qrAtual.n; k++) if (qrAtual.q.isDark(r, k)) g.fillRect((k + marg) * esc, (r + marg) * esc, esc, esc);
     c.toBlob((b) => { const a = h("a", { href: URL.createObjectURL(b), download: "qrcode-confirmacao.png" }); document.body.append(a); a.click(); a.remove(); }, "image/png");
@@ -972,43 +545,35 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     $("#cfg-aberta").checked = est.cfg.presenca_aberta !== "nao";
     $("#cfg-prazo").value = est.cfg.presenca_prazo || "";
     $("#cfg-erro").hidden = true;
-    $("#add-dep").replaceChildren(new Option("Departamento…", ""), ...listaDeps().map((d) => new Option(d, d)));
-    $("#add-nome").value = "";
-    const total = [...quadroDeps().values()].reduce((a, b) => a + b, 0);
-    $("#add-dica").textContent = `As pessoas vêm da planilha da empresa${total ? ` (${nf(total)} na lista)` : ""}. Quem você incluir aqui já aparece na busca do link.`;
     $("#jan-cfg").showModal();
-  });
-  $("#add-btn").addEventListener("click", async () => {
-    const nome = $("#add-nome").value.trim().replace(/\s+/g, " "), dep = $("#add-dep").value, err = $("#cfg-erro");
-    err.hidden = true;
-    if (nome.split(" ").length < 2) { err.textContent = "Escreva o nome completo (nome e sobrenome)."; err.hidden = false; $("#add-nome").focus(); return; }
-    if (!dep) { err.textContent = "Escolha o departamento da pessoa."; err.hidden = false; return; }
-    const btn = $("#add-btn"); btn.disabled = true;
-    try { await P.adicionarColaborador(est.senha, nome, dep); toast(`${nome} incluído(a) na lista.`); $("#add-nome").value = ""; buscar(); }
-    catch (e) { err.textContent = e.message; err.hidden = false; }
-    finally { btn.disabled = false; }
   });
   $("#cfg-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    const err = $("#cfg-erro"); err.hidden = true;
-    const btn = $("#cfg-salvar"); btn.disabled = true;
+    const err = $("#cfg-erro"), btn = $("#cfg-salvar"); err.hidden = true; btn.disabled = true;
     try {
       await P.salvarConfig(est.senha, "presenca_aberta", $("#cfg-aberta").checked ? "sim" : "nao");
       await P.salvarConfig(est.senha, "presenca_prazo", $("#cfg-prazo").value.trim());
       est.cfg = await P.config(); est.ultimaCfg = Date.now(); evento();
-      $("#jan-cfg").close(); toast("Configurações salvas."); renderTudo();
+      $("#jan-cfg").close(); toast("Configurações salvas.");
     } catch (e) { err.textContent = e.message; err.hidden = false; }
     finally { btn.disabled = false; }
   });
+  // apagar todas as respostas: precisa tocar duas vezes
+  const zerar = $("#cfg-zerar");
+  zerar.addEventListener("click", async () => {
+    if (zerar.dataset.armado !== "1") {
+      zerar.dataset.armado = "1"; zerar.textContent = `Toque de novo para apagar ${nf(est.linhas.length)} respostas`; zerar.classList.add("armado");
+      clearTimeout(zerar._t); zerar._t = setTimeout(() => { zerar.dataset.armado = ""; zerar.textContent = "Apagar todas as respostas"; zerar.classList.remove("armado"); }, 4000);
+      return;
+    }
+    clearTimeout(zerar._t); zerar.disabled = true;
+    try { await P.zerar(est.senha); toast("Todas as respostas foram apagadas."); $("#jan-cfg").close(); est.vistos = null; buscar(); }
+    catch (e) { $("#cfg-erro").textContent = e.message; $("#cfg-erro").hidden = false; }
+    finally { zerar.disabled = false; zerar.dataset.armado = ""; zerar.textContent = "Apagar todas as respostas"; zerar.classList.remove("armado"); }
+  });
 
-  // redesenha os gráficos quando a largura muda
   let rz = null;
-  addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (est.senha && est.linhas) { renderTempo(); renderDep(); renderBeb(); renderSitu(); } }, 150); });
-
-  async function iniciarPainel() {
-    est.ultimaCfg = 0;
-    await buscar();
-  }
+  addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (est.senha) { renderTempo(); renderBeb(); renderSitu(); } }, 150); });
   mostrar();
 })();
 </script>
