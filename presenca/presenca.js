@@ -120,6 +120,16 @@ window.presenca = (function () {
       });
       return [...m].map(([k, qtd]) => { const [departamento, resposta, bebida] = k.split("|"); return { departamento, resposta, bebida, qtd }; });
     },
+    // resumo público: só números
+    async resumo() {
+      await espera(60); const d = lerTeste();
+      const m = new Map(), pega = (dep) => { if (!m.has(dep)) m.set(dep, { d: dep, sim: 0, talvez: 0, nao: 0, sem: 0 }); return m.get(dep); };
+      const resp = new Map(d.linhas.map((l) => [l.colaborador_id, l]));
+      d.colaboradores.forEach((c) => { const l = resp.get(c.id); pega(c.departamento)[l ? l.resposta : "sem"]++; });
+      const bebidas = {};
+      d.linhas.filter((l) => l.resposta === "sim").forEach((l) => { const k = l.bebida || "sem_resposta"; bebidas[k] = (bebidas[k] || 0) + 1; });
+      return { deps: [...m.values()], bebidas, ultima: d.linhas.length ? new Date(Math.max(...d.linhas.map((l) => l.atualizado_em))).toISOString() : null };
+    },
     async excluir(senha, id) { const d = lerTeste(); exigirSenha(d, senha); d.linhas = d.linhas.filter((l) => l.id !== id); store.set(KEY_TESTE, d); },
     async adicionarColaborador(senha, nome, departamento) {
       const d = lerTeste(); exigirSenha(d, senha);
@@ -162,6 +172,7 @@ window.presenca = (function () {
     async painel(senha) { return (await rpc("confra_presenca_painel", { p_senha: senha })) || []; },
     async pendentes(senha) { return (await rpc("confra_presenca_pendentes", { p_senha: senha })) || []; },
     async bebidas(senha) { return ((await rpc("confra_presenca_bebidas", { p_senha: senha })) || []).map((x) => ({ ...x, qtd: Number(x.qtd) })); },
+    async resumo() { return (await rpc("confra_presenca_resumo", {})) || { deps: [], bebidas: {}, ultima: null }; },
     excluir(senha, id) { return rpc("confra_admin_presenca_excluir", { p_senha: senha, p_id: id }); },
     adicionarColaborador(senha, nome, departamento) { return rpc("confra_admin_colaborador_adicionar", { p_senha: senha, p_nome: nome, p_departamento: departamento }); },
     salvarConfig(senha, chave, valor) { return rpc("confra_admin_config", { p_senha: senha, p_chave: chave, p_valor: valor }); },
@@ -181,6 +192,7 @@ window.presenca = (function () {
       guardarMinha({ id, chave, ...dados, quando: Date.now() });
       return id;
     },
+    resumo: () => b.resumo(),
     login: (s) => b.login(s), painel: (s) => b.painel(s), pendentes: (s) => b.pendentes(s), bebidas: (s) => b.bebidas(s),
     excluir: (s, id) => b.excluir(s, id), adicionarColaborador: (s, n, d) => b.adicionarColaborador(s, n, d),
     salvarConfig: (s, k, v) => b.salvarConfig(s, k, v),

@@ -12,8 +12,8 @@
 <link rel="stylesheet" href="../estilo.css?v=26">
 <!--
   RESUMO DAS CONFIRMAÇÕES (versão para celular, só as quantidades)
-  Mesma senha do painel. Atualiza a cada 5 segundos. ?teste → dados de exemplo.
-  O painel completo é o painel.html.
+  Abre sem senha: o banco só envia números (nunca nomes). Atualiza a cada 5 segundos.
+  ?teste → dados de exemplo. O painel completo (com nomes, com senha) é o painel.html.
 -->
 <style>
 :root {
@@ -81,17 +81,10 @@ body { background-color: #071d15; }
 <div class="r-wrap">
   <header class="r-topo">
     <div><h1>Confirmações</h1><p id="r-ev">Confraternização 2026</p></div>
-    <p class="r-vivo" id="r-vivo" hidden><i></i><span id="r-vivo-txt">Ao vivo</span></p>
+    <p class="r-vivo" id="r-vivo"><i></i><span id="r-vivo-txt">Ao vivo</span></p>
   </header>
 
-  <form class="r-login" id="r-login" novalidate hidden>
-    <div class="campo"><label for="r-senha">Senha do painel</label><input type="password" id="r-senha" autocomplete="current-password"></div>
-    <p class="dica" id="r-dica-teste" hidden style="margin:-8px 0 12px">Modo de teste: a senha é trocar123.</p>
-    <p class="erro" id="r-erro" role="alert" hidden></p>
-    <button class="btn cheio" type="submit">Entrar</button>
-  </form>
-
-  <main id="r-painel" hidden>
+  <main id="r-painel">
     <section class="c heroi" aria-label="Confirmados">
       <div><small><span class="pt" style="background:var(--s-sim)"></span>Confirmados</small><b id="n-sim">0</b></div>
       <div class="lado"><strong id="n-sim-pct">0%</strong>de quem respondeu</div>
@@ -124,12 +117,12 @@ body { background-color: #071d15; }
       <dl class="beb" id="beb"></dl>
     </section>
 
-    <div class="rodape"><a href="painel.html" id="r-completo">Abrir o painel completo</a><button type="button" id="r-sair">Sair</button></div>
+    <div class="rodape"><span style="color:var(--muted)" id="r-ultima"></span><a href="painel.html" id="r-completo">Painel completo (com senha)</a></div>
   </main>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="presenca.js?v=29"></script>
+<script src="presenca.js?v=30"></script>
 <script>
 (function () {
   "use strict";
@@ -145,27 +138,9 @@ body { background-color: #071d15; }
     filhos.flat().forEach((f) => { if (f != null) e.append(f instanceof Node ? f : String(f)); });
     return e;
   }
-  const SENHA_KEY = P.TESTE ? "confra_presenca_senha_teste" : "confra_admin";
-  const est = { senha: null, linhas: [], pendentes: null, bebidas: [], ordem: "falta", timer: null };
-  try { est.senha = sessionStorage.getItem(SENHA_KEY); } catch (e) { /* ignora */ }
+  // Sem senha: o banco só manda números (por departamento: vou / talvez / não / sem resposta; bebida: total de quem vai).
+  const est = { deps: [], bebidas: {}, ultima: null, ordem: "falta", timer: null };
   if (P.TESTE) $("#r-completo").href = "painel.html?teste";
-
-  function mostrar() {
-    const ok = !!est.senha;
-    $("#r-login").hidden = ok; $("#r-painel").hidden = !ok; $("#r-vivo").hidden = !ok;
-    $("#r-dica-teste").hidden = !P.TESTE;
-    if (ok) buscar(); else clearTimeout(est.timer);
-  }
-  $("#r-login").addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const s = $("#r-senha").value, err = $("#r-erro"); err.hidden = true;
-    try {
-      if (!(await P.login(s))) throw new Error("Senha incorreta.");
-      est.senha = s; try { sessionStorage.setItem(SENHA_KEY, s); } catch (e) { /* ignora */ }
-      $("#r-senha").value = ""; mostrar();
-    } catch (e) { err.textContent = e.message; err.hidden = false; }
-  });
-  $("#r-sair").addEventListener("click", () => { est.senha = null; try { sessionStorage.removeItem(SENHA_KEY); } catch (e) { /* ignora */ } mostrar(); });
   document.querySelectorAll(".ordem button").forEach((b) => b.addEventListener("click", () => {
     est.ordem = b.dataset.ord;
     document.querySelectorAll(".ordem button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
@@ -174,45 +149,48 @@ body { background-color: #071d15; }
 
   async function buscar() {
     clearTimeout(est.timer);
-    if (!est.senha) return;
     try {
-      const [linhas, pendentes, bebidas] = await Promise.all([P.painel(est.senha), P.pendentes(est.senha).catch(() => null), P.bebidas(est.senha)]);
-      est.linhas = linhas; est.pendentes = pendentes; est.bebidas = bebidas;
+      const r = await P.resumo();
+      est.deps = (r.deps || []).map((x) => ({ d: x.d, sim: +x.sim || 0, talvez: +x.talvez || 0, nao: +x.nao || 0, sem: +x.sem || 0 }));
+      est.bebidas = r.bebidas || {}; est.ultima = r.ultima ? Date.parse(r.ultima) : null;
       $("#r-vivo").classList.remove("off"); $("#r-vivo-txt").textContent = "Ao vivo";
       render();
     } catch (e) {
-      if (/senha/i.test(e.message)) { est.senha = null; try { sessionStorage.removeItem(SENHA_KEY); } catch (x) { /* ignora */ } mostrar(); return; }
       $("#r-vivo").classList.add("off"); $("#r-vivo-txt").textContent = "Sem conexão";
-    } finally { if (est.senha) est.timer = setTimeout(buscar, 5000); }
+    } finally { est.timer = setTimeout(buscar, 5000); }
   }
-  document.addEventListener("visibilitychange", () => { if (!document.hidden && est.senha) buscar(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) buscar(); });
+  function relativo(ms) {
+    const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+    if (s < 45) return "agora mesmo";
+    const m = Math.round(s / 60); if (m < 60) return `há ${m} min`;
+    const hh = Math.round(m / 60); if (hh < 24) return `há ${hh} h`;
+    return `há ${Math.round(hh / 24)} dias`;
+  }
+  setInterval(() => { $("#r-ultima").textContent = est.ultima ? "Última resposta " + relativo(est.ultima) : ""; }, 1000);
 
   function barra(partes, total) {
     return partes.filter(([, n]) => n > 0).map(([k, n]) => el("span", { style: `flex:${n} 1 0;background:${COR[k]}`, title: `${NOME[k]}: ${n}` }));
   }
   function render() {
-    const c = { sim: 0, talvez: 0, nao: 0 };
-    est.linhas.forEach((l) => { c[l.resposta]++; });
-    const resp = est.linhas.length, falta = est.pendentes ? est.pendentes.length : 0, pessoas = resp + falta;
+    const c = { sim: 0, talvez: 0, nao: 0, sem: 0 };
+    est.deps.forEach((x) => { c.sim += x.sim; c.talvez += x.talvez; c.nao += x.nao; c.sem += x.sem; });
+    const resp = c.sim + c.talvez + c.nao, falta = c.sem, pessoas = resp + falta;
     $("#n-sim").textContent = nf(c.sim);
     $("#n-sim-pct").textContent = pct(c.sim, resp) + "%";
     $("#n-talvez").textContent = nf(c.talvez);
     $("#n-nao").textContent = nf(c.nao);
-    $("#n-sem").textContent = est.pendentes ? nf(falta) : "—";
+    $("#n-sem").textContent = nf(falta);
     $("#n-resp").textContent = nf(resp);
-    $("#n-pessoas").textContent = est.pendentes ? nf(pessoas) : "—";
-    $("#n-resp-pct").textContent = est.pendentes ? pct(resp, pessoas) + "%" : "";
+    $("#n-pessoas").textContent = nf(pessoas);
+    $("#n-resp-pct").textContent = pct(resp, pessoas) + "%";
     const bg = $("#b-geral");
     bg.replaceChildren(...barra([["sim", c.sim], ["talvez", c.talvez], ["nao", c.nao], ["sem", falta]]));
     bg.setAttribute("aria-label", `Vou ${c.sim}, talvez ${c.talvez}, não vão ${c.nao}, faltam ${falta}`);
     $("#plano").replaceChildren("Prepare para ", el("b", { text: nf(c.sim) }), ...(c.talvez ? [" a ", el("b", { text: nf(c.sim + c.talvez) })] : []), " pessoas", c.talvez ? " (contando os talvez)." : ".");
 
     // por departamento
-    const m = new Map();
-    const pega = (d) => { if (!m.has(d)) m.set(d, { d, sim: 0, talvez: 0, nao: 0, sem: 0 }); return m.get(d); };
-    est.linhas.forEach((l) => { pega(l.departamento)[l.resposta]++; });
-    (est.pendentes || []).forEach((p) => { pega(p.departamento).sem++; });
-    const lista = [...m.values()].map((x) => ({ ...x, tot: x.sim + x.talvez + x.nao + x.sem }));
+    const lista = est.deps.map((x) => ({ ...x, tot: x.sim + x.talvez + x.nao + x.sem }));
     if (est.ordem === "az") lista.sort((a, b) => a.d.localeCompare(b.d, "pt-BR"));
     else if (est.ordem === "sim") lista.sort((a, b) => b.sim - a.sim || a.d.localeCompare(b.d, "pt-BR"));
     else lista.sort((a, b) => b.sem - a.sem || a.d.localeCompare(b.d, "pt-BR"));
@@ -223,12 +201,12 @@ body { background-color: #071d15; }
 
     // bebidas de quem vai
     const ordemB = ["cerveja", "refrigerante", "suco", "agua", "tanto_faz", "sem_resposta"];
-    const tb = {}; est.bebidas.filter((b) => b.resposta === "sim").forEach((b) => { tb[b.bebida] = (tb[b.bebida] || 0) + Number(b.qtd); });
+    const tb = {}; Object.entries(est.bebidas).forEach(([k, n]) => { tb[k] = Number(n) || 0; });
     const max = Math.max(1, ...ordemB.map((k) => tb[k] || 0));
     $("#beb").replaceChildren(...ordemB.map((k) => el("div", null, el("dt", { text: P.BEBIDAS[k] }), el("dd", { text: nf(tb[k] || 0) }),
       el("div", { class: "trilho" }, el("span", { style: `width:${((tb[k] || 0) / max) * 100}%` })))));
   }
-  mostrar();
+  buscar();
 })();
 </script>
 </body>

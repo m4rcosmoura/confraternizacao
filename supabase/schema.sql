@@ -828,6 +828,31 @@ grant execute on function
   public.confra_admin_colaborador_adicionar(text, text, text)
 to anon, authenticated;
 
+-- Resumo público (sem senha) para o resumo.html: só quantidades, nunca nomes.
+-- Por departamento: vou / talvez / não / ainda sem resposta. Bebida: só o total geral de quem vai.
+create or replace function public.confra_presenca_resumo()
+returns jsonb language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'deps', coalesce((
+      select jsonb_agg(x order by x->>'d') from (
+        select jsonb_build_object(
+          'd', c.departamento,
+          'sim', count(p.id) filter (where p.resposta = 'sim'),
+          'talvez', count(p.id) filter (where p.resposta = 'talvez'),
+          'nao', count(p.id) filter (where p.resposta = 'nao'),
+          'sem', count(*) filter (where p.id is null)) as x
+        from public.confra_colaboradores c
+        left join public.confra_presenca p on p.colaborador_id = c.id
+        group by c.departamento) t), '[]'::jsonb),
+    'bebidas', coalesce((
+      select jsonb_object_agg(b, n) from (
+        select coalesce(bebida, 'sem_resposta') as b, count(*) as n
+        from public.confra_presenca where resposta = 'sim' group by 1) z), '{}'::jsonb),
+    'ultima', (select max(atualizado_em) from public.confra_presenca)
+  );
+$$;
+grant execute on function public.confra_presenca_resumo() to anon, authenticated;
+
 -- ---------------------------------------------------------------------
 -- Permissões das funções
 -- ---------------------------------------------------------------------
