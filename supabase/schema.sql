@@ -602,8 +602,9 @@ begin
   if char_length(trim(coalesce(p_departamento, ''))) < 1 then
     raise exception 'Escolha o seu departamento.';
   end if;
+  -- cada linha da lista: "Departamento" ou "Departamento | quantidade de pessoas"
   if v_deps <> '' and not (trim(p_departamento) = any (
-       select trim(x) from unnest(string_to_array(v_deps, E'\n')) x where trim(x) <> '')) then
+       select trim(split_part(x, '|', 1)) from unnest(string_to_array(v_deps, E'\n')) x where trim(x) <> '')) then
     raise exception 'Escolha o departamento na lista.';
   end if;
   if p_resposta not in ('sim', 'nao', 'talvez') then
@@ -681,7 +682,8 @@ to anon, authenticated;
 insert into public.confra_config (chave, valor) values
   ('presenca_aberta', 'sim'),
   ('presenca_prazo', ''),
-  ('presenca_departamentos', E'Administrativo\nComercial\nFinanceiro\nLaboratório\nLogística\nManutenção\nProdução\nQualidade\nRH\nTI\nTSI')
+  -- um departamento por linha; "| número" = quantas pessoas o departamento tem (o painel mostra quantos já responderam)
+  ('presenca_departamentos', E'Administrativo | 5\nAmbulatório | 3\nBalança / Faturamento | 9\nCampo | 18\nCampo / Milho | 3\nCantina | 6\nComercial Cooperados | 4\nComercial Vendas | 12\nConstrução Civil | 1\nControle de Qualidade | 29\nElétrica e Manutenção | 26\nFrotas | 2\nGestão da Qualidade | 3\nGrãos | 19\nLaboratório | 23\nLimpeza | 20\nLogística | 8\nPortaria | 18\nProdução | 175\nSegurança do Trabalho | 5\nSuprimentos / Compras | 7\nTI | 11')
 on conflict (chave) do nothing;
 
 -- ---------------------------------------------------------------------

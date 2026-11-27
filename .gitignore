@@ -2,3 +2,6 @@
 *.log
 Thumbs.db
 desktop.ini
+*.xlsx
+*.xls
+*.csv

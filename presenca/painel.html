@@ -32,6 +32,7 @@
   --s-sim: #c98500;
   --s-talvez: #3987e5;
   --s-nao: #d55181;
+  --s-sem: #4b6b5e;           /* ainda sem resposta: cinza-esverdeado neutro, não é uma situação */
   --vivo: #ff4a3d;
   color-scheme: dark;
 }
@@ -83,6 +84,9 @@ body.dash {
 .card-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .card h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .01em; }
 .card-sub { margin: 3px 0 0; font-size: 13px; color: var(--tinta-3); }
+.coluna { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.feed-card { flex: 1; display: flex; flex-direction: column; min-height: 260px; }
+.feed-card .feed { flex: 1 1 0; min-height: 200px; max-height: none; }
 .s4 { grid-column: span 4; } .s5 { grid-column: span 5; } .s7 { grid-column: span 7; } .s8 { grid-column: span 8; } .s12 { grid-column: span 12; }
 
 /* KPIs */
@@ -322,6 +326,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
           <div class="alterna" role="group" aria-label="Ordem">
             <button type="button" data-ord="total" aria-pressed="true">Mais respostas</button>
             <button type="button" data-ord="sim" aria-pressed="false">Mais confirmados</button>
+            <button type="button" data-ord="falta" aria-pressed="false">Faltam responder</button>
             <button type="button" data-ord="az" aria-pressed="false">A–Z</button>
           </div>
         </div>
@@ -329,7 +334,8 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
         <div class="graf" id="g-dep"></div>
       </section>
 
-      <section class="card s5" aria-labelledby="t-beb">
+      <div class="coluna s5">
+      <section class="card" aria-labelledby="t-beb">
         <div class="card-cab">
           <div><h2 id="t-beb">Bebidas</h2><p class="card-sub">Preferência de quem vai e de quem talvez vá</p></div>
           <span class="privado"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Só totais</span>
@@ -339,7 +345,13 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
         <p class="plano" id="beb-plano" style="margin-top:12px"></p>
       </section>
 
-      <section class="card s8" aria-labelledby="t-tab">
+      <section class="card feed-card" aria-labelledby="t-feed">
+        <div class="card-cab"><div><h2 id="t-feed">Atividade recente</h2><p class="card-sub">Últimas respostas e alterações</p></div></div>
+        <ul class="feed" id="feed"></ul>
+      </section>
+      </div>
+
+      <section class="card s12" aria-labelledby="t-tab">
         <div class="card-cab">
           <div><h2 id="t-tab">Respostas</h2><p class="card-sub" id="tab-sub">Lista de quem respondeu</p></div>
         </div>
@@ -355,11 +367,6 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
             <tbody id="tab-corpo"></tbody>
           </table>
         </div>
-      </section>
-
-      <section class="card s4" aria-labelledby="t-feed">
-        <div class="card-cab"><div><h2 id="t-feed">Atividade recente</h2><p class="card-sub">Últimas respostas e alterações</p></div></div>
-        <ul class="feed" id="feed"></ul>
       </section>
     </div>
   </main>
@@ -388,7 +395,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
         <input type="checkbox" role="switch" class="switch" id="cfg-aberta">
       </div>
       <div class="campo" style="margin-top:12px"><label for="cfg-prazo">Prazo <span class="opc">(aparece no link, opcional)</span></label><input type="text" id="cfg-prazo" maxlength="40" placeholder="Ex.: até 01/12"></div>
-      <div class="campo"><label for="cfg-deps">Departamentos <span class="opc">(um por linha, na ordem do menu)</span></label><textarea id="cfg-deps" maxlength="3000"></textarea>
+      <div class="campo"><label for="cfg-deps">Departamentos <span class="opc">(um por linha; depois da barra, quantas pessoas: "Produção | 175")</span></label><textarea id="cfg-deps" maxlength="3000"></textarea>
         <p class="dica">Quem já respondeu continua com o departamento que escolheu, mesmo que ele saia da lista.</p></div>
       <p class="erro" id="cfg-erro" role="alert" hidden></p>
       <div class="acoes" style="justify-content:flex-end"><button type="button" class="btn sec peq" data-fechar>Cancelar</button><button type="submit" class="btn peq" id="cfg-salvar">Salvar</button></div>
@@ -399,7 +406,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
 <div class="dica-graf" id="dica" role="status" aria-live="off"></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="presenca.js?v=27"></script>
+<script src="presenca.js?v=28"></script>
 <script>
 (function () {
   "use strict";
@@ -432,8 +439,13 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
 
   // ------------------------------------------------------------ Constantes
   const SIT = ["sim", "talvez", "nao"];
-  const NOME_SIT = { sim: "Vou", talvez: "Talvez", nao: "Não vou" };
-  const COR = { sim: "var(--s-sim)", talvez: "var(--s-talvez)", nao: "var(--s-nao)" };
+  const NOME_SIT = { sim: "Vou", talvez: "Talvez", nao: "Não vou", sem: "Sem resposta" };
+  const COR = { sim: "var(--s-sim)", talvez: "var(--s-talvez)", nao: "var(--s-nao)", sem: "var(--s-sem)" };
+  // quantas pessoas existem no recorte atual (lista de departamentos com "| número")
+  function pessoasNoFiltro() {
+    const qd = P.quadro(est.cfg);
+    return est.filtro.dep ? qd.get(est.filtro.dep) || 0 : [...qd.values()].reduce((a, b) => a + b, 0);
+  }
   const BEB = ["cerveja", "refrigerante", "suco", "agua", "tanto_faz", "sem_resposta"];
   const nf = (n) => Number(n).toLocaleString("pt-BR");
   const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
@@ -561,7 +573,9 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     $("#k-total").textContent = nf(total);
     const ult = base.reduce((m, l) => Math.max(m, l.atualizadoMs), 0);
     const ku = $("#k-ultima");
-    if (ult) { ku.replaceChildren("última ", h("span", { "data-rel": ult, text: relativo(ult) })); } else ku.textContent = "nenhuma ainda";
+    const pessoas = pessoasNoFiltro();
+    const de = pessoas ? `de ${nf(pessoas)} pessoas (${pct(total, pessoas)}%) · ` : "";
+    if (ult) { ku.replaceChildren(de + "última ", h("span", { "data-rel": ult, text: relativo(ult) })); } else ku.textContent = de + "nenhuma ainda";
     const lista = P.departamentos(est.cfg), com = new Set(est.linhas.map((l) => l.departamento));
     if (est.filtro.dep) {
       $("#k-deps").textContent = nf(base.length);
@@ -578,20 +592,23 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
   // Situação geral: barra segmentada + lista + planejamento
   function renderSitu() {
     const base = doDep(), c = contagem(base), total = base.length;
-    $("#situ-sub").textContent = est.filtro.dep || "Todos os departamentos";
+    // com o quadro de pessoas, a barra é o departamento (ou a empresa) inteiro: quem ainda não respondeu fica em cinza
+    const pessoas = pessoasNoFiltro();
+    c.sem = pessoas ? Math.max(0, pessoas - total) : 0;
+    const partes = pessoas ? SIT.concat("sem") : SIT, todo = pessoas ? Math.max(pessoas, total) : total;
+    $("#situ-sub").textContent = (est.filtro.dep || "Todos os departamentos") + (pessoas ? ` · ${nf(pessoas)} pessoas` : "");
     const bar = $("#situ-bar");
-    bar.setAttribute("aria-label", SIT.map((k) => `${NOME_SIT[k]}: ${c[k]} (${pct(c[k], total)}%)`).join(", "));
-    bar.replaceChildren(...SIT.filter((k) => c[k] > 0).map((k) => {
+    bar.setAttribute("aria-label", partes.map((k) => `${NOME_SIT[k]}: ${c[k]} (${pct(c[k], todo)}%)`).join(", "));
+    bar.replaceChildren(...partes.filter((k) => c[k] > 0).map((k) => {
       const d = h("div", { style: `flex:${c[k]} 1 0;background:${COR[k]}`, tabindex: "0", "aria-label": `${NOME_SIT[k]}: ${c[k]}` });
-      const txt = pct(c[k], total) + "%";
-      d.dataset.txt = txt;
-      dicaEm(d, () => [NOME_SIT[k], [[COR[k], nf(c[k]), `${pct(c[k], total)}% das respostas`]]]);
+      d.dataset.txt = pct(c[k], todo) + "%";
+      dicaEm(d, () => [NOME_SIT[k], [[COR[k], nf(c[k]), `${pct(c[k], todo)}% ${pessoas ? "das pessoas" : "das respostas"}`]]]);
       return d;
     }));
-    if (!total) bar.replaceChildren(h("div", { style: "flex:1;background:rgba(255,255,255,.08)" }));
+    if (!todo) bar.replaceChildren(h("div", { style: "flex:1;background:rgba(255,255,255,.08)" }));
     // percentual dentro do bloco só se couber
     requestAnimationFrame(() => $$("#situ-bar > div").forEach((d) => { if (d.dataset.txt && d.clientWidth >= 52) d.textContent = d.dataset.txt; }));
-    $("#situ-lista").replaceChildren(...SIT.map((k) => h("div", null, h("i", { style: `background:${COR[k]}` }), h("dt", { text: NOME_SIT[k] }), h("dd", { text: nf(c[k]) }), h("small", { text: pct(c[k], total) + "%" }))));
+    $("#situ-lista").replaceChildren(...partes.map((k) => h("div", null, h("i", { style: `background:${COR[k]}` }), h("dt", { text: NOME_SIT[k] }), h("dd", { text: nf(c[k]) }), h("small", { text: pct(c[k], todo) + "%" }))));
     const p = $("#situ-plano");
     p.replaceChildren("Planejamento: prepare para ", h("b", { text: nf(c.sim) }), ...(c.talvez ? [" a ", h("b", { text: nf(c.sim + c.talvez) })] : []), " pessoas", c.talvez ? " (contando os talvez)." : ".");
   }
@@ -645,7 +662,14 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
       svg.append(s("path", { d, fill: "none", stroke: COR[k], "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
       const ult = pts[pts.length - 1];
       svg.append(s("circle", { cx: x(ult.t), cy: y(ult[k]), r: 4.5, fill: COR[k], stroke: "var(--cartao)", "stroke-width": 2 }));
-      svg.append(s("text", { class: "t-val", x: x(ult.t) + 9, y: y(ult[k]) + 4 }, nf(ult[k])));
+    });
+    // valor no fim de cada linha; se dois ficarem colados, mostra só o maior (o outro fica na dica e na legenda)
+    const fim = pts[pts.length - 1], postos = [];
+    sits.slice().sort((a, b) => fim[b] - fim[a]).forEach((k) => {
+      const yy = y(fim[k]);
+      if (postos.some((p) => Math.abs(p - yy) < 15)) return;
+      postos.push(yy);
+      svg.append(s("text", { class: "t-val", x: x(fim.t) + 9, y: yy + 4 }, nf(fim[k])));
     });
     // mira + dica
     const mira = s("line", { class: "mira", y1: m.t, y2: H - m.b, x1: -10, x2: -10, visibility: "hidden" });
@@ -673,11 +697,16 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     const busca = normal(est.filtro.busca);
     const linhas = est.linhas.filter((l) => !busca || normal(l.nome).includes(busca));
     const deps = [...new Set(P.departamentos(est.cfg).concat(linhas.map((l) => l.departamento)))];
-    let dados = deps.map((d) => { const c = contagem(linhas.filter((l) => l.departamento === d)); return { d, c, tot: sits.reduce((a, k) => a + c[k], 0) }; });
+    const qd = P.quadro(est.cfg);
+    let dados = deps.map((d) => {
+      const c = contagem(linhas.filter((l) => l.departamento === d)), resp = c.sim + c.talvez + c.nao, q = qd.get(d) || 0;
+      return { d, c, tot: sits.reduce((a, k) => a + c[k], 0), q, falta: q ? Math.max(0, q - resp) : 0 };
+    });
     if (est.ordemDep === "az") dados.sort((a, b) => a.d.localeCompare(b.d, "pt-BR"));
     else if (est.ordemDep === "sim") dados.sort((a, b) => b.c.sim - a.c.sim || b.tot - a.tot || a.d.localeCompare(b.d));
+    else if (est.ordemDep === "falta") dados.sort((a, b) => b.falta - a.falta || a.d.localeCompare(b.d));
     else dados.sort((a, b) => b.tot - a.tot || a.d.localeCompare(b.d));
-    const W = largura(el), linhaH = 34, barH = 18, rotW = Math.min(170, Math.round(W * .32)), m = { t: 4, r: 44, b: 24 };
+    const W = largura(el), linhaH = 34, barH = 18, rotW = Math.min(170, Math.round(W * .32)), m = { t: 4, r: qd.size ? 92 : 44, b: 24 };
     const H = m.t + dados.length * linhaH + m.b;
     const max = Math.max(1, ...dados.map((x) => x.tot));
     const ticks = ticksBonitos(max, W < 480 ? 3 : 5), xMax = ticks[ticks.length - 1];
@@ -702,11 +731,14 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
         const w = Math.max(0, b - a - (j < vis.length - 1 ? 2 : 0));   // 2px de respiro entre segmentos
         const ultimo = j === vis.length - 1;
         const ret = s("path", { class: "seg-ret", fill: COR[k], d: barra(a, yb, w, barH, ultimo ? 4 : 0) });
-        dicaEm(ret, () => [r.d, sits.map((q) => [COR[q], nf(r.c[q]), NOME_SIT[q] + (r.tot ? ` · ${pct(r.c[q], r.tot)}%` : "")])]);
+        dicaEm(ret, () => [r.q ? `${r.d} · ${nf(r.q)} pessoas` : r.d, sits.map((q) => [COR[q], nf(r.c[q]), NOME_SIT[q] + (r.tot ? ` · ${pct(r.c[q], r.tot)}%` : "")])
+          .concat(r.q ? [[COR.sem, nf(r.falta), "ainda não responderam"]] : [])]);
         g.append(ret);
         acc += r.c[k];
       });
-      g.append(s("text", { class: "t-val", x: x(acc) + 8, y: y0 + linhaH / 2 + 4 }, r.tot ? nf(r.tot) : "—"));
+      const fim = s("text", { class: "t-val", x: x(acc) + 8, y: y0 + linhaH / 2 + 4 }, r.tot ? nf(r.tot) : "—");
+      if (r.q) fim.append(s("tspan", { class: "t-eixo", dx: 4 }, `de ${nf(r.q)}`));
+      g.append(fim);
       const alternar = () => definirFiltro({ dep: est.filtro.dep === r.d ? "" : r.d });
       g.addEventListener("click", alternar);
       g.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); alternar(); } });
@@ -801,7 +833,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
 
   // Atividade recente
   function renderFeed() {
-    const lista = doDep().slice().sort((a, b) => b.atualizadoMs - a.atualizadoMs).slice(0, 14);
+    const lista = doDep().slice().sort((a, b) => b.atualizadoMs - a.atualizadoMs).slice(0, 30);
     const feed = $("#feed");
     if (!lista.length) { feed.replaceChildren(h("li", null, h("span"), h("p", { class: "tab-vazia", style: "padding:10px 0", text: "Sem respostas ainda." }))); return; }
     feed.replaceChildren(...lista.map((l) => {
@@ -880,13 +912,18 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     try { est.cfg = await P.config(); est.ultimaCfg = Date.now(); } catch (e) { /* usa o que já tem */ }
     $("#cfg-aberta").checked = est.cfg.presenca_aberta !== "nao";
     $("#cfg-prazo").value = est.cfg.presenca_prazo || "";
-    $("#cfg-deps").value = P.departamentos(est.cfg).join("\n");
+    $("#cfg-deps").value = String(est.cfg.presenca_departamentos || "").split("\n").map((x) => x.trim()).filter(Boolean).join("\n");
     $("#cfg-erro").hidden = true;
     $("#jan-cfg").showModal();
   });
   $("#cfg-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    const deps = [...new Set($("#cfg-deps").value.split("\n").map((x) => x.trim()).filter(Boolean))];
+    // "Nome | quantidade": arruma os espaços e tira nomes repetidos (vale a primeira linha de cada nome)
+    const vistos = new Set();
+    const deps = $("#cfg-deps").value.split("\n").map((x) => x.trim()).filter(Boolean).map((x) => {
+      const [nome, n] = x.split("|"); const q = String(n || "").replace(/\D/g, "");
+      return { nome: nome.trim(), linha: q ? `${nome.trim()} | ${q}` : nome.trim() };
+    }).filter((x) => x.nome && !vistos.has(x.nome.toLowerCase()) && vistos.add(x.nome.toLowerCase())).map((x) => x.linha);
     const err = $("#cfg-erro"); err.hidden = true;
     if (!deps.length) { err.textContent = "Coloque pelo menos um departamento."; err.hidden = false; return; }
     const btn = $("#cfg-salvar"); btn.disabled = true;

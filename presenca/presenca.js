@@ -26,7 +26,12 @@ window.presenca = (function () {
     const h = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
     return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
   }
-  const departamentos = (cfg) => String(cfg.presenca_departamentos || "").split("\n").map((x) => x.trim()).filter(Boolean);
+  // Lista de departamentos: uma linha cada, "Nome" ou "Nome | quantidade de pessoas".
+  const linhasDep = (cfg) => String(cfg.presenca_departamentos || "").split("\n").map((x) => x.trim()).filter(Boolean)
+    .map((x) => { const [nome, n] = x.split("|"); return { nome: nome.trim(), qtd: Number(String(n || "").replace(/\D/g, "")) || 0 }; })
+    .filter((x) => x.nome);
+  const departamentos = (cfg) => linhasDep(cfg).map((x) => x.nome);
+  const quadro = (cfg) => new Map(linhasDep(cfg).filter((x) => x.qtd > 0).map((x) => [x.nome, x.qtd]));
 
   // A resposta deste aparelho (para poder alterar depois). A chave só existe aqui e, embaralhada, no banco.
   const MINHA = TESTE ? "confra_presenca_minha_teste" : "confra_presenca_minha";
@@ -34,19 +39,25 @@ window.presenca = (function () {
   const guardarMinha = (m) => store.set(MINHA, m);
 
   // ------------------------------------------------ modo de teste (só no navegador)
-  const KEY_TESTE = "confra_presenca_teste_v1";
+  const KEY_TESTE = "confra_presenca_teste_v2";
+  const DEPS_PADRAO = ["Administrativo | 5", "Ambulatório | 3", "Balança / Faturamento | 9", "Campo | 18", "Campo / Milho | 3", "Cantina | 6", "Comercial Cooperados | 4", "Comercial Vendas | 12", "Construção Civil | 1", "Controle de Qualidade | 29", "Elétrica e Manutenção | 26", "Frotas | 2", "Gestão da Qualidade | 3", "Grãos | 19", "Laboratório | 23", "Limpeza | 20", "Logística | 8", "Portaria | 18", "Produção | 175", "Segurança do Trabalho | 5", "Suprimentos / Compras | 7", "TI | 11"];
   function sementeTeste() {
-    const deps = ["Administrativo", "Comercial", "Financeiro", "Laboratório", "Logística", "Manutenção", "Produção", "Qualidade", "RH", "TI", "TSI"];
+    const lista = DEPS_PADRAO.map((x) => { const [n, q] = x.split("|"); return [n.trim(), Number(q)]; });
+    const deps = lista.map((x) => x[0]);
     const nomes = ["Ana", "Bruno", "Carla", "Diego", "Eduarda", "Fábio", "Gabriela", "Henrique", "Isabela", "João", "Karina", "Lucas", "Mariana", "Nicolas", "Olívia", "Paulo", "Queila", "Rafael", "Sabrina", "Tiago", "Úrsula", "Vinícius", "Wesley", "Yasmin", "Zeca"];
     const sobren = ["Souza", "Lima", "Alves", "Rocha", "Martins", "Pereira", "Gomes", "Ribeiro", "Carvalho", "Costa", "Nunes", "Torres"];
-    const peso = [3, 5, 2, 4, 9, 4, 14, 3, 2, 3, 6];
+    const peso = lista.map((x) => x[1]);
     const linhas = [];
     const agora = Date.now();
     let s = 7;
     const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-    for (let i = 0; i < 64; i++) {
-      let r = rnd() * peso.reduce((a, b) => a + b, 0), d = 0;
-      while ((r -= peso[d]) > 0) d++;
+    const usados = peso.map(() => 0);
+    for (let i = 0; i < 140; i++) {
+      // sorteia o departamento pelo tamanho, sem passar da quantidade de pessoas dele
+      const livre = peso.map((p, k) => Math.max(0, p - usados[k]));
+      let r = rnd() * livre.reduce((a, b) => a + b, 0), d = 0;
+      while ((r -= livre[d]) > 0 || !livre[d]) d++;
+      usados[d]++;
       const x = rnd(), resp = x < .68 ? "sim" : x < .84 ? "talvez" : "nao";
       const y = rnd(), beb = resp === "nao" ? null : y < .46 ? "cerveja" : y < .7 ? "refrigerante" : y < .8 ? "suco" : y < .87 ? "agua" : y < .95 ? "tanto_faz" : null;
       const t = agora - Math.round(Math.pow(rnd(), 1.6) * 3.2 * 86400000);
@@ -55,7 +66,7 @@ window.presenca = (function () {
     linhas.push({ ...linhas[3], id: uuid(), criado_em: agora - 3600000, atualizado_em: agora - 3600000 });   // um duplicado, para o painel avisar
     return {
       senha: "trocar123",
-      config: { evento_nome: "Confraternização 2026", evento_data: "2026-12-04", evento_local: "Fazendinha", presenca_aberta: "sim", presenca_prazo: "até 01/12", presenca_departamentos: deps.join("\n") },
+      config: { evento_nome: "Confraternização 2026", evento_data: "2026-12-04", evento_local: "Fazendinha", presenca_aberta: "sim", presenca_prazo: "até 01/12", presenca_departamentos: DEPS_PADRAO.join("\n") },
       linhas,
     };
   }
@@ -134,7 +145,7 @@ window.presenca = (function () {
   const b = TESTE ? teste : real;
 
   return {
-    TESTE, RESPOSTAS, BEBIDAS, departamentos, minha,
+    TESTE, RESPOSTAS, BEBIDAS, departamentos, quadro, minha,
     config: () => b.config(),
     // Envia a resposta deste aparelho (nova ou alteração) e guarda o necessário para alterar depois.
     async responder(dados) {

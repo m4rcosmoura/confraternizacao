@@ -102,7 +102,8 @@ Fica na pasta `presenca/`, fora do site da votação (o site dos convidados não
 - **Filtros** no topo (departamento, situação e busca por nome) valem para o painel todo.
 - **Exportar planilha**: baixa um CSV (abre no Excel) com nome, departamento, situação e datas, respeitando os filtros.
 - **Link e QR code**: copia o link e baixa o QR code para imprimir.
-- **Configurações**: abrir ou encerrar as confirmações, prazo que aparece no link (ex.: "até 01/12") e a **lista de departamentos** (um por linha). A lista inicial é provisória: troque pelos departamentos oficiais antes de enviar o link.
+- **Configurações**: abrir ou encerrar as confirmações, prazo que aparece no link (ex.: "até 01/12") e a **lista de departamentos**, um por linha no formato `Produção | 175` (nome | quantas pessoas). A quantidade não aparece para quem confirma: serve para o painel mostrar quantos de cada departamento já responderam, a parte cinza "sem resposta" e a ordem "Faltam responder".
+- A lista inicial veio da planilha `Lista Confraternização.xlsx` (407 pessoas, 22 departamentos; "Terceirizado/Comercial Vendas" entrou em Comercial Vendas). Só os nomes dos departamentos e as quantidades foram usados; a planilha **não** vai para o GitHub (`*.xlsx` está no `.gitignore`), porque o site é público.
 
 ## Depois: ligar o banco para a festa de verdade
 
