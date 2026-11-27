@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b2e22">
+<title>Confirme sua presença · Confraternização</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,500;1,600;1,700;1,800&family=Playfair+Display:wght@500;600&display=swap">
+<link rel="stylesheet" href="../estilo.css?v=26">
+<!--
+  CONFIRMAÇÃO DE PRESENÇA (link separado do site da votação)
+  presenca/            → a pessoa confirma nome, departamento, se vai e (opcional) a bebida preferida
+  presenca/painel.html → painel ao vivo da organização (senha do painel)
+  ?teste               → modo de teste: tudo fica só no navegador, com respostas de exemplo
+-->
+<style>
+.pc-capa { text-align: center; padding: 4px 0 6px; }
+.pc-capa .recorte { margin: 0 auto; }
+.pc-tit { margin: 14px 0 0; font-size: clamp(30px, 8.6vw, 38px); font-weight: 800; font-style: italic; color: var(--gold); }
+.pc-sub { margin: 8px auto 0; max-width: 440px; color: var(--muted); }
+.pc-prazo { display: inline-block; margin-top: 12px; padding: 5px 14px; border-radius: 999px; background: var(--gold); color: var(--gold-ink); font-weight: 800; font-style: italic; font-size: 14px; }
+.pc-card { margin: 22px 0 0; padding: 20px 18px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 14px 40px rgba(0, 0, 0, .28); }
+.pc-card legend, .pc-perg { display: block; padding: 0; margin: 0 0 10px; font-weight: 700; font-size: 17px; }
+.pc-card fieldset { border: 0; padding: 0; margin: 0 0 20px; min-width: 0; }
+.pc-card select { appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--gold) 50%), linear-gradient(135deg, var(--gold) 50%, transparent 50%); background-position: calc(100% - 22px) 52%, calc(100% - 16px) 52%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 40px; }
+/* Vou / Talvez / Não vou */
+.pc-opcoes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.pc-op { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 6px 14px; border-radius: 16px; cursor: pointer; text-align: center; background: rgba(6, 34, 25, .8); border: 2px solid var(--line); transition: border-color .15s, transform .15s, background .15s, box-shadow .15s; }
+.pc-op input { position: absolute; opacity: 0; pointer-events: none; }
+.pc-op:active { transform: scale(.97); }
+.pc-op .ic { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: rgba(255, 255, 255, .07); color: var(--gold); }
+.pc-op b { font-size: 16px; font-weight: 800; font-style: italic; line-height: 1.15; }
+.pc-op small { color: var(--muted); font-size: 12px; line-height: 1.25; }
+.pc-op:has(input:checked) { border-color: var(--gold); background: linear-gradient(160deg, rgba(245, 221, 47, .2), rgba(6, 34, 25, .9) 70%); box-shadow: 0 0 0 3px rgba(245, 221, 47, .2); }
+.pc-op:has(input:checked) .ic { background: var(--gold); color: var(--gold-ink); }
+.pc-op:has(input:focus-visible) { outline: 3px solid var(--gold); outline-offset: 2px; }
+/* bebida */
+.pc-bebidas { display: flex; flex-wrap: wrap; gap: 8px; }
+.pc-chip { position: relative; cursor: pointer; }
+.pc-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.pc-chip span { display: inline-block; padding: 10px 14px; border-radius: 999px; border: 2px solid var(--line); background: rgba(6, 34, 25, .8); font-weight: 600; font-size: 15px; transition: border-color .15s, background .15s; }
+.pc-chip input:checked + span { border-color: var(--gold); background: var(--gold); color: var(--gold-ink); font-weight: 800; }
+.pc-chip input:focus-visible + span { outline: 3px solid var(--gold); outline-offset: 2px; }
+.pc-priv { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+.pc-priv svg { flex: none; margin-top: 2px; color: var(--gold); }
+.pc-feito { text-align: center; }
+.pc-feito .ok { width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 50%; display: grid; place-items: center; background: var(--gold); color: var(--gold-ink); box-shadow: 0 0 0 8px rgba(245, 221, 47, .15); }
+.pc-feito h2 { font-size: 26px; font-style: italic; font-weight: 800; color: var(--gold); }
+.pc-feito p { color: var(--muted); margin: 8px 0 0; }
+.pc-resumo { display: grid; gap: 8px; margin: 18px 0; padding: 14px 16px; border-radius: 14px; background: rgba(6, 34, 25, .8); border: 1px solid var(--line); text-align: left; }
+.pc-resumo div { display: flex; justify-content: space-between; gap: 12px; }
+.pc-resumo dt { color: var(--muted); }
+.pc-resumo dd { margin: 0; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
+.pc-rodape { margin: 28px 0 0; padding-bottom: 40px; text-align: center; color: var(--muted); font-size: 13px; }
+@media (max-width: 360px) { .pc-op small { display: none; } }
+</style>
+</head>
+<body>
+<div class="recorte de-confra faixa-topo faixa-interna" style="--x:0;--y:0;--w:902;--h:118;--px:0%" aria-hidden="true"></div>
+
+<main class="wrap">
+  <header class="pc-capa">
+    <h1 class="recorte de-confra esfuma" style="--x:88;--y:176;--w:726;--h:264;max-width:400px"><span class="vh">Confraternização 2026, Dois Marcos Sementes</span></h1>
+    <p class="pc-tit">Confirme sua presença</p>
+    <p class="pc-sub" id="pc-quando">Leva menos de 1 minuto.</p>
+    <p class="pc-prazo" id="pc-prazo" hidden></p>
+    <p class="teste-nota" id="pc-teste" hidden style="margin-top:10px">Modo de teste: as respostas ficam só neste aparelho.</p>
+  </header>
+
+  <p class="info" id="pc-fechado" hidden style="margin-top:22px">As confirmações estão encerradas. Se precisar mudar algo, fale com a organização.</p>
+
+  <form class="pc-card" id="pc-form" novalidate hidden>
+    <div class="campo">
+      <label for="pc-nome">Seu nome completo</label>
+      <input type="text" id="pc-nome" name="nome" maxlength="80" autocomplete="name" placeholder="Ex.: Maria Souza" required>
+    </div>
+    <div class="campo">
+      <label for="pc-dep">Departamento</label>
+      <select id="pc-dep" name="departamento" required><option value="">Escolha…</option></select>
+    </div>
+
+    <fieldset>
+      <legend>Você vai à confraternização?</legend>
+      <div class="pc-opcoes">
+        <label class="pc-op"><input type="radio" name="resposta" value="sim">
+          <span class="ic" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+          <b>Vou!</b><small>Pode contar comigo</small></label>
+        <label class="pc-op"><input type="radio" name="resposta" value="talvez">
+          <span class="ic" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9.2 9.2a2.9 2.9 0 1 1 4.1 2.6c-.8.4-1.3 1.1-1.3 2v.4"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg></span>
+          <b>Ainda não sei</b><small>Confirmo depois</small></label>
+        <label class="pc-op"><input type="radio" name="resposta" value="nao">
+          <span class="ic" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></span>
+          <b>Não vou</b><small>Dessa vez não</small></label>
+      </div>
+    </fieldset>
+
+    <fieldset id="pc-bloco-bebida" hidden>
+      <legend>O que você prefere beber na festa? <span class="opc">(opcional)</span></legend>
+      <div class="pc-bebidas" id="pc-bebidas"></div>
+      <p class="pc-priv"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        Serve só para a organização calcular as compras. Ninguém vê a sua resposta: o painel mostra apenas o total de cada bebida.</p>
+    </fieldset>
+
+    <p class="erro" id="pc-erro" role="alert" hidden></p>
+    <button class="btn cheio" type="submit" id="pc-enviar">Enviar resposta</button>
+  </form>
+
+  <section class="pc-card pc-feito" id="pc-feito" hidden aria-live="polite">
+    <div class="ok" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg></div>
+    <h2 id="pc-feito-tit">Presença confirmada!</h2>
+    <p id="pc-feito-txt"></p>
+    <dl class="pc-resumo" id="pc-resumo"></dl>
+    <button type="button" class="btn sec cheio" id="pc-alterar">Alterar minha resposta</button>
+  </section>
+
+  <p class="pc-rodape">Dúvidas? Fale com a organização da confraternização.</p>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="presenca.js?v=27"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const P = window.presenca;
+  let cfg = {};
+
+  function toast(msg, tipo) {
+    const t = $("#toast"); t.textContent = msg; t.dataset.tipo = tipo || ""; t.classList.add("on");
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 3800);
+  }
+  function dataLonga(iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+    if (!m) return "";
+    return new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date(+m[1], +m[2] - 1, +m[3]));
+  }
+
+  // Opções de bebida (chips; tocar de novo desmarca)
+  $("#pc-bebidas").replaceChildren(...["cerveja", "refrigerante", "suco", "agua", "tanto_faz"].map((v) => {
+    const l = document.createElement("label"); l.className = "pc-chip";
+    const i = document.createElement("input"); i.type = "radio"; i.name = "bebida"; i.value = v;
+    const s = document.createElement("span"); s.textContent = P.BEBIDAS[v];
+    i.addEventListener("click", () => { if (i.dataset.era === "1") { i.checked = false; } $$('input[name="bebida"]').forEach((o) => { o.dataset.era = o.checked ? "1" : ""; }); });
+    l.append(i, s); return l;
+  }));
+  function mostrarBebida() {
+    const r = ($('input[name="resposta"]:checked') || {}).value;
+    $("#pc-bloco-bebida").hidden = !(r === "sim" || r === "talvez");
+  }
+  $$('input[name="resposta"]').forEach((i) => i.addEventListener("change", () => { mostrarBebida(); $("#pc-erro").hidden = true; }));
+
+  function preencherDepartamentos(atual) {
+    const sel = $("#pc-dep"), deps = P.departamentos(cfg);
+    const lista = atual && !deps.includes(atual) ? deps.concat(atual) : deps;
+    sel.replaceChildren(new Option("Escolha…", ""), ...lista.map((d) => new Option(d, d)));
+    if (atual) sel.value = atual;
+  }
+  function preencher(m) {
+    $("#pc-nome").value = m ? m.nome : "";
+    preencherDepartamentos(m && m.departamento);
+    $$('input[name="resposta"]').forEach((i) => { i.checked = !!m && i.value === m.resposta; });
+    $$('input[name="bebida"]').forEach((i) => { i.checked = !!m && i.value === m.bebida; i.dataset.era = i.checked ? "1" : ""; });
+    mostrarBebida();
+  }
+
+  function telaFeito(m) {
+    $("#pc-form").hidden = true;
+    const f = $("#pc-feito"); f.hidden = false;
+    $("#pc-feito-tit").textContent = m.resposta === "sim" ? "Presença confirmada!" : m.resposta === "talvez" ? "Anotado: talvez" : "Obrigado por avisar";
+    const primeiro = String(m.nome).trim().split(/\s+/)[0];
+    const quando = dataLonga(cfg.evento_data);
+    $("#pc-feito-txt").textContent = m.resposta === "sim"
+      ? `${primeiro}, te esperamos${quando ? " na " + quando : ""}${cfg.evento_local ? ", na " + cfg.evento_local : ""}!`
+      : m.resposta === "talvez" ? `${primeiro}, quando decidir é só voltar neste link e alterar a resposta.`
+      : `${primeiro}, sentiremos sua falta. Se mudar de ideia, é só alterar a resposta.`;
+    const linhas = [["Nome", m.nome], ["Departamento", m.departamento], ["Resposta", P.RESPOSTAS[m.resposta]]];
+    if (m.resposta !== "nao") linhas.push(["Bebida", m.bebida ? P.BEBIDAS[m.bebida] : "Não informou"]);
+    $("#pc-resumo").replaceChildren(...linhas.map(([k, v]) => {
+      const d = document.createElement("div"), dt = document.createElement("dt"), dd = document.createElement("dd");
+      dt.textContent = k; dd.textContent = v; d.append(dt, dd); return d;
+    }));
+    $("#pc-alterar").hidden = cfg.presenca_aberta === "nao";
+    window.scrollTo(0, 0);
+  }
+  function telaForm(m) {
+    $("#pc-feito").hidden = true;
+    const aberta = cfg.presenca_aberta !== "nao";
+    $("#pc-fechado").hidden = aberta;
+    $("#pc-form").hidden = !aberta;
+    preencher(m);
+    $("#pc-enviar").textContent = m ? "Salvar alteração" : "Enviar resposta";
+  }
+  $("#pc-alterar").addEventListener("click", () => { telaForm(P.minha()); $("#pc-nome").focus(); });
+
+  $("#pc-form").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const err = $("#pc-erro"); err.hidden = true;
+    const falha = (msg, el) => { err.textContent = msg; err.hidden = false; if (el) el.focus(); };
+    const nome = $("#pc-nome").value.trim().replace(/\s+/g, " ");
+    const departamento = $("#pc-dep").value;
+    const resposta = ($('input[name="resposta"]:checked') || {}).value;
+    const bebida = resposta === "nao" ? null : (($('input[name="bebida"]:checked') || {}).value || null);
+    if (nome.length < 2) return falha("Informe seu nome.", $("#pc-nome"));
+    if (!/\s/.test(nome)) return falha("Escreva nome e sobrenome, para a organização não confundir pessoas com o mesmo nome.", $("#pc-nome"));
+    if (!departamento) return falha("Escolha o seu departamento.", $("#pc-dep"));
+    if (!resposta) return falha("Diga se você vai: Vou, Ainda não sei ou Não vou.");
+    const btn = $("#pc-enviar"), txt = btn.textContent;
+    btn.disabled = true; btn.textContent = "Enviando…";
+    try {
+      await P.responder({ nome, departamento, resposta, bebida });
+      telaFeito(P.minha());
+    } catch (e) { falha(e.message); }
+    finally { btn.disabled = false; btn.textContent = txt; }
+  });
+
+  async function iniciar() {
+    $("#pc-teste").hidden = !P.TESTE;
+    try { cfg = await P.config(); }
+    catch (e) { cfg = {}; toast(e.message, "erro"); }
+    const quando = dataLonga(cfg.evento_data);
+    if (quando) $("#pc-quando").textContent = `${quando.charAt(0).toUpperCase() + quando.slice(1)}, das 10h às 17h${cfg.evento_local ? " · " + cfg.evento_local : ""}. Leva menos de 1 minuto.`;
+    if (cfg.presenca_prazo) { $("#pc-prazo").textContent = `Responda ${cfg.presenca_prazo}`; $("#pc-prazo").hidden = false; }
+    const m = P.minha();
+    if (m) telaFeito(m); else telaForm(null);
+  }
+  iniciar();
+})();
+</script>
+</body>
+</html>

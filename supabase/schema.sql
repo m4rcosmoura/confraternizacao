@@ -323,12 +323,16 @@ begin
     'evento_nome', 'evento_data', 'evento_local', 'aviso',
     'inscricoes_fantasia', 'inscricoes_talento',
     'votacao_fantasia', 'votacao_talento', 'resultados_publicos',
-    'telao_categoria'   -- o que a TV (telao.html) mostra: fantasia ou talento
+    'telao_categoria',  -- o que a TV (telao.html) mostra: fantasia ou talento
+    'presenca_aberta', 'presenca_prazo', 'presenca_departamentos'   -- confirmação de presença (presenca/)
   ) then
     raise exception 'Configuração desconhecida: %', p_chave;
   end if;
   if p_chave = 'telao_categoria' and coalesce(p_valor, '') not in ('fantasia', 'talento') then
     raise exception 'A TV mostra fantasia ou talento.';
+  end if;
+  if p_chave = 'presenca_departamentos' and char_length(coalesce(p_valor, '')) > 3000 then
+    raise exception 'Lista de departamentos grande demais.';
   end if;
   insert into public.confra_config (chave, valor) values (p_chave, coalesce(p_valor, ''))
   on conflict (chave) do update set valor = excluded.valor;
@@ -559,6 +563,126 @@ grant execute on function
   public.confra_admin_desempate_encerrar(text, uuid),
   public.confra_admin_desempate_cancelar(text, uuid)
 to anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- Confirmação de presença (link separado: presenca/)
+-- Cada pessoa informa nome, departamento, se vai (sim / não / talvez) e,
+-- opcionalmente, o que prefere beber. Só o celular que respondeu pode
+-- alterar a resposta (chave secreta guardada no aparelho).
+-- O painel (presenca/painel.html, com a senha da organização) vê a lista
+-- de nomes e departamentos; a bebida aparece SÓ em totais, nunca por nome.
+-- ---------------------------------------------------------------------
+create table if not exists public.confra_presenca (
+  id uuid primary key default gen_random_uuid(),
+  nome text not null check (char_length(nome) between 2 and 80),
+  departamento text not null check (char_length(departamento) between 1 and 60),
+  resposta text not null check (resposta in ('sim', 'nao', 'talvez')),
+  bebida text check (bebida in ('cerveja', 'refrigerante', 'suco', 'agua', 'tanto_faz')),
+  chave_hash text not null,
+  criado_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now()
+);
+alter table public.confra_presenca enable row level security;   -- sem política: ninguém lê direto
+
+-- Responder (p_id vazio) ou alterar a própria resposta (p_id + chave do aparelho).
+create or replace function public.confra_presenca_responder(
+  p_id uuid, p_chave text, p_nome text, p_departamento text, p_resposta text, p_bebida text default null
+)
+returns uuid language plpgsql security definer set search_path = public, extensions as $$
+declare
+  v_id uuid;
+  v_deps text := coalesce(public._confra_cfg('presenca_departamentos'), '');
+begin
+  if coalesce(public._confra_cfg('presenca_aberta'), 'sim') <> 'sim' then
+    raise exception 'As confirmações estão encerradas.';
+  end if;
+  if char_length(trim(coalesce(p_nome, ''))) < 2 then
+    raise exception 'Informe seu nome.';
+  end if;
+  if char_length(trim(coalesce(p_departamento, ''))) < 1 then
+    raise exception 'Escolha o seu departamento.';
+  end if;
+  if v_deps <> '' and not (trim(p_departamento) = any (
+       select trim(x) from unnest(string_to_array(v_deps, E'\n')) x where trim(x) <> '')) then
+    raise exception 'Escolha o departamento na lista.';
+  end if;
+  if p_resposta not in ('sim', 'nao', 'talvez') then
+    raise exception 'Diga se você vai.';
+  end if;
+  if p_bebida is not null and p_bebida not in ('cerveja', 'refrigerante', 'suco', 'agua', 'tanto_faz') then
+    raise exception 'Opção de bebida inválida.';
+  end if;
+  if p_chave is null or char_length(p_chave) not between 16 and 64 then
+    raise exception 'Não foi possível identificar este aparelho. Recarregue a página.';
+  end if;
+
+  if p_id is null then
+    if (select count(*) from public.confra_presenca where criado_em > now() - interval '1 minute') >= 60 then
+      raise exception 'Muitas confirmações ao mesmo tempo. Tente de novo em 1 minuto.';
+    end if;
+    insert into public.confra_presenca (nome, departamento, resposta, bebida, chave_hash)
+    values (trim(p_nome), trim(p_departamento), p_resposta,
+            case when p_resposta = 'nao' then null else p_bebida end,
+            extensions.crypt(p_chave, extensions.gen_salt('bf')))
+    returning id into v_id;
+    return v_id;
+  end if;
+
+  update public.confra_presenca set
+    nome = trim(p_nome), departamento = trim(p_departamento), resposta = p_resposta,
+    bebida = case when p_resposta = 'nao' then null else p_bebida end, atualizado_em = now()
+  where id = p_id and chave_hash = extensions.crypt(p_chave, chave_hash)
+  returning id into v_id;
+  if v_id is null then
+    raise exception 'Não encontramos sua resposta anterior. Envie de novo.';
+  end if;
+  return v_id;
+end $$;
+
+-- Painel: lista de quem respondeu (sem a bebida).
+create or replace function public.confra_presenca_painel(p_senha text)
+returns table (id uuid, nome text, departamento text, resposta text, criado_em timestamptz, atualizado_em timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+#variable_conflict use_column
+begin
+  perform public._confra_exigir_admin(p_senha);
+  return query select p.id, p.nome, p.departamento, p.resposta, p.criado_em, p.atualizado_em
+    from public.confra_presenca p order by p.criado_em;
+end $$;
+
+-- Painel: bebida só em totais (por departamento e resposta).
+create or replace function public.confra_presenca_bebidas(p_senha text)
+returns table (departamento text, resposta text, bebida text, qtd bigint)
+language plpgsql stable security definer set search_path = public as $$
+#variable_conflict use_column
+begin
+  perform public._confra_exigir_admin(p_senha);
+  return query select p.departamento, p.resposta, coalesce(p.bebida, 'sem_resposta'), count(*)
+    from public.confra_presenca p where p.resposta <> 'nao'
+    group by 1, 2, 3;
+end $$;
+
+-- Painel: remover uma resposta (duplicada ou de brincadeira).
+create or replace function public.confra_admin_presenca_excluir(p_senha text, p_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform public._confra_exigir_admin(p_senha);
+  delete from public.confra_presenca where id = p_id;
+end $$;
+
+grant execute on function
+  public.confra_presenca_responder(uuid, text, text, text, text, text),
+  public.confra_presenca_painel(text),
+  public.confra_presenca_bebidas(text),
+  public.confra_admin_presenca_excluir(text, uuid)
+to anon, authenticated;
+
+-- Configuração da confirmação (o painel edita): aberta ou não, prazo e lista de departamentos (um por linha).
+insert into public.confra_config (chave, valor) values
+  ('presenca_aberta', 'sim'),
+  ('presenca_prazo', ''),
+  ('presenca_departamentos', E'Administrativo\nComercial\nFinanceiro\nLaboratório\nLogística\nManutenção\nProdução\nQualidade\nRH\nTI\nTSI')
+on conflict (chave) do nothing;
 
 -- ---------------------------------------------------------------------
 -- Permissões das funções

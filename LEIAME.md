@@ -86,6 +86,24 @@ Links diretos (úteis para QR codes específicos):
 | `index.html#talentos-inscrever` | Inscrição no show de talentos |
 | `index.html#fantasia-resultado` / `index.html#talentos-resultado` | Aba Resultado (quando divulgado) |
 
+## Confirmação de presença (link separado)
+
+Fica na pasta `presenca/`, fora do site da votação (o site dos convidados não tem link para ela).
+
+| Endereço | Para quem | O que é |
+|---|---|---|
+| `presenca/` | Todo mundo (é o link que vai no grupo / QR code) | Nome completo, departamento, **Vou / Ainda não sei / Não vou** e, para quem vai ou talvez vá, a bebida preferida (opcional) |
+| `presenca/painel.html` | Só a organização (mesma senha do `admin.html`) | Painel ao vivo das respostas |
+| `...?teste` (nos dois) | Para testar | Respostas de exemplo, salvas só no navegador (senha do teste: `trocar123`) |
+
+- **Alterar a resposta**: quem já respondeu vê o resumo e o botão "Alterar minha resposta" (vale só no celular que respondeu). Alterar não cria uma resposta nova.
+- **Bebida**: só a organização vê, e só em **totais** (por departamento e situação). O banco não envia a bebida de cada pessoa nem para o painel, e a planilha exportada não tem essa coluna.
+- **Painel** (atualiza a cada 5 segundos): confirmados, talvez, não vão, total e departamentos que já responderam; barra da situação com o planejamento ("prepare para X a Y pessoas"); respostas acumuladas ao longo do tempo; respostas por departamento (toque num departamento para filtrar o painel inteiro); bebidas; lista com busca, ordenação, aviso de **nome repetido** e botão para remover; atividade recente com aviso de cada resposta nova.
+- **Filtros** no topo (departamento, situação e busca por nome) valem para o painel todo.
+- **Exportar planilha**: baixa um CSV (abre no Excel) com nome, departamento, situação e datas, respeitando os filtros.
+- **Link e QR code**: copia o link e baixa o QR code para imprimir.
+- **Configurações**: abrir ou encerrar as confirmações, prazo que aparece no link (ex.: "até 01/12") e a **lista de departamentos** (um por linha). A lista inicial é provisória: troque pelos departamentos oficiais antes de enviar o link.
+
 ## Depois: ligar o banco para a festa de verdade
 
 1. Crie uma conta gratuita em supabase.com e um projeto novo.
