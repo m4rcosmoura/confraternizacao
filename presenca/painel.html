@@ -248,6 +248,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
       <button type="button" class="d-btn" id="b-link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>Link e QR code</button>
       <button type="button" class="d-btn" id="b-csv"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Exportar planilha</button>
       <button type="button" class="d-btn" id="b-cfg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Configurações</button>
+      <a class="d-btn" id="b-resumo" href="resumo.html" style="text-decoration:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18h2"/></svg>Versão celular</a>
       <button type="button" class="d-btn" id="b-sair">Sair</button>
     </div>
   </header>
@@ -491,6 +492,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     filtro: { dep: "", sit: "", busca: "" }, ordemDep: "total", ordemTab: { col: "atualizado", dir: -1 }, novos: new Set(),
   };
   try { est.senha = sessionStorage.getItem(SENHA_KEY); } catch (e) { /* ignora */ }
+  if (P.TESTE) $("#b-resumo").href = "resumo.html?teste";
 
   // ------------------------------------------------------------ Login
   function mostrar() {

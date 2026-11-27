@@ -94,6 +94,7 @@ Fica na pasta `presenca/`, fora do site da votação (o site dos convidados não
 |---|---|---|
 | `presenca/` | Todo mundo (é o link que vai no grupo / QR code) | A pessoa **procura o próprio nome** (digita 3 letras e toca no nome; o departamento vem junto), responde **Vou / Ainda não sei / Não vou** e, se vai ou talvez vá, a bebida preferida (opcional) |
 | `presenca/painel.html` | Só a organização (mesma senha do `admin.html`) | Painel ao vivo das respostas |
+| `presenca/resumo.html` | Só a organização (mesma senha) | **Resumo para celular**: só as quantidades (confirmados, talvez, não vão, faltam, quantos responderam, planejamento, por departamento e bebidas de quem vai). Atualiza a cada 5 segundos |
 | `...?teste` (nos dois) | Para testar | Respostas de exemplo, salvas só no navegador (senha do teste: `trocar123`) |
 
 - **Lista de pessoas**: os 407 colaboradores da planilha `Lista Confraternização.xlsx` estão no banco (tabela `confra_colaboradores`), **sem leitura pública**: a busca do link devolve no máximo 8 nomes a partir de 3 letras, sem acento e com as palavras em qualquer ordem (digitar "silva moura" acha quem tem Silva e Moura no nome). Os nomes não estão no GitHub (o site é público).

@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#071d15">
+<title>Confirmações · Resumo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700;1,800&display=swap">
+<link rel="stylesheet" href="../estilo.css?v=26">
+<!--
+  RESUMO DAS CONFIRMAÇÕES (versão para celular, só as quantidades)
+  Mesma senha do painel. Atualiza a cada 5 segundos. ?teste → dados de exemplo.
+  O painel completo é o painel.html.
+-->
+<style>
+:root {
+  --cartao: #0e3527;
+  --borda: rgba(245, 221, 47, .16);
+  --s-sim: #c98500; --s-talvez: #3987e5; --s-nao: #d55181; --s-sem: #4b6b5e;
+}
+body { background-color: #071d15; }
+.r-wrap { max-width: 520px; margin: 0 auto; padding: 0 16px calc(32px + env(safe-area-inset-bottom, 0px)); }
+.r-topo { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 0 12px; }
+.r-topo h1 { font-size: 20px; font-weight: 800; font-style: italic; color: var(--gold); }
+.r-topo p { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+.r-vivo { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 999px; background: rgba(0, 0, 0, .35); border: 1px solid rgba(255, 255, 255, .14); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
+.r-vivo i { width: 8px; height: 8px; border-radius: 50%; background: #ff4a3d; animation: r-bip 1.6s infinite; }
+.r-vivo.off i { background: #8a9a92; animation: none; }
+@keyframes r-bip { 0% { box-shadow: 0 0 0 0 rgba(255, 74, 61, .7); } 70% { box-shadow: 0 0 0 8px rgba(255, 74, 61, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 74, 61, 0); } }
+.c { margin-top: 12px; padding: 16px; border-radius: 16px; background: var(--cartao); border: 1px solid var(--borda); }
+.c h2 { margin: 0 0 12px; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+/* número principal */
+.heroi { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; background: linear-gradient(135deg, #17503b 0%, var(--cartao) 65%); border-color: rgba(245, 221, 47, .4); }
+.heroi small { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.heroi b { display: block; font-size: 64px; font-weight: 800; line-height: .95; letter-spacing: -.03em; }
+.heroi .lado { text-align: right; font-size: 13px; color: var(--muted); }
+.heroi .lado strong { display: block; font-size: 22px; color: #fff; }
+.pt { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+/* três números */
+.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.trio div { padding: 12px 10px; border-radius: 14px; background: var(--cartao); border: 1px solid var(--borda); }
+.trio small { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.trio b { display: block; margin-top: 4px; font-size: 28px; font-weight: 800; line-height: 1; }
+/* respostas x quadro */
+.barra { display: flex; gap: 2px; height: 14px; margin: 4px 0 10px; }
+.barra span { border-radius: 4px; min-width: 0; }
+.linha-txt { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--muted); }
+.linha-txt b { color: #fff; }
+.plano { margin: 12px 0 0; padding: 10px 12px; border-radius: 12px; background: rgba(245, 221, 47, .08); border: 1px solid rgba(245, 221, 47, .22); font-size: 14px; color: var(--muted); }
+.plano b { color: var(--gold); font-size: 16px; }
+/* departamentos */
+.deps { list-style: none; margin: 0; padding: 0; }
+.deps li { padding: 10px 0; border-top: 1px solid rgba(255, 255, 255, .07); }
+.deps li:first-child { border-top: 0; padding-top: 0; }
+.dep-cab { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.dep-cab strong { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+.dep-cab span { flex: none; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dep-cab span b { color: #fff; font-size: 15px; }
+.deps .barra { height: 8px; margin: 6px 0 4px; }
+.dep-num { display: flex; gap: 12px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dep-num i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; }
+.ordem { display: flex; gap: 6px; margin: -4px 0 12px; }
+.ordem button { border: 1px solid var(--borda); background: none; color: var(--muted); font: 600 12px var(--body); padding: 6px 10px; border-radius: 999px; cursor: pointer; }
+.ordem button[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+/* bebidas */
+.beb { display: grid; gap: 8px; margin: 0; }
+.beb div { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+.beb dt { font-size: 14px; }
+.beb dd { margin: 0; font-weight: 800; font-variant-numeric: tabular-nums; }
+.beb .trilho { grid-column: 1 / -1; height: 6px; border-radius: 99px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+.beb .trilho span { display: block; height: 100%; border-radius: 99px; background: var(--s-sim); }
+.rodape { margin-top: 16px; display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+.rodape a, .rodape button { color: var(--gold); background: none; border: 0; font: 600 13px var(--body); text-decoration: underline; cursor: pointer; padding: 0; }
+.r-login { margin-top: 24px; padding: 20px; border-radius: 16px; background: var(--cartao); border: 1px solid var(--borda); }
+</style>
+</head>
+<body>
+<div class="r-wrap">
+  <header class="r-topo">
+    <div><h1>Confirmações</h1><p id="r-ev">Confraternização 2026</p></div>
+    <p class="r-vivo" id="r-vivo" hidden><i></i><span id="r-vivo-txt">Ao vivo</span></p>
+  </header>
+
+  <form class="r-login" id="r-login" novalidate hidden>
+    <div class="campo"><label for="r-senha">Senha do painel</label><input type="password" id="r-senha" autocomplete="current-password"></div>
+    <p class="dica" id="r-dica-teste" hidden style="margin:-8px 0 12px">Modo de teste: a senha é trocar123.</p>
+    <p class="erro" id="r-erro" role="alert" hidden></p>
+    <button class="btn cheio" type="submit">Entrar</button>
+  </form>
+
+  <main id="r-painel" hidden>
+    <section class="c heroi" aria-label="Confirmados">
+      <div><small><span class="pt" style="background:var(--s-sim)"></span>Confirmados</small><b id="n-sim">0</b></div>
+      <div class="lado"><strong id="n-sim-pct">0%</strong>de quem respondeu</div>
+    </section>
+    <div class="trio">
+      <div><small><span class="pt" style="background:var(--s-talvez)"></span>Talvez</small><b id="n-talvez">0</b></div>
+      <div><small><span class="pt" style="background:var(--s-nao)"></span>Não vão</small><b id="n-nao">0</b></div>
+      <div><small><span class="pt" style="background:var(--s-sem)"></span>Faltam</small><b id="n-sem">0</b></div>
+    </div>
+
+    <section class="c" aria-labelledby="t-resp">
+      <h2 id="t-resp">Respostas</h2>
+      <div class="barra" id="b-geral" role="img"></div>
+      <p class="linha-txt" style="margin:0"><span><b id="n-resp">0</b> de <b id="n-pessoas">0</b> responderam</span><b id="n-resp-pct">0%</b></p>
+      <p class="plano" id="plano"></p>
+    </section>
+
+    <section class="c" aria-labelledby="t-dep">
+      <h2 id="t-dep">Por departamento</h2>
+      <div class="ordem" role="group" aria-label="Ordem">
+        <button type="button" data-ord="falta" aria-pressed="true">Faltam mais</button>
+        <button type="button" data-ord="sim" aria-pressed="false">Mais confirmados</button>
+        <button type="button" data-ord="az" aria-pressed="false">A–Z</button>
+      </div>
+      <ul class="deps" id="deps"></ul>
+    </section>
+
+    <section class="c" aria-labelledby="t-beb">
+      <h2 id="t-beb">Bebidas (quem vai)</h2>
+      <dl class="beb" id="beb"></dl>
+    </section>
+
+    <div class="rodape"><a href="painel.html" id="r-completo">Abrir o painel completo</a><button type="button" id="r-sair">Sair</button></div>
+  </main>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="presenca.js?v=29"></script>
+<script>
+(function () {
+  "use strict";
+  const P = window.presenca;
+  const $ = (s) => document.querySelector(s);
+  const nf = (n) => Number(n).toLocaleString("pt-BR");
+  const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+  const COR = { sim: "var(--s-sim)", talvez: "var(--s-talvez)", nao: "var(--s-nao)", sem: "var(--s-sem)" };
+  const NOME = { sim: "vou", talvez: "talvez", nao: "não", sem: "faltam" };
+  function el(tag, props, ...filhos) {
+    const e = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) { if (v == null) continue; if (k === "text") e.textContent = v; else if (k === "class") e.className = v; else e.setAttribute(k, v); }
+    filhos.flat().forEach((f) => { if (f != null) e.append(f instanceof Node ? f : String(f)); });
+    return e;
+  }
+  const SENHA_KEY = P.TESTE ? "confra_presenca_senha_teste" : "confra_admin";
+  const est = { senha: null, linhas: [], pendentes: null, bebidas: [], ordem: "falta", timer: null };
+  try { est.senha = sessionStorage.getItem(SENHA_KEY); } catch (e) { /* ignora */ }
+  if (P.TESTE) $("#r-completo").href = "painel.html?teste";
+
+  function mostrar() {
+    const ok = !!est.senha;
+    $("#r-login").hidden = ok; $("#r-painel").hidden = !ok; $("#r-vivo").hidden = !ok;
+    $("#r-dica-teste").hidden = !P.TESTE;
+    if (ok) buscar(); else clearTimeout(est.timer);
+  }
+  $("#r-login").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const s = $("#r-senha").value, err = $("#r-erro"); err.hidden = true;
+    try {
+      if (!(await P.login(s))) throw new Error("Senha incorreta.");
+      est.senha = s; try { sessionStorage.setItem(SENHA_KEY, s); } catch (e) { /* ignora */ }
+      $("#r-senha").value = ""; mostrar();
+    } catch (e) { err.textContent = e.message; err.hidden = false; }
+  });
+  $("#r-sair").addEventListener("click", () => { est.senha = null; try { sessionStorage.removeItem(SENHA_KEY); } catch (e) { /* ignora */ } mostrar(); });
+  document.querySelectorAll(".ordem button").forEach((b) => b.addEventListener("click", () => {
+    est.ordem = b.dataset.ord;
+    document.querySelectorAll(".ordem button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    render();
+  }));
+
+  async function buscar() {
+    clearTimeout(est.timer);
+    if (!est.senha) return;
+    try {
+      const [linhas, pendentes, bebidas] = await Promise.all([P.painel(est.senha), P.pendentes(est.senha).catch(() => null), P.bebidas(est.senha)]);
+      est.linhas = linhas; est.pendentes = pendentes; est.bebidas = bebidas;
+      $("#r-vivo").classList.remove("off"); $("#r-vivo-txt").textContent = "Ao vivo";
+      render();
+    } catch (e) {
+      if (/senha/i.test(e.message)) { est.senha = null; try { sessionStorage.removeItem(SENHA_KEY); } catch (x) { /* ignora */ } mostrar(); return; }
+      $("#r-vivo").classList.add("off"); $("#r-vivo-txt").textContent = "Sem conexão";
+    } finally { if (est.senha) est.timer = setTimeout(buscar, 5000); }
+  }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && est.senha) buscar(); });
+
+  function barra(partes, total) {
+    return partes.filter(([, n]) => n > 0).map(([k, n]) => el("span", { style: `flex:${n} 1 0;background:${COR[k]}`, title: `${NOME[k]}: ${n}` }));
+  }
+  function render() {
+    const c = { sim: 0, talvez: 0, nao: 0 };
+    est.linhas.forEach((l) => { c[l.resposta]++; });
+    const resp = est.linhas.length, falta = est.pendentes ? est.pendentes.length : 0, pessoas = resp + falta;
+    $("#n-sim").textContent = nf(c.sim);
+    $("#n-sim-pct").textContent = pct(c.sim, resp) + "%";
+    $("#n-talvez").textContent = nf(c.talvez);
+    $("#n-nao").textContent = nf(c.nao);
+    $("#n-sem").textContent = est.pendentes ? nf(falta) : "—";
+    $("#n-resp").textContent = nf(resp);
+    $("#n-pessoas").textContent = est.pendentes ? nf(pessoas) : "—";
+    $("#n-resp-pct").textContent = est.pendentes ? pct(resp, pessoas) + "%" : "";
+    const bg = $("#b-geral");
+    bg.replaceChildren(...barra([["sim", c.sim], ["talvez", c.talvez], ["nao", c.nao], ["sem", falta]]));
+    bg.setAttribute("aria-label", `Vou ${c.sim}, talvez ${c.talvez}, não vão ${c.nao}, faltam ${falta}`);
+    $("#plano").replaceChildren("Prepare para ", el("b", { text: nf(c.sim) }), ...(c.talvez ? [" a ", el("b", { text: nf(c.sim + c.talvez) })] : []), " pessoas", c.talvez ? " (contando os talvez)." : ".");
+
+    // por departamento
+    const m = new Map();
+    const pega = (d) => { if (!m.has(d)) m.set(d, { d, sim: 0, talvez: 0, nao: 0, sem: 0 }); return m.get(d); };
+    est.linhas.forEach((l) => { pega(l.departamento)[l.resposta]++; });
+    (est.pendentes || []).forEach((p) => { pega(p.departamento).sem++; });
+    const lista = [...m.values()].map((x) => ({ ...x, tot: x.sim + x.talvez + x.nao + x.sem }));
+    if (est.ordem === "az") lista.sort((a, b) => a.d.localeCompare(b.d, "pt-BR"));
+    else if (est.ordem === "sim") lista.sort((a, b) => b.sim - a.sim || a.d.localeCompare(b.d, "pt-BR"));
+    else lista.sort((a, b) => b.sem - a.sem || a.d.localeCompare(b.d, "pt-BR"));
+    $("#deps").replaceChildren(...lista.map((x) => el("li", null,
+      el("div", { class: "dep-cab" }, el("strong", { text: x.d }), el("span", null, el("b", { text: nf(x.tot - x.sem) }), ` de ${nf(x.tot)}`)),
+      el("div", { class: "barra" }, barra([["sim", x.sim], ["talvez", x.talvez], ["nao", x.nao], ["sem", x.sem]])),
+      el("div", { class: "dep-num" }, ...["sim", "talvez", "nao", "sem"].map((k) => el("span", null, el("i", { style: `background:${COR[k]}` }), `${nf(x[k])} ${NOME[k]}`))))));
+
+    // bebidas de quem vai
+    const ordemB = ["cerveja", "refrigerante", "suco", "agua", "tanto_faz", "sem_resposta"];
+    const tb = {}; est.bebidas.filter((b) => b.resposta === "sim").forEach((b) => { tb[b.bebida] = (tb[b.bebida] || 0) + Number(b.qtd); });
+    const max = Math.max(1, ...ordemB.map((k) => tb[k] || 0));
+    $("#beb").replaceChildren(...ordemB.map((k) => el("div", null, el("dt", { text: P.BEBIDAS[k] }), el("dd", { text: nf(tb[k] || 0) }),
+      el("div", { class: "trilho" }, el("span", { style: `width:${((tb[k] || 0) / max) * 100}%` })))));
+  }
+  mostrar();
+})();
+</script>
+</body>
+</html>
