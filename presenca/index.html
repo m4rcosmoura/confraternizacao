@@ -55,6 +55,29 @@
 .pc-resumo dd { margin: 0; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
 .pc-rodape { margin: 28px 0 0; padding-bottom: 40px; text-align: center; color: var(--muted); font-size: 13px; }
 @media (max-width: 360px) { .pc-op small { display: none; } }
+/* Busca do nome */
+.pc-busca-caixa { position: relative; }
+.pc-busca-caixa svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gold); pointer-events: none; }
+.pc-busca-caixa input { -webkit-appearance: none; appearance: none; width: 100%; padding: 13px 14px 13px 44px; border-radius: 12px; border: 1px solid var(--line); background: rgba(6, 34, 25, .8); color: var(--fg); font-size: 17px; }
+.pc-busca-caixa input::placeholder { color: var(--muted); opacity: .75; }
+.pc-busca-caixa input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245, 221, 47, .25); }
+.pc-result { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.pc-result:empty { display: none; }
+.pc-result button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(6, 34, 25, .85); color: var(--fg); font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, background .15s; }
+.pc-result button:hover, .pc-result button:focus-visible { border-color: var(--gold); background: rgba(245, 221, 47, .08); outline: none; }
+.pc-result .t { display: grid; min-width: 0; }
+.pc-result strong { font-weight: 700; overflow-wrap: anywhere; }
+.pc-result strong mark { background: none; color: var(--gold); }
+.pc-result span.d { color: var(--muted); font-size: 13px; }
+.pc-result .msg { padding: 10px 2px; color: var(--muted); font-size: 14px; }
+.pc-av { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--surface-2); color: var(--gold); font-weight: 800; font-size: 14px; }
+.pc-eu { display: flex; align-items: center; gap: 12px; margin: 0 0 20px; padding: 12px 14px; border-radius: 14px; border: 2px solid var(--gold); background: linear-gradient(160deg, rgba(245, 221, 47, .14), rgba(6, 34, 25, .9) 70%); }
+.pc-eu .pc-av { width: 46px; height: 46px; background: var(--gold); color: var(--gold-ink); font-size: 16px; }
+.pc-eu-txt { flex: 1; min-width: 0; display: grid; }
+.pc-eu-txt small { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.pc-eu-txt strong { font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; }
+.pc-eu-txt span { color: var(--muted); font-size: 14px; }
+.pc-eu .link-editar { flex: none; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -72,13 +95,20 @@
   <p class="info" id="pc-fechado" hidden style="margin-top:22px">As confirmações estão encerradas. Se precisar mudar algo, fale com a organização.</p>
 
   <form class="pc-card" id="pc-form" novalidate hidden>
-    <div class="campo">
-      <label for="pc-nome">Seu nome completo</label>
-      <input type="text" id="pc-nome" name="nome" maxlength="80" autocomplete="name" placeholder="Ex.: Maria Souza" required>
+    <!-- A pessoa procura o próprio nome na lista de colaboradores e toca nele -->
+    <div class="campo" id="pc-procura">
+      <label for="pc-busca">Procure seu nome</label>
+      <div class="pc-busca-caixa">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input type="search" id="pc-busca" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Digite seu nome ou sobrenome" aria-controls="pc-result" aria-describedby="pc-busca-dica">
+      </div>
+      <p class="dica" id="pc-busca-dica">Digite pelo menos 3 letras e toque no seu nome.</p>
+      <ul class="pc-result" id="pc-result" role="listbox" aria-label="Nomes encontrados"></ul>
     </div>
-    <div class="campo">
-      <label for="pc-dep">Departamento</label>
-      <select id="pc-dep" name="departamento" required><option value="">Escolha…</option></select>
+    <div class="pc-eu" id="pc-eu" hidden>
+      <span class="pc-av" id="pc-eu-av" aria-hidden="true"></span>
+      <div class="pc-eu-txt"><small>Você é</small><strong id="pc-eu-nome"></strong><span id="pc-eu-dep"></span></div>
+      <button type="button" class="link-editar" id="pc-eu-trocar">Não sou eu</button>
     </div>
 
     <fieldset>
@@ -120,7 +150,7 @@
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="presenca.js?v=28"></script>
+<script src="presenca.js?v=29"></script>
 <script>
 (function () {
   "use strict";
@@ -153,15 +183,77 @@
   }
   $$('input[name="resposta"]').forEach((i) => i.addEventListener("change", () => { mostrarBebida(); $("#pc-erro").hidden = true; }));
 
-  function preencherDepartamentos(atual) {
-    const sel = $("#pc-dep"), deps = P.departamentos(cfg);
-    const lista = atual && !deps.includes(atual) ? deps.concat(atual) : deps;
-    sel.replaceChildren(new Option("Escolha…", ""), ...lista.map((d) => new Option(d, d)));
-    if (atual) sel.value = atual;
+  // ---------------------------------------------------------- busca do próprio nome
+  let escolhido = null;   // { colaborador, nome, departamento }
+  // iniciais do primeiro e do último nome (sem "da", "de", "dos"...)
+  const iniciais = (n) => { const p = String(n || "").trim().split(/\s+/).filter((x) => !/^(da|de|do|das|dos|e)$/i.test(x)); return ((p[0] || "?")[0] + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase(); };
+  function marcar(nome, termo) {
+    // destaca as letras digitadas no nome (sem depender de acento)
+    const el = document.createElement("strong");
+    const palavras = P.normal(termo).split(" ").filter(Boolean);
+    const alvo = P.normal(nome);
+    const marcas = new Array(nome.length).fill(false);
+    palavras.forEach((w) => { let i = alvo.indexOf(w); while (i >= 0) { for (let k = i; k < i + w.length; k++) marcas[k] = true; i = alvo.indexOf(w, i + w.length); } });
+    let buf = "", em = false;
+    const fecha = () => { if (!buf) return; if (em) { const m = document.createElement("mark"); m.textContent = buf; el.append(m); } else el.append(buf); buf = ""; };
+    // normal() só troca letras (mesmo tamanho) quando o nome não tem espaços duplos; se não bater, mostra sem destaque
+    if (alvo.length !== nome.length) { el.textContent = nome; return el; }
+    [...nome].forEach((ch, i) => { if (marcas[i] !== em) { fecha(); em = marcas[i]; } buf += ch; });
+    fecha();
+    return el;
   }
+  let buscaSeq = 0, buscaT = null;
+  function buscar() {
+    const termo = $("#pc-busca").value, lista = $("#pc-result");
+    clearTimeout(buscaT);
+    if (P.normal(termo).replace(/ /g, "").length < 3) { lista.replaceChildren(); return; }
+    buscaT = setTimeout(async () => {
+      const seq = ++buscaSeq;
+      let r;
+      try { r = await P.buscar(termo); } catch (e) { if (seq === buscaSeq) lista.replaceChildren(msg(e.message)); return; }
+      if (seq !== buscaSeq) return;   // chegou uma busca mais nova
+      if (!r.length) { lista.replaceChildren(msg("Nenhum nome encontrado. Confira a grafia ou tente só o sobrenome. Se não estiver na lista, fale com a organização.")); return; }
+      lista.replaceChildren(...r.map((c) => {
+        const li = document.createElement("li");
+        const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "option");
+        const av = document.createElement("span"); av.className = "pc-av"; av.setAttribute("aria-hidden", "true"); av.textContent = iniciais(c.nome);
+        const t = document.createElement("span"); t.className = "t";
+        const d = document.createElement("span"); d.className = "d"; d.textContent = c.departamento;
+        t.append(marcar(c.nome, termo), d); b.append(av, t);
+        b.addEventListener("click", () => escolher({ colaborador: c.id, nome: c.nome, departamento: c.departamento }));
+        li.append(b); return li;
+      }));
+    }, 220);
+  }
+  function msg(texto) { const li = document.createElement("li"); li.className = "msg"; li.textContent = texto; return li; }
+  function escolher(p) {
+    escolhido = p;
+    $("#pc-procura").hidden = !!p; $("#pc-eu").hidden = !p;
+    $("#pc-erro").hidden = true;
+    if (p) {
+      $("#pc-eu-av").textContent = iniciais(p.nome);
+      $("#pc-eu-nome").textContent = p.nome;
+      $("#pc-eu-dep").textContent = p.departamento;
+    } else {
+      $("#pc-busca").value = ""; $("#pc-result").replaceChildren();
+      setTimeout(() => $("#pc-busca").focus(), 30);
+    }
+  }
+  $("#pc-busca").addEventListener("input", buscar);
+  $("#pc-busca").addEventListener("keydown", (ev) => {   // Enter escolhe o primeiro da lista; seta para baixo entra na lista
+    const primeiro = $("#pc-result button");
+    if (ev.key === "Enter") { ev.preventDefault(); if (primeiro && $$("#pc-result button").length === 1) primeiro.click(); }
+    if (ev.key === "ArrowDown" && primeiro) { ev.preventDefault(); primeiro.focus(); }
+  });
+  $("#pc-result").addEventListener("keydown", (ev) => {
+    const bs = $$("#pc-result button"), i = bs.indexOf(document.activeElement);
+    if (ev.key === "ArrowDown" && i < bs.length - 1) { ev.preventDefault(); bs[i + 1].focus(); }
+    if (ev.key === "ArrowUp") { ev.preventDefault(); (i > 0 ? bs[i - 1] : $("#pc-busca")).focus(); }
+  });
+  $("#pc-eu-trocar").addEventListener("click", () => escolher(null));
+
   function preencher(m) {
-    $("#pc-nome").value = m ? m.nome : "";
-    preencherDepartamentos(m && m.departamento);
+    escolher(m && m.colaborador ? { colaborador: m.colaborador, nome: m.nome, departamento: m.departamento } : null);
     $$('input[name="resposta"]').forEach((i) => { i.checked = !!m && i.value === m.resposta; });
     $$('input[name="bebida"]').forEach((i) => { i.checked = !!m && i.value === m.bebida; i.dataset.era = i.checked ? "1" : ""; });
     mostrarBebida();
@@ -194,24 +286,20 @@
     preencher(m);
     $("#pc-enviar").textContent = m ? "Salvar alteração" : "Enviar resposta";
   }
-  $("#pc-alterar").addEventListener("click", () => { telaForm(P.minha()); $("#pc-nome").focus(); });
+  $("#pc-alterar").addEventListener("click", () => { telaForm(P.minha()); });
 
   $("#pc-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const err = $("#pc-erro"); err.hidden = true;
     const falha = (msg, el) => { err.textContent = msg; err.hidden = false; if (el) el.focus(); };
-    const nome = $("#pc-nome").value.trim().replace(/\s+/g, " ");
-    const departamento = $("#pc-dep").value;
     const resposta = ($('input[name="resposta"]:checked') || {}).value;
     const bebida = resposta === "nao" ? null : (($('input[name="bebida"]:checked') || {}).value || null);
-    if (nome.length < 2) return falha("Informe seu nome.", $("#pc-nome"));
-    if (!/\s/.test(nome)) return falha("Escreva nome e sobrenome, para a organização não confundir pessoas com o mesmo nome.", $("#pc-nome"));
-    if (!departamento) return falha("Escolha o seu departamento.", $("#pc-dep"));
+    if (!escolhido) return falha("Procure e toque no seu nome na lista.", $("#pc-busca"));
     if (!resposta) return falha("Diga se você vai: Vou, Ainda não sei ou Não vou.");
     const btn = $("#pc-enviar"), txt = btn.textContent;
     btn.disabled = true; btn.textContent = "Enviando…";
     try {
-      await P.responder({ nome, departamento, resposta, bebida });
+      await P.responder({ ...escolhido, resposta, bebida });
       telaFeito(P.minha());
     } catch (e) { falha(e.message); }
     finally { btn.disabled = false; btn.textContent = txt; }
@@ -225,7 +313,7 @@
     if (quando) $("#pc-quando").textContent = `${quando.charAt(0).toUpperCase() + quando.slice(1)}, das 10h às 17h${cfg.evento_local ? " · " + cfg.evento_local : ""}. Leva menos de 1 minuto.`;
     if (cfg.presenca_prazo) { $("#pc-prazo").textContent = `Responda ${cfg.presenca_prazo}`; $("#pc-prazo").hidden = false; }
     const m = P.minha();
-    if (m) telaFeito(m); else telaForm(null);
+    if (m && m.colaborador) telaFeito(m); else telaForm(null);
   }
   iniciar();
 })();

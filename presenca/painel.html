@@ -203,6 +203,11 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
 .jan-corpo textarea { min-height: 200px; font-size: 15px; line-height: 1.5; }
 .link-caixa { display: flex; gap: 8px; }
 .link-caixa input { flex: 1; min-width: 0; font-size: 14px; }
+.add-pessoa { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--borda); }
+.add-tit { margin: 0 0 4px; font-weight: 700; }
+.add-linha { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 8px; }
+.add-linha input, .add-linha select { width: 100%; padding: 10px 12px; font-size: 15px; }
+@media (max-width: 520px) { .add-linha { grid-template-columns: 1fr; } }
 .qr-caixa { display: flex; gap: 18px; align-items: center; margin-top: 16px; }
 .qr-caixa .qr { flex: none; width: 150px; height: 150px; padding: 10px; border-radius: 14px; background: #fff; }
 .qr-caixa .qr svg { display: block; width: 100%; height: 100%; }
@@ -267,6 +272,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
         <button type="button" data-sit="sim" aria-pressed="false"><span class="ponto" style="background:var(--s-sim)"></span>Vou</button>
         <button type="button" data-sit="talvez" aria-pressed="false"><span class="ponto" style="background:var(--s-talvez)"></span>Talvez</button>
         <button type="button" data-sit="nao" aria-pressed="false"><span class="ponto" style="background:var(--s-nao)"></span>Não vou</button>
+        <button type="button" data-sit="sem" aria-pressed="false" id="f-sem"><span class="ponto" style="background:var(--s-sem)"></span>Sem resposta</button>
       </div>
       <label class="vh" for="f-busca">Buscar nome</label>
       <input class="d-busca" id="f-busca" type="search" placeholder="Buscar nome…" autocomplete="off">
@@ -395,10 +401,17 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
         <input type="checkbox" role="switch" class="switch" id="cfg-aberta">
       </div>
       <div class="campo" style="margin-top:12px"><label for="cfg-prazo">Prazo <span class="opc">(aparece no link, opcional)</span></label><input type="text" id="cfg-prazo" maxlength="40" placeholder="Ex.: até 01/12"></div>
-      <div class="campo"><label for="cfg-deps">Departamentos <span class="opc">(um por linha; depois da barra, quantas pessoas: "Produção | 175")</span></label><textarea id="cfg-deps" maxlength="3000"></textarea>
-        <p class="dica">Quem já respondeu continua com o departamento que escolheu, mesmo que ele saia da lista.</p></div>
       <p class="erro" id="cfg-erro" role="alert" hidden></p>
       <div class="acoes" style="justify-content:flex-end"><button type="button" class="btn sec peq" data-fechar>Cancelar</button><button type="submit" class="btn peq" id="cfg-salvar">Salvar</button></div>
+      <div class="add-pessoa">
+        <p class="add-tit">Incluir alguém que não está na lista</p>
+        <p class="dica" id="add-dica" style="margin:0 0 10px">As pessoas vêm da planilha da empresa. Quem você incluir aqui já aparece na busca do link.</p>
+        <div class="add-linha">
+          <label class="vh" for="add-nome">Nome completo</label><input type="text" id="add-nome" maxlength="120" placeholder="Nome completo">
+          <label class="vh" for="add-dep">Departamento</label><select id="add-dep"></select>
+          <button type="button" class="btn sec peq" id="add-btn">Incluir</button>
+        </div>
+      </div>
     </div>
   </form>
 </dialog>
@@ -406,7 +419,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
 <div class="dica-graf" id="dica" role="status" aria-live="off"></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="presenca.js?v=28"></script>
+<script src="presenca.js?v=29"></script>
 <script>
 (function () {
   "use strict";
@@ -441,9 +454,20 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
   const SIT = ["sim", "talvez", "nao"];
   const NOME_SIT = { sim: "Vou", talvez: "Talvez", nao: "Não vou", sem: "Sem resposta" };
   const COR = { sim: "var(--s-sim)", talvez: "var(--s-talvez)", nao: "var(--s-nao)", sem: "var(--s-sem)" };
-  // quantas pessoas existem no recorte atual (lista de departamentos com "| número")
+  // Quantas pessoas cada departamento tem: pela lista de colaboradores (quem respondeu + quem falta);
+  // sem a lista, pela configuração ("Produção | 175").
+  function quadroDeps() {
+    if (!est.pendentes) return P.quadro(est.cfg);
+    const m = new Map();
+    est.linhas.concat(est.pendentes).forEach((x) => m.set(x.departamento, (m.get(x.departamento) || 0) + 1));
+    return m;
+  }
+  function listaDeps() {
+    const base = est.pendentes ? [...quadroDeps().keys()] : P.departamentos(est.cfg);
+    return [...new Set(base.concat(est.linhas.map((l) => l.departamento)))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }
   function pessoasNoFiltro() {
-    const qd = P.quadro(est.cfg);
+    const qd = quadroDeps();
     return est.filtro.dep ? qd.get(est.filtro.dep) || 0 : [...qd.values()].reduce((a, b) => a + b, 0);
   }
   const BEB = ["cerveja", "refrigerante", "suco", "agua", "tanto_faz", "sem_resposta"];
@@ -463,7 +487,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
   // ------------------------------------------------------------ Estado
   const SENHA_KEY = P.TESTE ? "confra_presenca_senha_teste" : "confra_admin";
   const est = {
-    senha: null, cfg: {}, linhas: [], bebidas: [], vistos: null, ultimaBusca: 0, timer: null, online: true,
+    senha: null, cfg: {}, linhas: [], bebidas: [], pendentes: null, vistos: null, ultimaBusca: 0, timer: null, online: true,
     filtro: { dep: "", sit: "", busca: "" }, ordemDep: "total", ordemTab: { col: "atualizado", dir: -1 }, novos: new Set(),
   };
   try { est.senha = sessionStorage.getItem(SENHA_KEY); } catch (e) { /* ignora */ }
@@ -493,10 +517,13 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     $$(".card").forEach((c) => c.classList.add("carregando"));
     try {
       const precisaCfg = Date.now() - est.ultimaCfg > 30000 || !est.ultimaCfg;
-      const [linhas, bebidas, cfg] = await Promise.all([P.painel(est.senha), P.bebidas(est.senha), precisaCfg ? P.config() : null]);
-      if (cfg) { est.cfg = cfg; est.ultimaCfg = Date.now(); evento(); }
+      const [linhas, bebidas, pendentes, cfg] = await Promise.all([P.painel(est.senha), P.bebidas(est.senha),
+        P.pendentes(est.senha).catch(() => null), precisaCfg ? P.config() : null]);
       est.linhas = linhas.map((l) => ({ ...l, criadoMs: Date.parse(l.criado_em), atualizadoMs: Date.parse(l.atualizado_em) }));
       est.bebidas = bebidas;
+      est.pendentes = pendentes;
+      if (cfg) { est.cfg = cfg; est.ultimaCfg = Date.now(); }
+      evento();
       // novidades desde a última busca
       const assinatura = (l) => `${l.id}|${l.resposta}|${l.atualizado_em}`;
       const agora = new Set(est.linhas.map(assinatura));
@@ -531,14 +558,21 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     const data = m ? new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date(+m[1], +m[2] - 1, +m[3])) : "";
     $("#d-ev").textContent = [c.evento_nome || "Confraternização", data, c.evento_local, c.presenca_aberta === "nao" ? "confirmações encerradas" : c.presenca_prazo ? `respostas ${c.presenca_prazo}` : ""].filter(Boolean).join(" · ") + (P.TESTE ? " · MODO DE TESTE" : "");
     const sel = $("#f-dep"), atual = sel.value;
-    const deps = [...new Set(P.departamentos(c).concat(est.linhas.map((l) => l.departamento)))];
-    sel.replaceChildren(new Option("Todos os departamentos", ""), ...deps.map((d) => new Option(d, d)));
+    const deps = listaDeps(), chave = deps.join("|");
+    if (sel.dataset.chave !== chave) {   // só refaz o menu se a lista mudou
+      sel.dataset.chave = chave;
+      sel.replaceChildren(new Option("Todos os departamentos", ""), ...deps.map((d) => new Option(d, d)));
+    }
     sel.value = deps.includes(atual) ? atual : "";
   }
 
   // ------------------------------------------------------------ Filtros
   const doDep = () => est.linhas.filter((l) => !est.filtro.dep || l.departamento === est.filtro.dep);
-  const filtradas = () => doDep().filter((l) => (!est.filtro.sit || l.resposta === est.filtro.sit) && (!est.filtro.busca || normal(l.nome).includes(normal(est.filtro.busca))));
+  const buscaOk = (l) => !est.filtro.busca || normal(l.nome).includes(normal(est.filtro.busca));
+  // "Sem resposta": a lista de quem ainda não respondeu (vem da lista de colaboradores)
+  const filtradas = () => (est.filtro.sit === "sem"
+    ? (est.pendentes || []).filter((p) => (!est.filtro.dep || p.departamento === est.filtro.dep) && buscaOk(p)).map((p) => ({ ...p, resposta: "sem", pendente: true, criadoMs: 0, atualizadoMs: 0 }))
+    : doDep().filter((l) => (!est.filtro.sit || l.resposta === est.filtro.sit) && buscaOk(l)));
   function definirFiltro(mud) {
     Object.assign(est.filtro, mud);
     $("#f-dep").value = est.filtro.dep;
@@ -576,7 +610,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     const pessoas = pessoasNoFiltro();
     const de = pessoas ? `de ${nf(pessoas)} pessoas (${pct(total, pessoas)}%) · ` : "";
     if (ult) { ku.replaceChildren(de + "última ", h("span", { "data-rel": ult, text: relativo(ult) })); } else ku.textContent = de + "nenhuma ainda";
-    const lista = P.departamentos(est.cfg), com = new Set(est.linhas.map((l) => l.departamento));
+    const lista = listaDeps(), com = new Set(est.linhas.map((l) => l.departamento));
     if (est.filtro.dep) {
       $("#k-deps").textContent = nf(base.length);
       $("#k-deps-det").textContent = `respostas em ${est.filtro.dep}`;
@@ -627,6 +661,11 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
   }
   function renderTempo() {
     const el = $("#g-tempo"), base = doDep().slice().sort((a, b) => a.criadoMs - b.criadoMs);
+    if (est.filtro.sit === "sem") {
+      $("#leg-tempo").replaceChildren();
+      el.replaceChildren(h("p", { class: "tab-vazia", text: "Este gráfico mostra quem já respondeu. Quem falta está na lista “Respostas”, logo abaixo." }));
+      return;
+    }
     const sits = est.filtro.sit ? [est.filtro.sit] : SIT;
     $("#leg-tempo").replaceChildren(...sits.map((k) => h("li", null, h("i", { style: `background:${COR[k]};height:3px;border-radius:2px` }), NOME_SIT[k])));
     const W = largura(el), H = 260, m = { t: 12, r: 46, b: 30, l: 40 };
@@ -696,10 +735,11 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     $("#leg-dep").replaceChildren(...sits.map((k) => h("li", null, h("i", { style: `background:${COR[k]}` }), NOME_SIT[k])));
     const busca = normal(est.filtro.busca);
     const linhas = est.linhas.filter((l) => !busca || normal(l.nome).includes(busca));
-    const deps = [...new Set(P.departamentos(est.cfg).concat(linhas.map((l) => l.departamento)))];
-    const qd = P.quadro(est.cfg);
+    const deps = listaDeps();
+    const qd = quadroDeps();
     let dados = deps.map((d) => {
       const c = contagem(linhas.filter((l) => l.departamento === d)), resp = c.sim + c.talvez + c.nao, q = qd.get(d) || 0;
+      c.sem = q ? Math.max(0, q - est.linhas.filter((l) => l.departamento === d).length) : 0;   // quem ainda não respondeu
       return { d, c, tot: sits.reduce((a, k) => a + c[k], 0), q, falta: q ? Math.max(0, q - resp) : 0 };
     });
     if (est.ordemDep === "az") dados.sort((a, b) => a.d.localeCompare(b.d, "pt-BR"));
@@ -756,9 +796,9 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
   // Bebidas: só totais (quem vai e quem talvez vá)
   function renderBeb() {
     const el = $("#g-beb");
-    const sits = est.filtro.sit === "nao" ? [] : est.filtro.sit ? [est.filtro.sit] : ["sim", "talvez"];
+    const sits = est.filtro.sit === "nao" || est.filtro.sit === "sem" ? [] : est.filtro.sit ? [est.filtro.sit] : ["sim", "talvez"];
     $("#leg-beb").replaceChildren(...sits.map((k) => h("li", null, h("i", { style: `background:${COR[k]}` }), NOME_SIT[k])));
-    if (!sits.length) { el.replaceChildren(h("p", { class: "tab-vazia", text: "Quem não vai não responde a bebida." })); $("#beb-plano").hidden = true; return; }
+    if (!sits.length) { el.replaceChildren(h("p", { class: "tab-vazia", text: est.filtro.sit === "sem" ? "Quem ainda não respondeu não tem bebida informada." : "Quem não vai não responde a bebida." })); $("#beb-plano").hidden = true; return; }
     const dados = BEB.map((b) => {
       const c = { sim: 0, talvez: 0 };
       est.bebidas.filter((x) => x.bebida === b && (!est.filtro.dep || x.departamento === est.filtro.dep)).forEach((x) => { if (c[x.resposta] != null) c[x.resposta] += Number(x.qtd); });
@@ -800,10 +840,22 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     lista.sort((a, b) => (val(a) < val(b) ? -1 : val(a) > val(b) ? 1 : 0) * dir || a.nome.localeCompare(b.nome, "pt-BR"));
     $$(".d-tab th[data-col]").forEach((th) => th.setAttribute("aria-sort", th.dataset.col === col ? (dir > 0 ? "ascending" : "descending") : "none"));
     const dups = [...nomes.values()].filter((n) => n > 1).length;
-    $("#tab-sub").textContent = `${nf(lista.length)} de ${nf(est.linhas.length)} respostas` + (dups ? ` · ${dups} ${dups === 1 ? "nome repetido" : "nomes repetidos"} (verifique e remova o duplicado)` : "");
+    const semResp = est.filtro.sit === "sem";
+    $("#t-tab").textContent = semResp ? "Quem ainda não respondeu" : "Respostas";
+    $("#tab-sub").textContent = semResp
+      ? `${nf(lista.length)} ${lista.length === 1 ? "pessoa" : "pessoas"}${est.filtro.dep ? " em " + est.filtro.dep : ""} · use “Exportar planilha” para cobrar o pessoal`
+      : `${nf(lista.length)} de ${nf(est.linhas.length)} respostas` + (dups ? ` · ${dups} ${dups === 1 ? "nome repetido" : "nomes repetidos"} (verifique e remova o duplicado)` : "");
     const corpo = $("#tab-corpo");
-    if (!lista.length) { corpo.replaceChildren(h("tr", null, h("td", { colspan: "5", class: "tab-vazia", text: est.linhas.length ? "Ninguém com esses filtros." : "Ninguém respondeu ainda. Envie o link (botão “Link e QR code”)." }))); return; }
+    if (!lista.length) {
+      const vazio = semResp ? (est.pendentes ? "Todo mundo já respondeu. 🎉" : "A lista de colaboradores não está disponível.") : est.linhas.length ? "Ninguém com esses filtros." : "Ninguém respondeu ainda. Envie o link (botão “Link e QR code”).";
+      corpo.replaceChildren(h("tr", null, h("td", { colspan: "5", class: "tab-vazia", text: vazio }))); return;
+    }
     corpo.replaceChildren(...lista.map((l) => {
+      if (l.pendente) {
+        return h("tr", null, h("td", { class: "nome", text: l.nome }), h("td", { text: l.departamento }),
+          h("td", null, h("span", { class: "tag-sit" }, h("i", { style: `background:${COR.sem}` }), NOME_SIT.sem)),
+          h("td", { class: "quando col-quando", text: "—" }), h("td"));
+      }
       const rm = h("button", { type: "button", class: "rm", text: "Remover", "aria-label": `Remover a resposta de ${l.nome}` });
       armar(rm, async () => { await P.excluir(est.senha, l.id); toast(`Resposta de ${l.nome} removida.`); buscar(); });
       return h("tr", { class: est.novos.has(l.id) ? "novo" : null },
@@ -871,9 +923,9 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     const lista = filtradas().slice().sort((a, b) => a.departamento.localeCompare(b.departamento, "pt-BR") || a.nome.localeCompare(b.nome, "pt-BR"));
     const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
     const linhas = [["Nome", "Departamento", "Situação", "Respondeu em", "Atualizado em"].map(q).join(";"),
-      ...lista.map((l) => [l.nome, l.departamento, NOME_SIT[l.resposta], dataHora(l.criadoMs), dataHora(l.atualizadoMs)].map(q).join(";"))];
+      ...lista.map((l) => [l.nome, l.departamento, NOME_SIT[l.resposta], l.pendente ? "" : dataHora(l.criadoMs), l.pendente ? "" : dataHora(l.atualizadoMs)].map(q).join(";"))];
     const blob = new Blob(["﻿" + linhas.join("\r\n")], { type: "text/csv;charset=utf-8" });
-    const a = h("a", { href: URL.createObjectURL(blob), download: `confirmacoes-${new Date().toISOString().slice(0, 10)}.csv` });
+    const a = h("a", { href: URL.createObjectURL(blob), download: `${est.filtro.sit === "sem" ? "falta-responder" : "confirmacoes"}-${new Date().toISOString().slice(0, 10)}.csv` });
     document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     toast(`Planilha com ${lista.length} ${lista.length === 1 ? "resposta" : "respostas"} baixada.`);
   });
@@ -912,25 +964,30 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     try { est.cfg = await P.config(); est.ultimaCfg = Date.now(); } catch (e) { /* usa o que já tem */ }
     $("#cfg-aberta").checked = est.cfg.presenca_aberta !== "nao";
     $("#cfg-prazo").value = est.cfg.presenca_prazo || "";
-    $("#cfg-deps").value = String(est.cfg.presenca_departamentos || "").split("\n").map((x) => x.trim()).filter(Boolean).join("\n");
     $("#cfg-erro").hidden = true;
+    $("#add-dep").replaceChildren(new Option("Departamento…", ""), ...listaDeps().map((d) => new Option(d, d)));
+    $("#add-nome").value = "";
+    const total = [...quadroDeps().values()].reduce((a, b) => a + b, 0);
+    $("#add-dica").textContent = `As pessoas vêm da planilha da empresa${total ? ` (${nf(total)} na lista)` : ""}. Quem você incluir aqui já aparece na busca do link.`;
     $("#jan-cfg").showModal();
+  });
+  $("#add-btn").addEventListener("click", async () => {
+    const nome = $("#add-nome").value.trim().replace(/\s+/g, " "), dep = $("#add-dep").value, err = $("#cfg-erro");
+    err.hidden = true;
+    if (nome.split(" ").length < 2) { err.textContent = "Escreva o nome completo (nome e sobrenome)."; err.hidden = false; $("#add-nome").focus(); return; }
+    if (!dep) { err.textContent = "Escolha o departamento da pessoa."; err.hidden = false; return; }
+    const btn = $("#add-btn"); btn.disabled = true;
+    try { await P.adicionarColaborador(est.senha, nome, dep); toast(`${nome} incluído(a) na lista.`); $("#add-nome").value = ""; buscar(); }
+    catch (e) { err.textContent = e.message; err.hidden = false; }
+    finally { btn.disabled = false; }
   });
   $("#cfg-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    // "Nome | quantidade": arruma os espaços e tira nomes repetidos (vale a primeira linha de cada nome)
-    const vistos = new Set();
-    const deps = $("#cfg-deps").value.split("\n").map((x) => x.trim()).filter(Boolean).map((x) => {
-      const [nome, n] = x.split("|"); const q = String(n || "").replace(/\D/g, "");
-      return { nome: nome.trim(), linha: q ? `${nome.trim()} | ${q}` : nome.trim() };
-    }).filter((x) => x.nome && !vistos.has(x.nome.toLowerCase()) && vistos.add(x.nome.toLowerCase())).map((x) => x.linha);
     const err = $("#cfg-erro"); err.hidden = true;
-    if (!deps.length) { err.textContent = "Coloque pelo menos um departamento."; err.hidden = false; return; }
     const btn = $("#cfg-salvar"); btn.disabled = true;
     try {
       await P.salvarConfig(est.senha, "presenca_aberta", $("#cfg-aberta").checked ? "sim" : "nao");
       await P.salvarConfig(est.senha, "presenca_prazo", $("#cfg-prazo").value.trim());
-      await P.salvarConfig(est.senha, "presenca_departamentos", deps.join("\n"));
       est.cfg = await P.config(); est.ultimaCfg = Date.now(); evento();
       $("#jan-cfg").close(); toast("Configurações salvas."); renderTudo();
     } catch (e) { err.textContent = e.message; err.hidden = false; }
