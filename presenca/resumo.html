@@ -122,7 +122,7 @@ body { background-color: #071d15; }
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="presenca.js?v=30"></script>
+<script src="presenca.js?v=31"></script>
 <script>
 (function () {
   "use strict";
@@ -200,7 +200,7 @@ body { background-color: #071d15; }
       el("div", { class: "dep-num" }, ...["sim", "talvez", "nao", "sem"].map((k) => el("span", null, el("i", { style: `background:${COR[k]}` }), `${nf(x[k])} ${NOME[k]}`))))));
 
     // bebidas de quem vai
-    const ordemB = ["cerveja", "refrigerante", "suco", "agua", "tanto_faz", "sem_resposta"];
+    const ordemB = ["alcool", "sem_alcool", "tanto_faz", "prefiro_nao", "sem_resposta"];
     const tb = {}; Object.entries(est.bebidas).forEach(([k, n]) => { tb[k] = Number(n) || 0; });
     const max = Math.max(1, ...ordemB.map((k) => tb[k] || 0));
     $("#beb").replaceChildren(...ordemB.map((k) => el("div", null, el("dt", { text: P.BEBIDAS[k] }), el("dd", { text: nf(tb[k] || 0) }),

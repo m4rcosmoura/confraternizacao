@@ -37,11 +37,13 @@
 .pc-op:has(input:checked) .ic { background: var(--gold); color: var(--gold-ink); }
 .pc-op:has(input:focus-visible) { outline: 3px solid var(--gold); outline-offset: 2px; }
 /* bebida */
-.pc-bebidas { display: flex; flex-wrap: wrap; gap: 8px; }
-.pc-chip { position: relative; cursor: pointer; }
+.pc-bebidas { display: grid; gap: 8px; }
+.pc-chip { position: relative; cursor: pointer; display: block; }
 .pc-chip input { position: absolute; opacity: 0; pointer-events: none; }
-.pc-chip span { display: inline-block; padding: 10px 14px; border-radius: 999px; border: 2px solid var(--line); background: rgba(6, 34, 25, .8); font-weight: 600; font-size: 15px; transition: border-color .15s, background .15s; }
-.pc-chip input:checked + span { border-color: var(--gold); background: var(--gold); color: var(--gold-ink); font-weight: 800; }
+.pc-chip span { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 2px solid var(--line); background: rgba(6, 34, 25, .8); font-weight: 600; font-size: 15px; line-height: 1.3; transition: border-color .15s, background .15s; }
+.pc-chip span::before { content: ""; flex: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--gold); box-sizing: border-box; }
+.pc-chip input:checked + span { border-color: var(--gold); background: linear-gradient(160deg, rgba(245, 221, 47, .2), rgba(6, 34, 25, .9) 75%); font-weight: 700; }
+.pc-chip input:checked + span::before { background: var(--gold); box-shadow: inset 0 0 0 3px #0b2e22; }
 .pc-chip input:focus-visible + span { outline: 3px solid var(--gold); outline-offset: 2px; }
 .pc-priv { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; color: var(--muted); font-size: 13px; }
 .pc-priv svg { flex: none; margin-top: 2px; color: var(--gold); }
@@ -127,7 +129,7 @@
     </fieldset>
 
     <fieldset id="pc-bloco-bebida" hidden>
-      <legend>O que você prefere beber na festa? <span class="opc">(opcional)</span></legend>
+      <legend>Para organizarmos melhor as bebidas da confraternização, qual opção combina com você? <span class="opc">(opcional)</span></legend>
       <div class="pc-bebidas" id="pc-bebidas"></div>
       <p class="pc-priv"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
         Serve só para a organização calcular as compras. Ninguém vê a sua resposta: o painel mostra apenas o total de cada bebida.</p>
@@ -150,7 +152,7 @@
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="presenca.js?v=30"></script>
+<script src="presenca.js?v=31"></script>
 <script>
 (function () {
   "use strict";
@@ -170,7 +172,7 @@
   }
 
   // Opções de bebida (chips; tocar de novo desmarca)
-  $("#pc-bebidas").replaceChildren(...["cerveja", "refrigerante", "suco", "agua", "tanto_faz"].map((v) => {
+  $("#pc-bebidas").replaceChildren(...P.OPCOES_BEBIDA.map((v) => {
     const l = document.createElement("label"); l.className = "pc-chip";
     const i = document.createElement("input"); i.type = "radio"; i.name = "bebida"; i.value = v;
     const s = document.createElement("span"); s.textContent = P.BEBIDAS[v];
@@ -270,7 +272,7 @@
       : m.resposta === "talvez" ? `${primeiro}, quando decidir é só voltar neste link e alterar a resposta.`
       : `${primeiro}, sentiremos sua falta. Se mudar de ideia, é só alterar a resposta.`;
     const linhas = [["Nome", m.nome], ["Departamento", m.departamento], ["Resposta", P.RESPOSTAS[m.resposta]]];
-    if (m.resposta !== "nao") linhas.push(["Bebida", m.bebida ? P.BEBIDAS[m.bebida] : "Não informou"]);
+    if (m.resposta !== "nao") linhas.push(["Bebidas", (m.bebida && P.BEBIDAS[m.bebida]) || "Não informou"]);
     $("#pc-resumo").replaceChildren(...linhas.map(([k, v]) => {
       const d = document.createElement("div"), dt = document.createElement("dt"), dd = document.createElement("dd");
       dt.textContent = k; dd.textContent = v; d.append(dt, dd); return d;

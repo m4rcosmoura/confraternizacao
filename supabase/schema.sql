@@ -577,7 +577,7 @@ create table if not exists public.confra_presenca (
   nome text not null check (char_length(nome) between 2 and 80),
   departamento text not null check (char_length(departamento) between 1 and 60),
   resposta text not null check (resposta in ('sim', 'nao', 'talvez')),
-  bebida text check (bebida in ('cerveja', 'refrigerante', 'suco', 'agua', 'tanto_faz')),
+  bebida text check (bebida in ('alcool', 'sem_alcool', 'tanto_faz', 'prefiro_nao')),   -- alcool = cerveja e/ou outras alcoólicas; sem_alcool = só sem álcool; vazio = não respondeu
   chave_hash text not null,
   criado_em timestamptz not null default now(),
   atualizado_em timestamptz not null default now()
@@ -610,7 +610,7 @@ begin
   if p_resposta not in ('sim', 'nao', 'talvez') then
     raise exception 'Diga se você vai.';
   end if;
-  if p_bebida is not null and p_bebida not in ('cerveja', 'refrigerante', 'suco', 'agua', 'tanto_faz') then
+  if p_bebida is not null and p_bebida not in ('alcool', 'sem_alcool', 'tanto_faz', 'prefiro_nao') then
     raise exception 'Opção de bebida inválida.';
   end if;
   if p_chave is null or char_length(p_chave) not between 16 and 64 then
@@ -743,7 +743,7 @@ begin
   if p_resposta is null or p_resposta not in ('sim', 'nao', 'talvez') then
     raise exception 'Diga se você vai.';
   end if;
-  if p_bebida is not null and p_bebida not in ('cerveja', 'refrigerante', 'suco', 'agua', 'tanto_faz') then
+  if p_bebida is not null and p_bebida not in ('alcool', 'sem_alcool', 'tanto_faz', 'prefiro_nao') then
     raise exception 'Opção de bebida inválida.';
   end if;
   if p_chave is null or char_length(p_chave) not between 16 and 64 then

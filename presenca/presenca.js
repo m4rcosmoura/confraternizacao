@@ -14,7 +14,15 @@ window.presenca = (function () {
   const TESTE = new URLSearchParams(location.search).has("teste");
 
   const RESPOSTAS = { sim: "Vou", talvez: "Talvez", nao: "Não vou" };
-  const BEBIDAS = { cerveja: "Cerveja / bebida alcoólica", refrigerante: "Refrigerante", suco: "Suco", agua: "Água", tanto_faz: "Tanto faz", sem_resposta: "Não respondeu" };
+  // Pergunta: "Para organizarmos melhor as bebidas da confraternização, qual opção combina com você?" (opcional)
+  const BEBIDAS = {
+    alcool: "Cerveja e/ou outras bebidas alcoólicas",
+    sem_alcool: "Somente bebidas sem álcool",
+    tanto_faz: "Tanto faz, posso consumir ambas",
+    prefiro_nao: "Prefiro não responder",
+    sem_resposta: "Não respondeu",
+  };
+  const OPCOES_BEBIDA = ["alcool", "sem_alcool", "tanto_faz", "prefiro_nao"];
   const CHAVES_CFG = ["evento_nome", "evento_data", "evento_local", "presenca_aberta", "presenca_prazo", "presenca_departamentos"];
 
   const store = {
@@ -43,7 +51,7 @@ window.presenca = (function () {
   const guardarMinha = (m) => store.set(MINHA, m);
 
   // ------------------------------------------------ modo de teste (só no navegador)
-  const KEY_TESTE = "confra_presenca_teste_v3";
+  const KEY_TESTE = "confra_presenca_teste_v4";
   const DEPS_PADRAO = [["Administrativo", 5], ["Ambulatório", 3], ["Balança / Faturamento", 9], ["Campo", 18], ["Campo / Milho", 3], ["Cantina", 6], ["Comercial Cooperados", 4], ["Comercial Vendas", 12], ["Construção Civil", 1], ["Controle de Qualidade", 29], ["Elétrica e Manutenção", 26], ["Frotas", 2], ["Gestão da Qualidade", 3], ["Grãos", 19], ["Laboratório", 23], ["Limpeza", 20], ["Logística", 8], ["Portaria", 18], ["Produção", 175], ["Segurança do Trabalho", 5], ["Suprimentos / Compras", 7], ["TI", 11]];
   function sementeTeste() {
     const nomes = ["Ana", "Bruno", "Carla", "Diego", "Eduarda", "Fábio", "Gabriela", "Henrique", "Isabela", "João", "Karina", "Lucas", "Mariana", "Nicolas", "Olívia", "Paulo", "Queila", "Rafael", "Sabrina", "Tiago", "Úrsula", "Vinícius", "Wesley", "Yasmin", "Zeca"];
@@ -58,7 +66,7 @@ window.presenca = (function () {
     const agora = Date.now();
     const linhas = embaralhados.map((c) => {
       const x = rnd(), resp = x < .68 ? "sim" : x < .84 ? "talvez" : "nao";
-      const y = rnd(), beb = resp === "nao" ? null : y < .46 ? "cerveja" : y < .7 ? "refrigerante" : y < .8 ? "suco" : y < .87 ? "agua" : y < .95 ? "tanto_faz" : null;
+      const y = rnd(), beb = resp === "nao" ? null : y < .45 ? "alcool" : y < .7 ? "sem_alcool" : y < .88 ? "tanto_faz" : y < .94 ? "prefiro_nao" : null;
       const t = agora - Math.round(Math.pow(rnd(), 1.6) * 3.2 * 86400000);
       return { id: uuid(), colaborador_id: c.id, nome: c.nome, departamento: c.departamento, resposta: resp, bebida: beb, chave: null, criado_em: t, atualizado_em: t };
     });
@@ -180,7 +188,7 @@ window.presenca = (function () {
   const b = TESTE ? teste : real;
 
   return {
-    TESTE, RESPOSTAS, BEBIDAS, departamentos, quadro, minha, normal,
+    TESTE, RESPOSTAS, BEBIDAS, OPCOES_BEBIDA, departamentos, quadro, minha, normal,
     config: () => b.config(),
     buscar: (t) => b.buscar(t),
     // Envia a resposta deste aparelho (nova ou alteração) e guarda o necessário para alterar depois.

@@ -420,7 +420,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
 <div class="dica-graf" id="dica" role="status" aria-live="off"></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="presenca.js?v=30"></script>
+<script src="presenca.js?v=31"></script>
 <script>
 (function () {
   "use strict";
@@ -471,7 +471,9 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     const qd = quadroDeps();
     return est.filtro.dep ? qd.get(est.filtro.dep) || 0 : [...qd.values()].reduce((a, b) => a + b, 0);
   }
-  const BEB = ["cerveja", "refrigerante", "suco", "agua", "tanto_faz", "sem_resposta"];
+  const BEB = ["alcool", "sem_alcool", "tanto_faz", "prefiro_nao", "sem_resposta"];
+  // nomes curtos para o gráfico (o texto completo da pergunta aparece na dica)
+  const ROT_BEB = { alcool: "Com álcool", sem_alcool: "Só sem álcool", tanto_faz: "Tanto faz (ambas)", prefiro_nao: "Prefere não dizer", sem_resposta: "Não respondeu" };
   const nf = (n) => Number(n).toLocaleString("pt-BR");
   const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
   const normal = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
@@ -816,7 +818,7 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
     dados.forEach((d, i) => {
       const y0 = m.t + i * linhaH, yb = y0 + (linhaH - barH) / 2;
       const g = s("g", { role: "listitem", "aria-label": `${P.BEBIDAS[d.b]}: ${d.tot}` });
-      g.append(s("text", { class: "t-rot", x: rotW, y: y0 + linhaH / 2 + 4, "text-anchor": "end", style: d.b === "sem_resposta" ? "fill:var(--tinta-3);font-style:italic" : null }, P.BEBIDAS[d.b]));
+      g.append(s("text", { class: "t-rot", x: rotW, y: y0 + linhaH / 2 + 4, "text-anchor": "end", style: d.b === "sem_resposta" || d.b === "prefiro_nao" ? "fill:var(--tinta-3);font-style:italic" : null }, ROT_BEB[d.b]));
       let acc = 0; const vis = sits.filter((k) => d.c[k] > 0);
       vis.forEach((k, j) => {
         const a = x(acc), b = x(acc + d.c[k]), ultimo = j === vis.length - 1;
@@ -828,9 +830,12 @@ dialog.d-jan::backdrop { background: rgba(2, 10, 7, .7); backdrop-filter: blur(3
       svg.append(g);
     });
     el.replaceChildren(svg);
-    const cerveja = dados.find((d) => d.b === "cerveja");
-    const p = $("#beb-plano"); p.hidden = false;
-    p.replaceChildren(h("b", { text: nf(cerveja.c.sim) }), " confirmados preferem cerveja / bebida alcoólica", ...(cerveja.c.talvez && sits.includes("talvez") ? [" (+", h("b", { text: nf(cerveja.c.talvez) }), " entre os talvez)"] : []), ".");
+    // planejamento entre os confirmados: quem quer álcool, e quem também aceita (tanto faz)
+    const qtd = (b) => (dados.find((d) => d.b === b) || { c: {} }).c.sim || 0;
+    const al = qtd("alcool"), sa = qtd("sem_alcool"), tf = qtd("tanto_faz");
+    const p = $("#beb-plano"); p.hidden = !sits.includes("sim");
+    p.replaceChildren("Entre os confirmados: bebida alcoólica para ", h("b", { text: nf(al) }), ...(tf ? [" a ", h("b", { text: nf(al + tf) })] : []),
+      " pessoas; só sem álcool para ", h("b", { text: nf(sa) }), ...(tf ? [" a ", h("b", { text: nf(sa + tf) })] : []), tf ? " (o “tanto faz” entra nos dois)." : ".");
   }
 
   // Tabela de respostas
